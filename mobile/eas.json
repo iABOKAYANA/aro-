@@ -1,0 +1,34 @@
+{
+  // NOTE: `extra.eas.projectId` is intentionally absent. The project owner
+  // runs `eas init` once (requires an Expo account) and EAS writes it here.
+  // This file was parsed against @expo/eas-json (JSON.parse + JSON5 fallback),
+  // so these `//` comments are safe.
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://ghayaestate.com"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://ghayaestate.com"
+      }
+    }
+  }
+}

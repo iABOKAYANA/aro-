@@ -1,0 +1,35 @@
+node_modules/
+.next/
+.env
+.env.local
+.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+coverage/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+*.log
+# File-backed mail outbox (lib/mailer.ts) holds real recipient addresses —
+# never commit queued mail.
+public/uploads/outbox/*.json
+data/outbox/*.json
+dev.db
+*.db-journal
+*.sqlite*
+.env*
+workers/whatsapp-bot/auth/
+workers/whatsapp-bot/media/
+# SQLite backups can hold real row data — never commit them.
+prisma/*.bak*
+# CSP violation reports (JSONL, high-volume noise — never commit)
+log/
+# User/property image uploads (GBs of binary noise — never commit; disk files stay).
+public/images/uploads/
+# Queued mail + user file uploads (real PII/attachments — never commit; disk files stay).
+public/uploads/
+data/
+.DS_Store

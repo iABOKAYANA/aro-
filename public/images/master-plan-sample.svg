@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" font-family="Arial, Helvetica, sans-serif">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#E7E2D6" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- Page -->
+  <rect width="1200" height="800" fill="#F8F6F1"/>
+  <rect width="1200" height="800" fill="url(#grid)"/>
+
+  <!-- Title -->
+  <text x="60" y="70" font-size="34" font-weight="bold" fill="#0F1A2C" letter-spacing="6">MASTER PLAN</text>
+  <text x="62" y="98" font-size="15" fill="#8A8578" letter-spacing="2">SAMPLE — replace from the CEO panel</text>
+
+  <!-- Legend -->
+  <g transform="translate(880,44)">
+    <rect x="0" y="0" width="260" height="118" rx="10" fill="#FFFFFF" stroke="#DCD6C7"/>
+    <text x="16" y="26" font-size="13" font-weight="bold" fill="#0F1A2C" letter-spacing="2">LEGEND</text>
+    <rect x="16" y="40" width="18" height="12" fill="#0F1A2C"/><text x="44" y="51" font-size="12" fill="#4A5568">Buildings</text>
+    <rect x="140" y="40" width="18" height="12" fill="#E5E2DA" stroke="#C9C4B5"/><text x="168" y="51" font-size="12" fill="#4A5568">Roads</text>
+    <rect x="16" y="66" width="18" height="12" fill="#CFE4D2"/><text x="44" y="77" font-size="12" fill="#4A5568">Green areas</text>
+    <rect x="140" y="66" width="18" height="12" fill="#CBE0EF"/><text x="168" y="77" font-size="12" fill="#4A5568">Water</text>
+    <rect x="16" y="92" width="18" height="12" fill="#D4A843"/><text x="44" y="103" font-size="12" fill="#4A5568">Amenities / access</text>
+  </g>
+
+  <!-- Site boundary -->
+  <rect x="50" y="140" width="1100" height="600" rx="18" fill="#FCFBF8" stroke="#D4A843" stroke-width="3" stroke-dasharray="14 9"/>
+
+  <!-- Roads -->
+  <g>
+    <rect x="50" y="520" width="1100" height="64" fill="#E9E6DE" stroke="#D6D1C2"/>
+    <rect x="540" y="140" width="56" height="600" fill="#E9E6DE" stroke="#D6D1C2"/>
+    <line x1="70" y1="552" x2="1130" y2="552" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="26 20"/>
+    <line x1="568" y1="160" x2="568" y2="720" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="26 20"/>
+  </g>
+
+  <!-- Buildings: towers (top) -->
+  <g>
+    <rect x="110" y="180" width="220" height="150" rx="6" fill="#0F1A2C"/>
+    <rect x="110" y="180" width="220" height="16" rx="6" fill="#D4A843"/>
+    <text x="220" y="262" font-size="16" font-weight="bold" fill="#FFFFFF" text-anchor="middle">BUILDING A</text>
+
+    <rect x="360" y="180" width="160" height="150" rx="6" fill="#16233A"/>
+    <rect x="360" y="180" width="160" height="16" rx="6" fill="#D4A843"/>
+    <text x="440" y="262" font-size="15" font-weight="bold" fill="#FFFFFF" text-anchor="middle">BUILDING B</text>
+
+    <rect x="620" y="180" width="240" height="150" rx="6" fill="#0F1A2C"/>
+    <rect x="620" y="180" width="240" height="16" rx="6" fill="#D4A843"/>
+    <text x="740" y="262" font-size="16" font-weight="bold" fill="#FFFFFF" text-anchor="middle">BUILDING C</text>
+
+    <rect x="890" y="180" width="220" height="150" rx="6" fill="#16233A"/>
+    <rect x="890" y="180" width="220" height="16" rx="6" fill="#D4A843"/>
+    <text x="1000" y="262" font-size="16" font-weight="bold" fill="#FFFFFF" text-anchor="middle">BUILDING D</text>
+  </g>
+
+  <!-- Villas row -->
+  <g>
+    <rect x="110" y="360" width="74" height="100" rx="4" fill="#22334F" stroke="#D4A843" stroke-width="2"/>
+    <rect x="200" y="360" width="74" height="100" rx="4" fill="#22334F" stroke="#D4A843" stroke-width="2"/>
+    <rect x="290" y="360" width="74" height="100" rx="4" fill="#22334F" stroke="#D4A843" stroke-width="2"/>
+    <rect x="380" y="360" width="74" height="100" rx="4" fill="#22334F" stroke="#D4A843" stroke-width="2"/>
+    <text x="272" y="486" font-size="14" fill="#0F1A2C" text-anchor="middle" letter-spacing="2">TWIN VILLAS</text>
+  </g>
+
+  <!-- Amenities cluster -->
+  <g>
+    <rect x="620" y="360" width="180" height="100" rx="8" fill="#F3EAD3" stroke="#D4A843" stroke-width="2"/>
+    <text x="710" y="404" font-size="14" font-weight="bold" fill="#8A6D1F" text-anchor="middle">CLUBHOUSE</text>
+    <text x="710" y="428" font-size="12" fill="#A5884A" text-anchor="middle">Gym · Café · Kids area</text>
+
+    <rect x="830" y="360" width="120" height="100" rx="8" fill="#F3EAD3" stroke="#D4A843" stroke-width="2"/>
+    <text x="890" y="416" font-size="13" font-weight="bold" fill="#8A6D1F" text-anchor="middle">SCHOOL</text>
+
+    <rect x="980" y="360" width="130" height="100" rx="8" fill="#CBE0EF" stroke="#9DBBD1"/>
+    <text x="1045" y="416" font-size="13" font-weight="bold" fill="#3E6B8A" text-anchor="middle">POOL</text>
+  </g>
+
+  <!-- Green park (below road) -->
+  <g>
+    <rect x="620" y="604" width="490" height="116" rx="14" fill="#CFE4D2" stroke="#A9CBB2"/>
+    <circle cx="680" cy="646" r="18" fill="#9CC6A5"/>
+    <circle cx="740" cy="686" r="14" fill="#9CC6A5"/>
+    <circle cx="810" cy="646" r="20" fill="#9CC6A5"/>
+    <circle cx="890" cy="686" r="15" fill="#9CC6A5"/>
+    <circle cx="960" cy="646" r="18" fill="#9CC6A5"/>
+    <circle cx="1040" cy="686" r="16" fill="#9CC6A5"/>
+    <text x="865" y="622" font-size="15" font-weight="bold" fill="#3F6B4C" text-anchor="middle" letter-spacing="3">CENTRAL GREEN PARK</text>
+  </g>
+
+  <!-- Commercial strip (below road, left) -->
+  <g>
+    <rect x="110" y="604" width="400" height="116" rx="10" fill="#FFFFFF" stroke="#D4A843" stroke-width="2"/>
+    <rect x="110" y="604" width="400" height="14" rx="10" fill="#D4A843"/>
+    <text x="310" y="668" font-size="15" font-weight="bold" fill="#0F1A2C" text-anchor="middle" letter-spacing="3">RETAIL BOULEVARD</text>
+    <text x="310" y="694" font-size="12" fill="#8A8578" text-anchor="middle">Shops · Restaurants · Services</text>
+  </g>
+
+  <!-- Entrance -->
+  <g>
+    <circle cx="568" cy="740" r="16" fill="#D4A843"/>
+    <path d="M560 740h16M568 732v16" stroke="#0F1A2C" stroke-width="3"/>
+    <text x="600" y="746" font-size="13" font-weight="bold" fill="#0F1A2C">MAIN ENTRANCE</text>
+  </g>
+
+  <!-- North arrow -->
+  <g transform="translate(1120,700)">
+    <circle r="26" fill="#FFFFFF" stroke="#D4A843" stroke-width="2"/>
+    <path d="M0 -16 L7 8 L0 2 L-7 8 Z" fill="#0F1A2C"/>
+    <text x="0" y="-30" font-size="12" font-weight="bold" fill="#0F1A2C" text-anchor="middle">N</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="60" y="775" font-size="13" fill="#A9A495">GHAYA REAL ESTATE · indicative site layout · not to scale</text>
+</svg>

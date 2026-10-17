@@ -1,0 +1,90 @@
+{
+  "expo": {
+    "name": "GHAYA",
+    "slug": "ghaya-estate",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "ghaya",
+    "userInterfaceStyle": "automatic",
+    "primaryColor": "#D4A843",
+    "ios": {
+      "bundleIdentifier": "eg.estateai.ghaya",
+      "icon": "./assets/expo.icon",
+      "supportsTablet": true,
+      "infoPlist": {
+        "CFBundleDisplayName": "GHAYA",
+        "NSFaceIDUsageDescription": "Lock GHAYA with Face ID (قفل غيّا بالبصمة): protects your signed-in session on this device.",
+        "NSMicrophoneUsageDescription": "Voice search (بحث صوتي): the microphone captures your question for Ayn. Your words land in the chat box for review.",
+        "NSSpeechRecognitionUsageDescription": "Voice search (بحث صوتي): your speech is transcribed into text for Ayn."
+      }
+    },
+    "android": {
+      "package": "eg.estateai.ghaya",
+      "predictiveBackGestureEnabled": false,
+      "adaptiveIcon": {
+        "backgroundColor": "#080E1A",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "__PASTE_GOOGLE_MAPS_ANDROID_KEY_HERE__"
+        }
+      }
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#080E1A",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 140
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Lock GHAYA with Face ID (قفل غيّا بالبصمة): protects your signed-in session on this device."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#D4A843",
+          "defaultChannel": "default"
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Voice search (بحث صوتي): the microphone captures your question for Ayn. Your words land in the chat box for review.",
+          "speechRecognitionPermission": "Voice search (بحث صوتي): your speech is transcribed into text for Ayn."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "enableSceneSupport": true
+          }
+        }
+      ],
+      "expo-video",
+      "expo-audio",
+      "expo-asset",
+      "expo-speech-recognition"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

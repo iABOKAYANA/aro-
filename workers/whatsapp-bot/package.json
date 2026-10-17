@@ -1,0 +1,17 @@
+{
+  "name": "ghaya-whatsapp-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Isolated WhatsApp listener scaffold (Baileys). Read-only: forwards monitored group messages to the backend ingest API. Not part of the Next.js build.",
+  "type": "module",
+  "scripts": {
+    "start": "node index.mjs"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.0",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

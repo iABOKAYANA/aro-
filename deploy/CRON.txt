@@ -1,0 +1,5 @@
+# GHAYA Estate — cron table. Install with `crontab -e`, paste the line below.
+# Runs daily at 03:00 server time (Africa/Cairo = set TZ via `timedatectl set-timezone Africa/Cairo`).
+# Logs to ~/GHAYA_backups/backup.log. Assumes the app checkout at /opt/ghaya.
+
+0 3 * * * GHAYA_APP_DIR=/opt/ghaya /bin/bash /opt/ghaya/deploy/backup-cron.sh

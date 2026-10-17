@@ -1,0 +1,654 @@
+{
+  "ranAt": "2026-10-14T05:34:23.731Z",
+  "changed": [
+    {
+      "path": "public/images/uploads/1791172367180-d44bb2cc.png",
+      "before": 8154313,
+      "after": 5698923,
+      "dimensions": "2256x1694→1920x1442"
+    },
+    {
+      "path": "public/images/uploads/1791172474933-9f377d23.jpg",
+      "before": 6055432,
+      "after": 495277,
+      "dimensions": "2457x3875→1217x1920"
+    },
+    {
+      "path": "public/images/uploads/1791172515783-82a77ad4.jpg",
+      "before": 8893308,
+      "after": 434389,
+      "dimensions": "8000x3648→1920x876"
+    },
+    {
+      "path": "public/images/uploads/1791172534883-3202f9ee.jpg",
+      "before": 11727341,
+      "after": 520158,
+      "dimensions": "4966x7025→1357x1920"
+    },
+    {
+      "path": "public/images/uploads/1791172535336-49eba17a.jpg",
+      "before": 11727341,
+      "after": 520158,
+      "dimensions": "4966x7025→1357x1920"
+    },
+    {
+      "path": "public/images/uploads/1791172598070-204b8aae.jpg",
+      "before": 5350712,
+      "after": 630540,
+      "dimensions": "8035x6177→1920x1476"
+    },
+    {
+      "path": "public/images/uploads/1791172604269-f587bfa3.jpg",
+      "before": 14060030,
+      "after": 737994,
+      "dimensions": "6508x8730→1431x1920"
+    },
+    {
+      "path": "public/images/uploads/1791173112990-dc62bffd.jpg",
+      "before": 7441769,
+      "after": 686083,
+      "dimensions": "6156x5218→1920x1627"
+    },
+    {
+      "path": "public/images/uploads/1791173113060-08c9673c.jpg",
+      "before": 6935545,
+      "after": 678261,
+      "dimensions": "4967x7022→1358x1920"
+    },
+    {
+      "path": "public/images/uploads/1791173125031-21c9d2fd.jpg",
+      "before": 5474895,
+      "after": 729956,
+      "dimensions": "4474x4721→1820x1920"
+    },
+    {
+      "path": "public/images/uploads/1791173133030-8707b93c.jpg",
+      "before": 7044194,
+      "after": 395763,
+      "dimensions": "4961x3508→1920x1358"
+    },
+    {
+      "path": "public/images/uploads/1791173144682-0ee2923e.jpg",
+      "before": 11874568,
+      "after": 735735,
+      "dimensions": "7335x9108→1546x1920"
+    },
+    {
+      "path": "public/images/uploads/1791173144922-1ec3cb85.jpg",
+      "before": 6652700,
+      "after": 653369,
+      "dimensions": "6022x4252→1920x1356"
+    },
+    {
+      "path": "public/images/uploads/1791173170196-69485478.jpg",
+      "before": 7883034,
+      "after": 684798,
+      "dimensions": "7460x5287→1920x1360"
+    },
+    {
+      "path": "public/images/uploads/1791173173268-798ccaab.jpg",
+      "before": 6470659,
+      "after": 613984,
+      "dimensions": "5906x6635→1709x1920"
+    },
+    {
+      "path": "public/images/uploads/1791173195098-f13c6938.jpg",
+      "before": 7663219,
+      "after": 838176,
+      "dimensions": "3130x3130→1920x1920"
+    },
+    {
+      "path": "public/images/uploads/1791173215109-388ecd8f.jpg",
+      "before": 14561364,
+      "after": 338429,
+      "dimensions": "11767x4123→1920x672"
+    },
+    {
+      "path": "public/images/uploads/1791173229466-7d6f7e18.jpg",
+      "before": 8310173,
+      "after": 732755,
+      "dimensions": "4167x2500→1920x1152"
+    },
+    {
+      "path": "public/images/uploads/1791173242401-ff57f651.jpg",
+      "before": 8957870,
+      "after": 798503,
+      "dimensions": "4691x5914→1523x1920"
+    },
+    {
+      "path": "public/images/uploads/1791173263417-b534a991.png",
+      "before": 8635801,
+      "after": 4026934,
+      "dimensions": "2758x1551→1920x1080"
+    },
+    {
+      "path": "public/images/uploads/1791173264294-e446a29f.jpg",
+      "before": 6927185,
+      "after": 729367,
+      "dimensions": "6113x5067→1920x1591"
+    },
+    {
+      "path": "public/images/uploads/1791173270284-16a81578.jpg",
+      "before": 5350712,
+      "after": 630540,
+      "dimensions": "8035x6177→1920x1476"
+    },
+    {
+      "path": "public/images/uploads/1791173274934-c17b51d2.png",
+      "before": 9352838,
+      "after": 3323514,
+      "dimensions": "3360x1471→1920x841"
+    },
+    {
+      "path": "public/images/uploads/1791173278187-1e57b969.png",
+      "before": 9855029,
+      "after": 3350057,
+      "dimensions": "3360x2100→1920x1200"
+    },
+    {
+      "path": "public/images/uploads/1791173293130-00ea58de.jpg",
+      "before": 10221312,
+      "after": 450877,
+      "dimensions": "4961x3508→1920x1358"
+    },
+    {
+      "path": "public/images/uploads/1791173301810-a46b6e1e.jpg",
+      "before": 5829436,
+      "after": 659471,
+      "dimensions": "4134x2836→1920x1317"
+    },
+    {
+      "path": "public/images/uploads/1791173305405-53352013.jpg",
+      "before": 5401005,
+      "after": 433227,
+      "dimensions": "5906x3536→1920x1150"
+    },
+    {
+      "path": "public/images/uploads/1791173321165-cfa3cdfe.jpg",
+      "before": 10749511,
+      "after": 582038,
+      "dimensions": "4921x3445→1920x1344"
+    },
+    {
+      "path": "public/images/uploads/1791173381982-784b23c9.jpg",
+      "before": 11867784,
+      "after": 783269,
+      "dimensions": "7495x8443→1704x1920"
+    },
+    {
+      "path": "public/images/uploads/1791173382339-f8f86456.jpg",
+      "before": 7576236,
+      "after": 493928,
+      "dimensions": "4898x3063→1920x1201"
+    },
+    {
+      "path": "public/images/uploads/1791173384721-f0e66d2f.png",
+      "before": 11298135,
+      "after": 4925417,
+      "dimensions": "2976x2083→1920x1344"
+    },
+    {
+      "path": "public/images/uploads/1791173438147-c348634c.jpg",
+      "before": 5592689,
+      "after": 496567,
+      "dimensions": "3793x3509→1920x1776"
+    },
+    {
+      "path": "public/images/uploads/1791173440976-a37c365b.jpg",
+      "before": 7171432,
+      "after": 602709,
+      "dimensions": "3762x2250→1920x1148"
+    },
+    {
+      "path": "public/images/uploads/1791173445707-ba602b2a.jpg",
+      "before": 8664979,
+      "after": 318046,
+      "dimensions": "5906x2363→1920x768"
+    },
+    {
+      "path": "public/images/uploads/1791173465887-1322c4da.jpg",
+      "before": 10277796,
+      "after": 389262,
+      "dimensions": "7087x4016→1920x1088"
+    },
+    {
+      "path": "public/images/uploads/1791173495409-51840cc9.jpg",
+      "before": 9106026,
+      "after": 529671,
+      "dimensions": "3337x4725→1356x1920"
+    },
+    {
+      "path": "public/images/uploads/1791173496995-b705daff.jpg",
+      "before": 6822998,
+      "after": 546243,
+      "dimensions": "3544x1772→1920x960"
+    },
+    {
+      "path": "public/images/uploads/1791173497714-054aaf1f.jpg",
+      "before": 9445077,
+      "after": 568995,
+      "dimensions": "9042x7482→1920x1589"
+    },
+    {
+      "path": "public/images/uploads/1791173529724-f3af5b35.jpg",
+      "before": 7248441,
+      "after": 642677,
+      "dimensions": "3750x3750→1920x1920"
+    },
+    {
+      "path": "public/images/uploads/1791173536322-098f0afd.jpg",
+      "before": 8346395,
+      "after": 823200,
+      "dimensions": "4197x3389→1920x1550"
+    },
+    {
+      "path": "public/images/uploads/1791173567659-e710c65a.jpg",
+      "before": 15490873,
+      "after": 326690,
+      "dimensions": "9375x3750→1920x768"
+    },
+    {
+      "path": "public/images/uploads/1791173576248-3c438f75.jpg",
+      "before": 13338527,
+      "after": 508725,
+      "dimensions": "4252x6024→1355x1920"
+    },
+    {
+      "path": "public/images/uploads/1791173598707-0daa6aac.jpg",
+      "before": 7171432,
+      "after": 602709,
+      "dimensions": "3762x2250→1920x1148"
+    },
+    {
+      "path": "public/images/uploads/1791173613406-ae98cd77.jpg",
+      "before": 9876058,
+      "after": 550891,
+      "dimensions": "4967x3508→1920x1356"
+    },
+    {
+      "path": "public/images/uploads/1791173633316-9ccfcce8.jpg",
+      "before": 10140802,
+      "after": 572515,
+      "dimensions": "12256x9914→1920x1553"
+    },
+    {
+      "path": "public/images/uploads/1791173652388-732a7acd.png",
+      "before": 12185187,
+      "after": 4893585,
+      "dimensions": "3080x1896→1920x1182"
+    },
+    {
+      "path": "public/images/uploads/1791173658481-7124d9df.png",
+      "before": 8923871,
+      "after": 2875074,
+      "dimensions": "3360x2100→1920x1200"
+    },
+    {
+      "path": "public/images/uploads/1791173659134-2e4e1aad.jpg",
+      "before": 12464384,
+      "after": 680187,
+      "dimensions": "7569x6365→1920x1615"
+    },
+    {
+      "path": "public/images/uploads/1791173669680-ba3b6cc0.jpg",
+      "before": 12489825,
+      "after": 1041079,
+      "dimensions": "3544x3553→1915x1920"
+    },
+    {
+      "path": "public/images/uploads/1791173671014-ef072a71.jpg",
+      "before": 11452745,
+      "after": 523018,
+      "dimensions": "7022x4967→1920x1358"
+    },
+    {
+      "path": "public/images/uploads/1791413685631-79605c8c.jpg",
+      "before": 13351943,
+      "after": 570254,
+      "dimensions": "5993x4221→1920x1352"
+    },
+    {
+      "path": "public/images/uploads/1791413690301-fed7519f.jpg",
+      "before": 7441769,
+      "after": 686083,
+      "dimensions": "6156x5218→1920x1627"
+    },
+    {
+      "path": "public/images/uploads/1791413757618-fd391b87.jpg",
+      "before": 6935545,
+      "after": 678261,
+      "dimensions": "4967x7022→1358x1920"
+    },
+    {
+      "path": "public/images/uploads/1791413772091-fd7e9fa6.jpg",
+      "before": 7044194,
+      "after": 395763,
+      "dimensions": "4961x3508→1920x1358"
+    },
+    {
+      "path": "public/images/uploads/1791413775311-67c40837.jpg",
+      "before": 5474895,
+      "after": 729956,
+      "dimensions": "4474x4721→1820x1920"
+    },
+    {
+      "path": "public/images/uploads/1791413805197-07a95818.jpg",
+      "before": 11874568,
+      "after": 735735,
+      "dimensions": "7335x9108→1546x1920"
+    },
+    {
+      "path": "public/images/uploads/1791413829920-97510c93.jpg",
+      "before": 6652700,
+      "after": 653369,
+      "dimensions": "6022x4252→1920x1356"
+    },
+    {
+      "path": "public/images/uploads/1791413880638-f917a1e9.png",
+      "before": 8154313,
+      "after": 5698923,
+      "dimensions": "2256x1694→1920x1442"
+    },
+    {
+      "path": "public/images/uploads/1791413907917-88bc2b8c.jpg",
+      "before": 9772473,
+      "after": 738753,
+      "dimensions": "5906x5669→1920x1843"
+    },
+    {
+      "path": "public/images/uploads/1791413911872-6684a03c.jpg",
+      "before": 6470659,
+      "after": 613984,
+      "dimensions": "5906x6635→1709x1920"
+    },
+    {
+      "path": "public/images/uploads/1791413929499-c881d9ac.jpg",
+      "before": 14189850,
+      "after": 514714,
+      "dimensions": "12431x10276→1920x1588"
+    },
+    {
+      "path": "public/images/uploads/1791413935574-f4a51fcd.jpg",
+      "before": 7883034,
+      "after": 684798,
+      "dimensions": "7460x5287→1920x1360"
+    },
+    {
+      "path": "public/images/uploads/1791413952380-aaee9dbe.jpg",
+      "before": 13960478,
+      "after": 392359,
+      "dimensions": "3977x6898→1920x1107"
+    },
+    {
+      "path": "public/images/uploads/1791413957560-72547c43.jpg",
+      "before": 15490873,
+      "after": 326690,
+      "dimensions": "9375x3750→1920x768"
+    },
+    {
+      "path": "public/images/uploads/1791413987913-bad50ecc.jpg",
+      "before": 7663219,
+      "after": 838176,
+      "dimensions": "3130x3130→1920x1920"
+    },
+    {
+      "path": "public/images/uploads/1791414028865-cc746ec3.jpg",
+      "before": 13338527,
+      "after": 508725,
+      "dimensions": "4252x6024→1355x1920"
+    },
+    {
+      "path": "public/images/uploads/1791414047579-9145dfca.jpg",
+      "before": 14561364,
+      "after": 338429,
+      "dimensions": "11767x4123→1920x672"
+    },
+    {
+      "path": "public/images/uploads/1791414078546-8e572221.jpg",
+      "before": 10140802,
+      "after": 572515,
+      "dimensions": "12256x9914→1920x1553"
+    },
+    {
+      "path": "public/images/uploads/1791414129009-ff6c5334.jpg",
+      "before": 8310173,
+      "after": 732755,
+      "dimensions": "4167x2500→1920x1152"
+    },
+    {
+      "path": "public/images/uploads/1791414167442-aa656a88.jpg",
+      "before": 8957870,
+      "after": 798503,
+      "dimensions": "4691x5914→1523x1920"
+    },
+    {
+      "path": "public/images/uploads/1791414193262-cfec0188.jpg",
+      "before": 14170268,
+      "after": 253314,
+      "dimensions": "7263x14042→993x1920"
+    },
+    {
+      "path": "public/images/uploads/1791414248797-538c025c.jpg",
+      "before": 6927185,
+      "after": 729367,
+      "dimensions": "6113x5067→1920x1591"
+    },
+    {
+      "path": "public/images/uploads/1791414259647-a6693bce.png",
+      "before": 8635801,
+      "after": 4026934,
+      "dimensions": "2758x1551→1920x1080"
+    },
+    {
+      "path": "public/images/uploads/1791414270873-7e7b06d8.png",
+      "before": 12185187,
+      "after": 4893585,
+      "dimensions": "3080x1896→1920x1182"
+    },
+    {
+      "path": "public/images/uploads/1791414274656-ae7a0eda.jpg",
+      "before": 5350712,
+      "after": 630540,
+      "dimensions": "8035x6177→1920x1476"
+    },
+    {
+      "path": "public/images/uploads/1791414291564-0cd387a0.png",
+      "before": 9352838,
+      "after": 3323514,
+      "dimensions": "3360x1471→1920x841"
+    },
+    {
+      "path": "public/images/uploads/1791414297653-13524185.png",
+      "before": 9855029,
+      "after": 3350057,
+      "dimensions": "3360x2100→1920x1200"
+    },
+    {
+      "path": "public/images/uploads/1791414325957-3e79d82b.png",
+      "before": 8923871,
+      "after": 2875074,
+      "dimensions": "3360x2100→1920x1200"
+    },
+    {
+      "path": "public/images/uploads/1791414340027-950af385.jpg",
+      "before": 10221312,
+      "after": 450877,
+      "dimensions": "4961x3508→1920x1358"
+    },
+    {
+      "path": "public/images/uploads/1791414380361-e67ed10c.jpg",
+      "before": 5829436,
+      "after": 659471,
+      "dimensions": "4134x2836→1920x1317"
+    },
+    {
+      "path": "public/images/uploads/1791414394420-b6e0a606.png",
+      "before": 10217694,
+      "after": 3455242,
+      "dimensions": "3314x1336→1920x774"
+    },
+    {
+      "path": "public/images/uploads/1791414410824-16a99755.jpg",
+      "before": 5401005,
+      "after": 433227,
+      "dimensions": "5906x3536→1920x1150"
+    },
+    {
+      "path": "public/images/uploads/1791414450799-f0f19070.jpg",
+      "before": 10749511,
+      "after": 582038,
+      "dimensions": "4921x3445→1920x1344"
+    },
+    {
+      "path": "public/images/uploads/1791414486082-0c581d86.jpg",
+      "before": 11727341,
+      "after": 520158,
+      "dimensions": "4966x7025→1357x1920"
+    },
+    {
+      "path": "public/images/uploads/1791414549747-274052a2.jpg",
+      "before": 12464384,
+      "after": 680187,
+      "dimensions": "7569x6365→1920x1615"
+    },
+    {
+      "path": "public/images/uploads/1791414556605-50ef5711.jpg",
+      "before": 10733940,
+      "after": 662862,
+      "dimensions": "5906x4134→1920x1344"
+    },
+    {
+      "path": "public/images/uploads/1791414647302-b4de0949.jpg",
+      "before": 7171432,
+      "after": 602709,
+      "dimensions": "3762x2250→1920x1148"
+    },
+    {
+      "path": "public/images/uploads/1791414655965-bf3aea7d.jpg",
+      "before": 11867784,
+      "after": 783269,
+      "dimensions": "7495x8443→1704x1920"
+    },
+    {
+      "path": "public/images/uploads/1791414665909-f39e4640.png",
+      "before": 11298135,
+      "after": 4925417,
+      "dimensions": "2976x2083→1920x1344"
+    },
+    {
+      "path": "public/images/uploads/1791414669397-56338939.jpg",
+      "before": 7576236,
+      "after": 493928,
+      "dimensions": "4898x3063→1920x1201"
+    },
+    {
+      "path": "public/images/uploads/1791414895349-904e9783.jpg",
+      "before": 5592689,
+      "after": 496567,
+      "dimensions": "3793x3509→1920x1776"
+    },
+    {
+      "path": "public/images/uploads/1791414910867-8be87873.jpg",
+      "before": 7171432,
+      "after": 602709,
+      "dimensions": "3762x2250→1920x1148"
+    },
+    {
+      "path": "public/images/uploads/1791414925156-1de94eae.jpg",
+      "before": 8664979,
+      "after": 318046,
+      "dimensions": "5906x2363→1920x768"
+    },
+    {
+      "path": "public/images/uploads/1791414935575-40dcd336.jpg",
+      "before": 12489825,
+      "after": 1041079,
+      "dimensions": "3544x3553→1915x1920"
+    },
+    {
+      "path": "public/images/uploads/1791414971176-c9fdbe18.jpg",
+      "before": 10277796,
+      "after": 389262,
+      "dimensions": "7087x4016→1920x1088"
+    },
+    {
+      "path": "public/images/uploads/1791414976319-e82816cc.jpg",
+      "before": 11452745,
+      "after": 523018,
+      "dimensions": "7022x4967→1920x1358"
+    },
+    {
+      "path": "public/images/uploads/1791415007820-b4577b8f.jpg",
+      "before": 9876058,
+      "after": 550891,
+      "dimensions": "4967x3508→1920x1356"
+    },
+    {
+      "path": "public/images/uploads/1791415134627-ad6c072b.jpg",
+      "before": 9445077,
+      "after": 568995,
+      "dimensions": "9042x7482→1920x1589"
+    },
+    {
+      "path": "public/images/uploads/1791415154812-195aabd7.jpg",
+      "before": 9106026,
+      "after": 529671,
+      "dimensions": "3337x4725→1356x1920"
+    },
+    {
+      "path": "public/images/uploads/1791415159925-ba7a8474.jpg",
+      "before": 6822998,
+      "after": 546243,
+      "dimensions": "3544x1772→1920x960"
+    },
+    {
+      "path": "public/images/uploads/1791415183675-4ce1564a.jpg",
+      "before": 6055432,
+      "after": 495277,
+      "dimensions": "2457x3875→1217x1920"
+    },
+    {
+      "path": "public/images/uploads/1791415309804-2337d735.jpg",
+      "before": 7248441,
+      "after": 642677,
+      "dimensions": "3750x3750→1920x1920"
+    },
+    {
+      "path": "public/images/uploads/1791415378300-249e9cf4.jpg",
+      "before": 8346395,
+      "after": 823200,
+      "dimensions": "4197x3389→1920x1550"
+    },
+    {
+      "path": "public/images/uploads/1791415405733-37529030.jpg",
+      "before": 8893308,
+      "after": 434389,
+      "dimensions": "8000x3648→1920x876"
+    },
+    {
+      "path": "public/images/uploads/1791415462712-73ab142c.jpg",
+      "before": 11727341,
+      "after": 520158,
+      "dimensions": "4966x7025→1357x1920"
+    },
+    {
+      "path": "public/images/uploads/1791415474318-61771486.jpg",
+      "before": 11727341,
+      "after": 520158,
+      "dimensions": "4966x7025→1357x1920"
+    },
+    {
+      "path": "public/images/uploads/1791415762855-c00d7fbb.jpg",
+      "before": 14060030,
+      "after": 737994,
+      "dimensions": "6508x8730→1431x1920"
+    },
+    {
+      "path": "public/images/uploads/1791415780002-041f6991.jpg",
+      "before": 5350712,
+      "after": 630540,
+      "dimensions": "8035x6177→1920x1476"
+    }
+  ],
+  "skipped": []
+}
