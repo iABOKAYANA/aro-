@@ -164,7 +164,34 @@ export async function searchProjects(filters: PropertyFilterInput & { developer?
   } satisfies SearchResult<typeof items[number]>
 }
 
-export async function getProjectBySlug(slug: string) {
+/**
+ * Public project pages do not need to serialize thousands of live units.
+ * Keep the full inventory for APIs/console/Ayn, but optionally return one
+ * area-balanced representative per offered unitType for the public showcase.
+ */
+async function getRepresentativeProjectUnits(projectId: string) {
+  const where = { projectId, isSample: false, status: { in: ['AVAILABLE', 'Vacant'] } }
+  const groups = await db.unit.groupBy({ where, by: ['unitType'], _count: { id: true } })
+  const representatives = await Promise.all(groups.map(async (group) => {
+    const skip = Math.floor(Math.max(0, group._count.id - 1) / 2)
+    const [unit] = await db.unit.findMany({
+      where: { ...where, unitType: group.unitType },
+      orderBy: [{ area: 'asc' }, { price: 'asc' }],
+      skip,
+      take: 1,
+      include: { phase: { select: { name: true } } },
+    })
+    return unit
+  }))
+  const samples = await db.unit.findMany({
+    where: { projectId, isSample: true },
+    orderBy: { price: 'asc' },
+    include: { phase: { select: { name: true } } },
+  })
+  return [...samples, ...representatives.filter(Boolean)]
+}
+
+export async function getProjectBySlug(slug: string, options: { representativeUnits?: boolean } = {}) {
   const project = await db.project.findUnique({
     where: { slug },
     include: {
@@ -172,14 +199,13 @@ export async function getProjectBySlug(slug: string) {
       governorate: true,
       city: true,
       district: true,
-      // Project detail keeps ALL rows (isSample included) — the client
-      // splits showcase samples into the models section vs listed inventory.
-      units: {
-        orderBy: { price: 'asc' },
-        include: {
-          phase: { select: { name: true } },
+      // Replaced below with one representative per type when requested.
+      ...(options.representativeUnits ? {} : {
+        units: {
+          orderBy: { price: 'asc' as const },
+          include: { phase: { select: { name: true } } },
         },
-      },
+      }),
       phases: {
         orderBy: { sortOrder: 'asc' },
       },
@@ -195,6 +221,14 @@ export async function getProjectBySlug(slug: string) {
     },
   })
   if (!project) return null
+  if (options.representativeUnits) {
+    return {
+      ...project,
+      units: await getRepresentativeProjectUnits(project.id),
+      overview: project.description ?? null,
+      overviewAr: project.descriptionArabic ?? null,
+    }
+  }
   // Mobile contract aliases: `overview` (EN) is the existing `description`
   // column; `overviewAr` (AR, may be null) is the existing
   // `descriptionArabic` column — no new column, values stay null until the

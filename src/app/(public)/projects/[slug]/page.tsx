@@ -30,7 +30,7 @@ async function listingArea(projectId: string): Promise<AreaRange | null> {
 }
 
 export async function generateMetadata({ params }: ProjectPageProps): Promise<Metadata> {
-  const project = await getProjectBySlug(params.slug)
+  const project = await getProjectBySlug(params.slug, { representativeUnits: true })
   // Hidden/unapproved projects stay invisible (same 404 as missing) and
   // never leak metadata to crawlers.
   if (!project || !isPublicProject(project)) return { title: 'Project Not Found', robots: { index: false, follow: false } }
@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: ProjectPageProps): Promise<Me
 }
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
-  const project = await getProjectBySlug(params.slug)
+  const project = await getProjectBySlug(params.slug, { representativeUnits: true })
   // Non-approved projects are invisible to the public (same 404 as missing).
   if (!project || !isPublicProject(project)) notFound()
   // Per-type buyable-inventory summary for the available-units section —
