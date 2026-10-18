@@ -593,6 +593,68 @@ Brief and sharp (max ~10 sentences). Never use names or numbers outside these re
   return null
 }
 
+// Consultation questions stay deterministic in CONTENT (the slot decision
+// and the exact question text are system-owned — the gate counts them from
+// plain history), but the DELIVERY becomes a consultative discussion: the
+// model drafts 2-4 engaged sentences — acknowledging what the client
+// actually said, with real market color when a place is in play — and MUST
+// end with the exact canned question verbatim. Any failure → the plain
+// question, so discovery never stalls on the model.
+async function consultativeWrap(
+  question: { slot: string; content: string },
+  history: Array<{ role: string; content: string }>,
+  lang: 'ar' | 'en',
+  lastUserText: string,
+  track?: FallbackTrack,
+): Promise<string> {
+  // Real market color ONLY when the client already named a place.
+  let market = ''
+  try {
+    const f = parseNaturalLanguageQuery(lastUserText).filters as Record<string, unknown>
+    const place = String(f.city || f.governorate || '')
+    const stats = place ? await areaStats(place) : null
+    if (stats) {
+      market = JSON.stringify({
+        area: stats.place,
+        publicProjects: stats.projectsCount,
+        activeDevelopers: stats.developersCount,
+        startsFrom: stats.minStart,
+        averageStart: stats.avgStart,
+        byType: stats.byType.slice(0, 4),
+      })
+    }
+  } catch {
+    /* market study is a bonus — never a dependency */
+  }
+
+  const ask =
+    lang === 'ar'
+      ? `آخر رسالة من العميل: "${lastUserText}"
+دراسة سوق حقيقية من قاعدة بياناتنا — دي الأرقام الوحيدة المسموحة: ${market || 'مفيش أرقام معاك — ممنوع تمامًا تذكر أي رقم'}
+اتكلم بلسان مستشار عقاري مصري خبير، في 2-4 جمل بس:
+- اتعامل مع اللي قاله بفهم حقيقي مش مجاملة (لو حدد مكان أو نوع أو غرض، قول رأيك الصريح فيه بسرعة).
+- الأرقام المسموحة هي اللي في الدراسة أعلاه بالحرف فقط. ممنوع أي رقم تاني، وممنوع تسمّي أي مشروع (المشروعات بتيجي بعد ما نخلص الأسئلة).
+- آخر جملة في ردك لازم تكون السؤال ده حرفيًا من غير أي تغيير: ${question.content}`
+      : `The client's last message: "${lastUserText}"
+Real market study from our database — the ONLY numbers allowed: ${market || 'none — you know no numbers, inventing any is forbidden'}
+Speak as an expert Egyptian real-estate consultant, in 2-4 sentences only:
+- Engage with what they said with genuine understanding, not flattery (if they named a place/type/purpose, give your quick honest take).
+- Numbers only from the study above, verbatim. No other figures, NO project names (projects come after discovery).
+- The LAST sentence of your reply must be this question verbatim, unchanged: ${question.content}`
+  try {
+    const { response, provider } = await chatOnce(
+      [...history.slice(-6).map((m) => ({ role: (m.role === 'tool' ? 'assistant' : m.role) as OllamaMessage['role'], content: m.content })), { role: 'user', content: ask }],
+      undefined,
+    )
+    if (provider === 'local') track && (track.fellBack = true)
+    const text = (response.message?.content || '').trim()
+    if (text.includes(question.content) && text.length <= 1000 && !replyNeedsRepair(text, lang)) return text
+  } catch {
+    /* fall through to the plain question */
+  }
+  return question.content
+}
+
 async function runForcedSearch(
   mergedQuery: string,
   lang: 'ar' | 'en',
@@ -735,13 +797,22 @@ async function prepareLLMRequest(
   // listing-turn logic so "عايز أعرف عن مشروع سيليا" resolves to project
   // facts instead of a catalog dump. Returns null for COMPARISON/GENERAL
   // and unknown project names → existing flow below is untouched.
+  // Ongoing-consultation guard: once Ayn has recommended (assistant history
+  // carries project links), a client pushback like "غالي، عندك أرخص قريب؟"
+  // must go to the consultative model path (client state + market study +
+  // search tools) — NOT the global-cheapest/global-best shortcut, which
+  // ignores the client's profile, area and type entirely. Standalone
+  // questions with no prior recommendations still hit the shortcuts.
+  const inConsultation = conversationHistory
+    .slice(-6)
+    .some((m) => m.role === 'assistant' && m.content.includes('/projects/'))
   const siteKind = classifySiteIntent(currentMessage)
   if (
     siteKind === 'GREETING' ||
     siteKind === 'WHERE_AREAS' ||
     siteKind === 'DEVELOPERS' ||
-    siteKind === 'CHEAPEST' ||
-    siteKind === 'BEST' ||
+    (siteKind === 'CHEAPEST' && !inConsultation) ||
+    (siteKind === 'BEST' && !inConsultation) ||
     siteKind === 'HOW_TO_BOOK' ||
     siteKind === 'CALCULATOR' ||
     siteKind === 'ABOUT_SITE' ||
@@ -785,13 +856,17 @@ async function prepareLLMRequest(
       if (countConsultQuestions(assistantTexts) < CONSULT_MAX_QUESTIONS) {
         const q = nextConsultQuestion(needs, lang, askedConsultSlots(assistantTexts))
         if (q) {
+          // The question stays system-owned; the delivery becomes a real
+          // consultative discussion (falls back to the plain question).
+          const trackWrap: FallbackTrack = { fellBack: false }
+          const wrapped = await consultativeWrap(q, conversationHistory, lang, currentMessage, trackWrap)
           return {
             lang,
             grounded: {
-              content: q.content,
-              blocks: [{ type: 'text', content: q.content }],
+              content: wrapped,
+              blocks: [{ type: 'text', content: wrapped }],
               toolCallsMade: [],
-              provider: 'grounded',
+              provider: servedProvider(trackWrap),
             },
             messages: [],
             mergedQuery,
