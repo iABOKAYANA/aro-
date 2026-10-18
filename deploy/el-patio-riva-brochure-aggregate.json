@@ -1,0 +1,15 @@
+{
+  "source": "Owner-supplied El Patio Riva brochure",
+  "projectSlug": "1761-el-patio-riva",
+  "sold": ["1 BR Penthouse · 85 sqm · 60 sqm outdoor roof"],
+  "phase": "Newly launched building · delivery 3.5 years",
+  "terms": "Delivery 3.5 years · payment: 5% + 2.5% after 3 months + 2.5% after 6 months over 8 years · up to 10 years with 6% interest per extra year · semi-finished · finishing option 15,000 EGP per meter · installments till delivery · maintenance 8% · underground parking 450,000 EGP",
+  "groups": [
+    { "type": "2 BR Typical Floor", "unitType": "APARTMENT", "bedrooms": 2, "area": 125, "areaMax": 137, "price": 8700000, "priceMax": 10400000 },
+    { "type": "2 BR Ground Floor", "unitType": "APARTMENT", "bedrooms": 2, "area": 112, "areaMax": 137, "gardenArea": 16, "gardenAreaMax": 50, "price": 9100000, "priceMax": 11600000 },
+    { "type": "2 BR Penthouse", "unitType": "PENTHOUSE", "bedrooms": 2, "area": 125, "areaMax": 137, "roofArea": 70, "price": 10400000, "priceMax": 13000000 },
+    { "type": "3 BR Typical Floor", "unitType": "APARTMENT", "bedrooms": 3, "area": 156, "areaMax": 212, "price": 11200000, "priceMax": 16600000 },
+    { "type": "3 BR Ground Floor", "unitType": "APARTMENT", "bedrooms": 3, "area": 156, "areaMax": 176, "gardenArea": 10, "gardenAreaMax": 50, "price": 11800000, "priceMax": 14600000 },
+    { "type": "3 BR Penthouse", "unitType": "PENTHOUSE", "bedrooms": 3, "area": 156, "areaMax": 208, "roofArea": 100, "price": 13300000, "priceMax": 19800000 }
+  ]
+}
