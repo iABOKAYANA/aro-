@@ -18,7 +18,7 @@ import { formatEGP, formatSQM } from '@/lib/utils'
 import { CompareToggle } from '@/lib/compare'
 import { coverChain, landmarkForCity } from '@/lib/landmarks'
 import { useLanguage } from '@/lib/language-context'
-import type { UnitsByTypeRow } from '@/lib/units-by-type'
+import { unitCategoryRows, type UnitsByTypeRow } from '@/lib/units-by-type'
 import { Reveal, SectionHeader, useParallax } from '@/components/design'
 import { UnitCard } from '@/components/units/unit-card'
 // Booking modal (533-line form + next-auth) splits into its own chunk; the
@@ -42,7 +42,7 @@ interface ProjectDetailProps {
   // Server-computed per-type inventory summary (same helper + semantics as
   // GET /api/projects/[slug]). Optional so other callers (developer preview)
   // keep working — the client falls back to grouping the loaded units.
-  unitsByType?: UnitsByTypeRow[]
+  unitsByType?: UnitsByTypeRow[] // legacy shape (mobile/API contract) — unused by the units tab now
 }
 
 // Reviews summary for the sidebar proof line, the payment-tab summary, and
@@ -351,7 +351,7 @@ function ShowcasePhoto({ photo, cover, landmark, name }: { photo?: string | null
   )
 }
 
-export function ProjectDetail({ project, unitsByType }: ProjectDetailProps) {
+export function ProjectDetail({ project }: ProjectDetailProps) {
   const { lang, dir } = useLanguage()
   const ar = lang === 'ar'
   const [showPhone, setShowPhone] = useState(false)
@@ -455,29 +455,17 @@ export function ProjectDetail({ project, unitsByType }: ProjectDetailProps) {
   // (AVAILABLE + legacy 'Vacant' — same rule the CEO project page uses).
   const listedCount = listedUnits.length
   const availableCount = listedUnits.filter((u) => u?.status === 'AVAILABLE' || u?.status === 'Vacant').length
-  // Per-type buyable-inventory summary for the units tab. The server prop is
-  // authoritative when present; otherwise group the already-loaded units with
-  // the same buyable rule (non-sample, AVAILABLE/Vacant) — no extra fetch.
-  const clientTypeRows: UnitsByTypeRow[] = (() => {
-    const byType = new Map<string, UnitsByTypeRow>()
-    for (const u of listedUnits) {
-      if (u?.status !== 'AVAILABLE' && u?.status !== 'Vacant') continue
-      const type = String(u?.unitType ?? '')
-      if (!type) continue
-      const row = byType.get(type) ?? { type, count: 0, startingPrice: null, minArea: null, maxArea: null }
-      row.count += 1
-      if (typeof u?.price === 'number') {
-        row.startingPrice = row.startingPrice === null ? u.price : Math.min(row.startingPrice, u.price)
-      }
-      if (typeof u?.area === 'number') {
-        row.minArea = row.minArea === null ? u.area : Math.min(row.minArea, u.area)
-        row.maxArea = row.maxArea === null ? u.area : Math.max(row.maxArea, u.area)
-      }
-      byType.set(type, row)
-    }
-    return [...byType.values()].sort((a, b) => a.type.localeCompare(b.type))
-  })()
-  const typeRows = unitsByType ?? clientTypeRows
+  // Per-TYPE buyable-inventory summary (old server prop shape, kept for the
+  // mobile/API contract) is no longer what the units tab renders — the tab
+  // now shows ONE summary row per offered category (1BR/2BR/3BR/4BR/5BR+/
+  // بناني/شاليه/…) computed from the loaded units with the same buyable
+  // rule, so a 500-unit compound reads as a short type list, not a flood of
+  // unit cards. Individual unit cards only render for small inventories.
+  const categoryRows = unitCategoryRows(listedUnits)
+  // Individual cards only for SMALL inventories (at most 12) — big compounds
+  // (500+ units) read as the category summary alone, never a flood of cards,
+  // and never a cheapest-12 skew (buyable inventory is price-ascending).
+  const showUnitCards = listedUnits.length > 0 && listedUnits.length <= 12
   // Highest cash-discount percent across the project's payment plans (the
   // "up to X%" headline for the payment tab) — null when no plan discounts.
   const maxPlanDiscount = (() => {
@@ -781,59 +769,50 @@ export function ProjectDetail({ project, unitsByType }: ProjectDetailProps) {
             </TabsContent>
 
             <TabsContent value="units">
-              {/* Per-type inventory summary: type label, starting price, area
-                  range, and buyable count — raw DB type values, both langs. */}
-              {typeRows.length > 0 && (
+              {/* ONE summary row per offered category: شقة غرفتين — المساحة
+                  الأولية — يبدأ من. Real aggregates only, no unit codes,
+                  no flood: a 500-unit compound reads as a short type list. */}
+              {categoryRows.length > 0 ? (
                 <div className="mb-4 grid gap-3 sm:grid-cols-2">
-                  {typeRows.map((row) => {
-                    const countLabel = ar
-                      ? row.count === 1
-                        ? 'وحدة واحدة'
-                        : row.count === 2
-                          ? 'وحدتين'
-                          : `${row.count} وحدات`
-                      : `${row.count} ${row.count === 1 ? 'unit' : 'units'}`
-                    const areaLabel =
-                      row.minArea === null || row.maxArea === null
-                        ? null
-                        : row.minArea === row.maxArea
-                          ? formatSQM(row.minArea)
-                          : ar
-                            ? `من ${formatSQM(row.minArea)} لـ ${formatSQM(row.maxArea)}`
-                            : `${formatSQM(row.minArea)} – ${formatSQM(row.maxArea)}`
-                    return (
-                      <div key={row.type} className="rounded-2xl border p-4">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="font-display font-semibold">{row.type.replace(/_/g, ' ')}</p>
-                          <Badge variant="secondary">{countLabel}</Badge>
-                        </div>
-                        <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                          {row.startingPrice !== null && (
-                            <p>
-                              {ar ? 'يبدأ من' : 'Starting from'}{' '}
-                              <span className="font-semibold text-estate-gold">{formatEGP(row.startingPrice)}</span>
-                            </p>
-                          )}
-                          {areaLabel && (
-                            <p>
-                              {ar ? 'المساحة: ' : 'Area: '}
-                              {areaLabel}
-                            </p>
-                          )}
-                        </div>
+                  {categoryRows.map((row) => (
+                    <div key={row.key} className="rounded-2xl border p-4">
+                      <p className="font-display font-semibold">
+                        {ar ? row.labelAr : row.labelEn}
+                      </p>
+                      <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+                        {row.minArea !== null && (
+                          <p>
+                            {ar ? 'المساحة الأولية: ' : 'Primary area: '}
+                            <span className="font-semibold text-foreground">{formatSQM(row.minArea)}</span>
+                          </p>
+                        )}
+                        {row.startingPrice !== null && (
+                          <p>
+                            {ar ? 'يبدأ من ' : 'Starting from '}
+                            <span className="font-semibold text-estate-gold">{formatEGP(row.startingPrice)}</span>
+                          </p>
+                        )}
                       </div>
-                    )
-                  })}
+                    </div>
+                  ))}
                 </div>
+              ) : (
+                <p className="py-4 text-center text-muted-foreground">
+                  {ar ? 'لسه مفيش وحدات معروضة.' : 'No units listed yet.'}
+                </p>
               )}
-              {listedUnits.length > 0 ? (
+              {showUnitCards ? (
                 <div className="grid gap-4 sm:grid-cols-2">
                   {listedUnits.map((unit: any) => (
                     <UnitCard key={unit.id} unit={unit} projectName={project.name} projectSlug={project.slug} projectCoverImage={project.coverImage} />
                   ))}
                 </div>
               ) : (
-                <p className="py-8 text-center text-muted-foreground">{ar ? 'لسه مفيش وحدات معروضة.' : 'No units listed yet.'}</p>
+                <p className="text-center text-xs text-muted-foreground">
+                  {ar
+                    ? `التفاصيل اللي فوق ملخصة من ${listedUnits.length} وحدة متاحة فعليًا — اسأل عين عن أي نوع أو مواصفة بالتحديد.`
+                    : `The summary above is drawn from ${listedUnits.length} live available units — ask Ayn for any exact unit or spec.`}
+                </p>
               )}
             </TabsContent>
 

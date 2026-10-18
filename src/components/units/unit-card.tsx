@@ -87,10 +87,6 @@ export function UnitCard({ unit, projectName, projectSlug, projectCoverImage }: 
           </h3>
         </Link>
 
-        <div className="mb-3 flex items-center gap-1 text-sm text-muted-foreground">
-          <span>{unit.unitNumber}</span>
-        </div>
-
         <div className="mb-3 flex flex-wrap gap-3 text-sm text-muted-foreground">
           {unit.bedrooms !== null && unit.bedrooms !== undefined && (
             <span className="flex items-center gap-1">
