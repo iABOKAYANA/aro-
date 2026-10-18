@@ -8,6 +8,7 @@ import {
   askedConsultSlots,
   countConsultQuestions,
   CONSULT_MAX_QUESTIONS,
+  discoveryExhausted,
   isReady,
   needsFromHistory,
   nextConsultQuestion,
@@ -837,15 +838,18 @@ async function prepareLLMRequest(
     }
   }
 
-  const { stateBlock, mergedQuery } = buildConversationState(conversationHistory, currentMessage)
+  const { stateBlock: stateBlockRaw, mergedQuery } = buildConversationState(conversationHistory, currentMessage)
   const listingTurn = isListingTurn(currentMessage, conversationHistory)
 
   // ── Consultation gate ────────────────────────────────────────
   // A listing turn with an incomplete client profile (no budget, no
   // place/type) resolves to ONE deterministic discovery question —
   // instant, free, consistent — instead of a project dump. Max
-  // CONSULT_MAX_QUESTIONS, then the search proceeds with whatever is
-  // known. "وريني اللي عندك" impatience skips discovery entirely.
+  // CONSULT_MAX_QUESTIONS. Every question is asked AT MOST once: when the
+  // client dodges (vague/no answer), discovery is exhausted and the flow
+  // proceeds to search with whatever is known — never a repeat question.
+  // "وريني اللي عندك" impatience skips discovery entirely.
+  let stateBlock = stateBlockRaw
   if (listingTurn && !wantsImmediateListings(currentMessage)) {
     const needs = needsFromHistory(conversationHistory, currentMessage)
     if (!isReady(needs)) {
@@ -853,8 +857,15 @@ async function prepareLLMRequest(
         .filter((m) => m.role === 'assistant')
         .map((m) => m.content)
         .slice(-6)
-      if (countConsultQuestions(assistantTexts) < CONSULT_MAX_QUESTIONS) {
-        const q = nextConsultQuestion(needs, lang, askedConsultSlots(assistantTexts))
+      const asked = askedConsultSlots(assistantTexts)
+      if (discoveryExhausted(needs, asked)) {
+        // Keep discussing, never repeat: the client already heard every
+        // question and answered vaguely. Provide with what is known and
+        // let them react — the model gets the explicit no-questions rule.
+        stateBlock +=
+          '\n[DISCOVERY EXHAUSTED — every discovery question was already asked once. NEVER ask the client any question this turn, not even rephrased. Recommend with what is known; if the budget is unknown, present options as a range (from below the area average up) and let them react.]'
+      } else if (countConsultQuestions(assistantTexts) < CONSULT_MAX_QUESTIONS) {
+        const q = nextConsultQuestion(needs, lang, asked)
         if (q) {
           // The question stays system-owned; the delivery becomes a real
           // consultative discussion (falls back to the plain question).

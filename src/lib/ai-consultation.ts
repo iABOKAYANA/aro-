@@ -88,6 +88,23 @@ export function isReady(n: ConsultNeeds): boolean {
   return hasBudget && hasDirection
 }
 
+/**
+ * Repeat protection: true when every still-missing discovery slot was
+ * already asked at least once. The gate must NEVER re-ask a question the
+ * client dodged — an unreplied slot is treated as "not important to them"
+ * and the search proceeds with whatever is known instead.
+ */
+export function discoveryExhausted(
+  n: ConsultNeeds,
+  asked: Set<'budget' | 'place' | 'typepurpose'>,
+): boolean {
+  const missing: Array<'budget' | 'place' | 'typepurpose'> = []
+  if (n.budgetMin === undefined && n.budgetMax === undefined) missing.push('budget')
+  if (!n.place) missing.push('place')
+  if (!n.propertyType && !n.purpose) missing.push('typepurpose')
+  return missing.length > 0 && missing.every((s) => asked.has(s))
+}
+
 export function wantsImmediateListings(text: string): boolean {
   const t = text.trim().toLowerCase()
   return IMMEDIATE_PHRASES.some((p) => t.includes(p))

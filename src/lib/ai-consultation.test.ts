@@ -8,10 +8,32 @@ import {
   askedConsultSlots,
   countConsultQuestions,
   nextConsultQuestion,
+  discoveryExhausted,
+  type ConsultNeeds,
   CONSULT_MARKER_AR,
 } from '@/lib/ai-consultation'
 
 describe('ai-consultation gate', () => {
+  it('discoveryExhausted: a dodged budget is never re-asked — search proceeds', () => {
+    // Client said place+type/purpose, dodged the budget question twice.
+    const needs = extractNeeds('عايز فيلا في زايد للاستثمار') // no numbers
+    const asked = askedConsultSlots([`عشان أرشّح لك صح: الميزانية في حدود كام؟ (كاش ولا تقسيط؟)`])
+    expect(isReady(needs)).toBe(false)
+    expect(discoveryExhausted(needs, asked)).toBe(true)
+  })
+
+  it('discoveryExhausted: unasked missing slots are not exhausted yet', () => {
+    const needs: ConsultNeeds = { place: 'sheikh-zayed' }
+    const asked = new Set<'budget' | 'place' | 'typepurpose'>(['budget'])
+    // budget asked+missing, but place is NOT asked and IS missing → ask place
+    expect(discoveryExhausted(needs, asked)).toBe(false)
+  })
+
+  it('discoveryExhausted: a complete profile is never exhausted (ready beats it)', () => {
+    const needs = extractNeeds('عايز شقة في التجمع تحت 8 مليون')
+    expect(discoveryExhausted(needs, new Set(['budget', 'place', 'typepurpose']))).toBe(false)
+  })
+
   it('extracts needs from a full Arabic query (digits, aliases, budget)', () => {
     const n = extractNeeds('عايز شقة ٣ أوض في التجمع تحت ٨ مليون تقسيط')
     expect(n.budgetMax).toBe(8_000_000)
