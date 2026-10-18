@@ -71,7 +71,7 @@ const GAP_LABELS: Record<GapKey, { en: string; ar: string }> = {
 }
 
 type SortKey = 'name' | 'gapCount' | 'units'
-type FilterKey = 'ALL' | GapKey
+type FilterKey = 'ALL' | 'no-units' | GapKey
 
 export default function CEOInventoryGapsPage() {
   const { lang } = useLanguage()
@@ -110,7 +110,8 @@ export default function CEOInventoryGapsPage() {
   const rows = useMemo(() => {
     if (!data) return []
     let list = data.projects
-    if (filter !== 'ALL') list = list.filter((p) => p.missing.includes(filter))
+    if (filter === 'no-units') list = list.filter((p) => p.unitsTotal === 0)
+    else if (filter !== 'ALL') list = list.filter((p) => p.missing.includes(filter))
     if (search.trim()) {
       const q = search.trim().toLowerCase()
       list = list.filter(
@@ -235,10 +236,10 @@ export default function CEOInventoryGapsPage() {
           </p>
           <hr className="gold-hairline mt-4" />
         </Reveal>
-        <span className="flex flex-wrap gap-2">
+        <span className="flex flex-wrap items-center gap-2">
           <Button onClick={exportCsv} variant="outline" disabled={!rows.length} className="gap-2 border-border bg-card text-gray-300 dark:border-[#262626] dark:bg-[#0A0A0A]">
             <Download className="h-4 w-4" />
-            {ar ? 'صدّر CSV' : 'Export CSV'}
+            {ar ? `صدّر CSV (${rows.length})` : `Export CSV (${rows.length})`}
           </Button>
           <Button onClick={load} variant="outline" className="gap-2 border-border bg-card text-gray-300 dark:border-[#262626] dark:bg-[#0A0A0A]">
             <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
@@ -310,8 +311,8 @@ export default function CEOInventoryGapsPage() {
               )}
             </div>
             <div className="flex flex-wrap gap-2">
-              {(['ALL', 'cover', 'gallery', 'descAr', 'price', 'units', 'plans', 'location', 'arabic-name'] as FilterKey[]).map((f) => {
-                const count = f === 'ALL' ? data!.projects.length : r.gapsByKey[f as GapKey]
+              {(['ALL', 'no-units', 'cover', 'gallery', 'descAr', 'price', 'units', 'plans', 'location', 'arabic-name'] as FilterKey[]).map((f) => {
+                const count = f === 'ALL' ? data!.projects.length : f === 'no-units' ? r.projectsWithoutUnits : r.gapsByKey[f as GapKey]
                 const active = filter === f
                 return (
                   <button
@@ -324,7 +325,11 @@ export default function CEOInventoryGapsPage() {
                         : 'border-border bg-card text-gray-400 hover:text-foreground dark:border-[#262626] dark:bg-[#0A0A0A]'
                     )}
                   >
-                    {f === 'ALL' ? (ar ? `الكل (${count})` : `All (${count})`) : `${ar ? GAP_LABELS[f as GapKey].ar : GAP_LABELS[f as GapKey].en} (${count})`}
+                    {f === 'ALL'
+                      ? (ar ? `الكل (${count})` : `All (${count})`)
+                      : f === 'no-units'
+                        ? (ar ? `بدون وحدات (${count})` : `No units (${count})`)
+                        : `${ar ? GAP_LABELS[f as GapKey].ar : GAP_LABELS[f as GapKey].en} (${count})`}
                   </button>
                 )
               })}
