@@ -32,4 +32,3 @@ public/images/uploads/
 # Queued mail + user file uploads (real PII/attachments — never commit; disk files stay).
 public/uploads/
 data/
-.DS_Store
