@@ -1,0 +1,18 @@
+{
+  "source": "Owner-supplied Patio Town brochure",
+  "projectSlug": "1113-el-patio-town",
+  "sold": ["Garden Town House Middle · 223 sqm BUA · 147 sqm land"],
+  "groups": [
+    { "phase": "Patio Town · delivery 1.5 years · Core & Shell", "type": "Garden Town House Corner", "unitType": "TOWNHOUSE", "area": 235, "land": 204, "price": 34000000, "priceMax": 35000000, "terms": "Delivery 1.5 years · Core & Shell · 5% down payment + 5% after 1 month over 7 years · land 204 sqm · maintenance 8%" },
+    { "phase": "Patio Town · delivery 1.5 years · Core & Shell", "type": "Town House Middle", "unitType": "TOWNHOUSE", "area": 235, "land": 188, "price": 35000000, "terms": "Delivery 1.5 years · Core & Shell · 5% down payment + 5% after 1 month over 7 years · land 188 sqm · maintenance 8%" },
+    { "phase": "Patio Town · delivery 1.5 years · Core & Shell", "type": "Town House Corner", "unitType": "TOWNHOUSE", "area": 249, "land": 282, "price": 39800000, "priceMax": 42800000, "terms": "Delivery 1.5 years · Core & Shell · 5% down payment + 5% after 1 month over 7 years · land 282 sqm · maintenance 8%" },
+    { "phase": "Patio Town · delivery 1.5 years · Core & Shell", "type": "Twin House", "unitType": "VILLA", "area": 274, "land": 302, "landMax": 316, "price": 48000000, "priceMax": 50000000, "terms": "Delivery 1.5 years · Core & Shell · 5% down payment + 5% after 1 month over 7 years · land 302–316 sqm · maintenance 8%" },
+    { "phase": "Patio Town · delivery 1.5 years · Core & Shell", "type": "Stand Alone", "unitType": "VILLA", "area": 341, "land": 438, "price": 72000000, "terms": "Delivery 1.5 years · Core & Shell · 5% down payment + 5% after 1 month over 7 years · land 438 sqm · maintenance 8%" },
+    { "phase": "Patio Town · delivery 1.5 years · Core & Shell", "type": "Stand Alone", "unitType": "VILLA", "area": 427, "land": 613, "price": 84000000, "priceMax": 87000000, "terms": "Delivery 1.5 years · Core & Shell · 5% down payment + 5% after 1 month over 7 years · land 613 sqm · maintenance 8%" },
+    { "phase": "Patio Town · delivery 2.5 years · Fully Finished", "type": "Quadro", "unitType": "VILLA", "area": 239, "land": 213, "landMax": 222, "price": 36900000, "terms": "Delivery 2.5 years · Fully Finished · 5% down payment + 5% after 1 month over 7 years · land 213–222 sqm · maintenance 8%" },
+    { "phase": "Patio Town · delivery 2.5 years · Fully Finished", "type": "Town House Middle", "unitType": "TOWNHOUSE", "area": 237, "land": 188, "price": 38800000, "terms": "Delivery 2.5 years · Fully Finished · 5% down payment + 5% after 1 month over 7 years · land 188 sqm · maintenance 8%" },
+    { "phase": "Patio Town · delivery 2.5 years · Fully Finished", "type": "Town House Corner", "unitType": "TOWNHOUSE", "area": 249, "land": 275, "price": 45800000, "priceMax": 46800000, "terms": "Delivery 2.5 years · Fully Finished · 5% down payment + 5% after 1 month over 7 years · land 275 sqm · maintenance 8%" },
+    { "phase": "Patio Town · delivery 2.5 years · Fully Finished", "type": "Twin House", "unitType": "VILLA", "area": 274, "land": 315, "landMax": 323, "price": 55000000, "priceMax": 56000000, "terms": "Delivery 2.5 years · Fully Finished · 5% down payment + 5% after 1 month over 7 years · land 315–323 sqm · maintenance 8%" },
+    { "phase": "Patio Town · delivery 2.5 years · Fully Finished", "type": "Stand Alone", "unitType": "VILLA", "area": 339, "land": 421, "landMax": 455, "price": 77800000, "priceMax": 79500000, "terms": "Delivery 2.5 years · Fully Finished · 5% down payment + 5% after 1 month over 7 years · land 421–455 sqm · maintenance 8%" }
+  ]
+}
