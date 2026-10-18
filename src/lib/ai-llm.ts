@@ -768,6 +768,22 @@ The LAST sentence verbatim: ${segue}`
   return `${needs.place?.replace(/-/g, ' ') || ''}: ${factsFallback} ${segue}`
 }
 
+// Final-turn ask after tool rounds: context-aware. Compare requests get a
+// VERDICT discussion ask (the consultant's pick + the deltas that decide +
+// "choose X if / Y if") — never a data dump narrating the table cells. Any
+// other listing turn keeps the shortlist ask.
+function finalSummaryAsk(lang: 'ar' | 'en', toolCallsMade: string[]): string {
+  const compared = toolCallsMade.some((t) => t.toLowerCase().includes('compare'))
+  if (!compared) {
+    return lang === 'ar'
+      ? 'رشّح أنسب 2-3 للمستخدم: سطر لكل واحد ليه مناسب + سؤال واحد للخطوة الجاية. مختصر جدًا.'
+      : 'Recommend the best 2-3: one line each on why it fits + one next-step question. Keep it very brief.'
+  }
+  return lang === 'ar'
+    ? 'قارن النتايج كخبير يتكلم لعميله: افتتح برأيك النهائي (أنصح بمين وطلب العميل هو إيه)، بعدين الفروقات اللي بتفرق فعلًا (السعر مقابل ميزانيته، هيكل السداد، التسليم، المكان) في 4-8 سطور، وبعدين "اختار كذا لو… واختار كذا لو…". الجدول ظاهر قدام العميل أصلًا — ممنوع تسرد كل خلية فيه، اتكلم في الخلاصة والرأي، وبسّط سؤال واحد للخطوة الجاية. بالعربي المصري.'
+    : 'Compare like an expert talking to their client: OPEN with your verdict (who you\'d pick for this profile), then the deltas that actually decide it (price vs budget, payment structure, delivery, location) in 4-8 lines, then "choose X if… / choose Y if…". The table is already on screen — never narrate every cell; give the takeaways and your opinion, then ONE next-step question.'
+}
+
 async function runForcedSearch(
   mergedQuery: string,
   lang: 'ar' | 'en',
@@ -1187,7 +1203,7 @@ export async function callLLM(
   }
   const { response: finalResponse, provider: finalProvider } = await chatOnce([
     ...messages,
-    { role: 'user', content: 'رشّح أنسب 2-3 للمستخدم: سطر لكل واحد ليه مناسب + سؤال واحد للخطوة الجاية. مختصر جدًا.' },
+    { role: 'user', content: finalSummaryAsk(lang, toolCallsMade) },
   ])
   if (finalProvider === 'local') track.fellBack = true
 
@@ -1355,7 +1371,7 @@ export async function callLLMStream(
   }
   cb.onStatus?.('summarizing', lang === 'ar' ? 'بكتب الإجابة…' : 'Writing the answer…')
   const streamed = await streamFinalText(
-    [...messages, { role: 'user', content: 'رشّح أنسب 2-3 للمستخدم: سطر لكل واحد ليه مناسب + سؤال واحد للخطوة الجاية. مختصر جدًا.' }],
+    [...messages, { role: 'user', content: finalSummaryAsk(lang, toolCallsMade) }],
     cb,
     track,
   )
