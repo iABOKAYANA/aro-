@@ -1,0 +1,13 @@
+{
+  "source": "Owner-supplied El Patio Vida brochure",
+  "projectSlug": "1427-patio-vida",
+  "soldExcluded": ["3 BR Ground Floor · 166 sqm · 25 sqm garden"],
+  "phase": "El Patio Vida · delivery 3 years",
+  "terms": "Delivery 3 years · 5% + 2.5% after 3 months + 2.5% after 6 months over 8 years · up to 10 years with 6% interest per extra year · Semi-Finished · finishing option 15,000 EGP per meter · installments till delivery · maintenance 8% · underground parking 450,000 EGP",
+  "groups": [
+    { "type": "3 BR Typical Floor", "unitType": "APARTMENT", "bedrooms": 3, "area": 158, "areaMax": 200, "price": 11500000, "priceMax": 17400000 },
+    { "type": "3 BR Ground Floor", "unitType": "APARTMENT", "bedrooms": 3, "area": 158, "areaMax": 214, "gardenArea": 30, "price": 12300000, "priceMax": 18500000 },
+    { "type": "4 BR Penthouse", "unitType": "PENTHOUSE", "bedrooms": 4, "area": 158, "areaMax": 214, "roofArea": 100, "price": 14700000, "priceMax": 22600000 },
+    { "type": "5 BR Duplex Ground Floor", "unitType": "DUPLEX", "bedrooms": 5, "area": 336, "gardenArea": 30, "price": 27600000 }
+  ]
+}
