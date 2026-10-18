@@ -24,7 +24,7 @@ async function main() {
     for (const [rawType, area, price] of group.items) {
       const unitType = TYPE_MAP[rawType]
       if (!unitType) throw new Error(`Unknown Taj Misr type: ${rawType}`)
-      const name = `${rawType} · ${area} sqm · ${group.phase}`
+      const name = `${rawType} · ${area} sqm`
       const existing = await p.unit.findFirst({ where: { projectId: project.id, phaseId: phase.id, unitNumber: null, unitType, area, price }, select: { id: true } })
       if (existing) {
         await p.unit.update({ where: { id: existing.id }, data: { name, nameArabic: `${rawType} · ${area} م²`, deliveryTerms: group.terms } })
