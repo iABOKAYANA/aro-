@@ -1,0 +1,10 @@
+{
+  "source": "Owner-supplied Sun Capital newly launched building availability message",
+  "projectSlug": "210-sun-capital",
+  "groups": [
+    { "phase": "Newly launched building · Prime views", "type": "Apartment", "unitType": "APARTMENT", "bedrooms": 2, "area": 118, "gardenArea": 82, "price": 11086273, "terms": "Prime views overlooking 7 feddan landscape · 10% down payment · installments up to 10 years" },
+    { "phase": "Newly launched building · Prime views", "type": "Apartment", "unitType": "APARTMENT", "bedrooms": 3, "area": 133, "gardenArea": 110, "price": 13582566, "terms": "Prime views overlooking 7 feddan landscape · 10% down payment · installments up to 10 years" },
+    { "phase": "Newly launched building · Prime views", "type": "Typical apartment", "unitType": "APARTMENT", "bedrooms": null, "area": 151, "areaMax": 154, "price": 10617217, "priceMax": 11895089, "terms": "Typical floors: 151–154 sqm · price depends on view: EGP 10,617,217–11,895,089 · 10% down payment · installments up to 10 years" },
+    { "phase": "Newly launched building · Prime views", "type": "Penthouse", "unitType": "PENTHOUSE", "bedrooms": null, "area": 151, "roofArea": 33, "outdoorArea": 204, "price": 16000000, "priceMax": 17309551, "terms": "151 sqm + 33 sqm rooftop room + 204 sqm outdoor space · price depends on view: EGP 16,000,000–17,309,551 · 10% down payment · installments up to 10 years" }
+  ]
+}
