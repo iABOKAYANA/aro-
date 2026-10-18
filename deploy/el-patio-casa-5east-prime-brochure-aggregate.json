@@ -1,0 +1,16 @@
+{
+  "source": "Owner-supplied Patio Casa / Patio 5 East / Patio Prime brochure",
+  "soldExcluded": ["Patio Prime Town House Middle"],
+  "groups": [
+    { "projectSlug": "156-el-patio-casa", "type": "4 BR Ground", "unitType": "APARTMENT", "bedrooms": 4, "area": 275, "price": 22800000, "terms": "Ready to Move · Semi-Finished · Pool View · 20% down payment over 4 years" },
+    { "projectSlug": "156-el-patio-casa", "type": "Twin House", "unitType": "VILLA", "area": 201, "areaMax": 279, "price": 25700000, "priceMax": 33900000, "terms": "Ready to Move · Core & Shell · Street View · 20% down payment over 4 years · land 235–309 sqm" },
+    { "projectSlug": "13-el-patio-5-east", "type": "Quadro", "unitType": "VILLA", "area": 202, "price": 24400000, "terms": "Ready to Move · Core & Shell · Street View · 20% down payment over 4 years · land 220 sqm" },
+    { "projectSlug": "13-el-patio-5-east", "type": "Town House Middle", "unitType": "TOWNHOUSE", "area": 232, "price": 23500000, "priceMax": 24700000, "terms": "Ready to Move · Core & Shell · Street View · 20% down payment over 4 years · land 211 sqm" },
+    { "projectSlug": "13-el-patio-5-east", "type": "Town House Corner", "unitType": "TOWNHOUSE", "area": 218, "areaMax": 235, "price": 29400000, "priceMax": 36900000, "terms": "Ready to Move · Core & Shell · Street View · 20% down payment over 4 years · land 270–351 sqm" },
+    { "projectSlug": "13-el-patio-5-east", "type": "Twin House", "unitType": "VILLA", "area": 220, "areaMax": 269, "price": 27400000, "priceMax": 38400000, "terms": "Ready to Move · Core & Shell · Street View · 20% down payment over 4 years · land 248–341 sqm" },
+    { "projectSlug": "224-el-patio-prime", "type": "Quadro", "unitType": "VILLA", "area": 205, "areaMax": 252, "price": 24200000, "priceMax": 31200000, "terms": "Ready to Move · Core & Shell · Street View · 20% down payment over 4 years · land 220–286 sqm" },
+    { "projectSlug": "224-el-patio-prime", "type": "Town House Corner", "unitType": "TOWNHOUSE", "area": 222, "areaMax": 226, "price": 30400000, "terms": "Ready to Move · Core & Shell · Street View · 20% down payment over 4 years · land 275 sqm" },
+    { "projectSlug": "224-el-patio-prime", "type": "Twin House", "unitType": "VILLA", "area": 255, "areaMax": 288, "price": 30400000, "priceMax": 33700000, "terms": "Ready to Move · Core & Shell · street/pool view based on price · 20% down payment over 4 years · land 275–296 sqm" },
+    { "projectSlug": "224-el-patio-prime", "type": "Stand Alone", "unitType": "VILLA", "area": 288, "areaMax": 332, "price": 37600000, "priceMax": 42500000, "terms": "Ready to Move · Core & Shell · Pool View · 20% down payment over 4 years · land 364–390 sqm" }
+  ]
+}
