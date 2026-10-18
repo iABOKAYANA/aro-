@@ -14,6 +14,7 @@ export interface UnitCategoryRow {
   labelEn: string
   labelAr: string
   count: number
+  areaLabel: 'average' | 'primary'
   /** المساحة الأولية — smallest buyable area inside the category. */
   minArea: number | null
   /** يبدأ من — cheapest buyable price inside the category. */
@@ -66,8 +67,11 @@ export function maxDiscountOf(
 const CATEGORY_LABELS: Record<string, [string, string]> = {
   BED_1: ['شقة غرفة واحدة', '1BR'],
   BED_2: ['شقة غرفتين', '2BR'],
+  BED_2_N: ['شقة غرفتين + N', '2BR + N'],
   BED_3: ['شقة 3 غرف', '3BR'],
+  BED_3_N: ['شقة 3 غرف + N', '3BR + N'],
   BED_4: ['شقة 4 غرف', '4BR'],
+  BED_4_N: ['شقة 4 غرف + N', '4BR + N'],
   BED_5: ['شقة 5 غرف وأكثر', '5BR+'],
   BED_NULL: ['شقة', 'Apartment'],
   STUDIO: ['استوديو', 'Studio'],
@@ -87,7 +91,7 @@ const CATEGORY_LABELS: Record<string, [string, string]> = {
  * بعدين الفيلات/الشاليهات، بعدين التجاري/الإداري/الطبي، وأي نوع تاني آخرًا.
  */
 const CATEGORY_ORDER = [
-  'BED_1', 'BED_2', 'BED_3', 'BED_4', 'BED_5', 'BED_NULL',
+  'BED_1', 'BED_2', 'BED_2_N', 'BED_3', 'BED_3_N', 'BED_4', 'BED_4_N', 'BED_5', 'BED_NULL',
   'STUDIO', 'DUPLEX', 'PENTHOUSE', 'VILLA', 'VILLA_TWIN', 'TOWNHOUSE',
   'CHALET', 'COMMERCIAL', 'ADMINISTRATIVE', 'MEDICAL', 'OTHER',
 ]
@@ -126,12 +130,23 @@ export function unitCategoryRows(
     if (!type) continue
     const beds = typeof u.bedrooms === 'number' && Number.isFinite(u.bedrooms) ? u.bedrooms : null
     // Apartments split by bedroom count; every other kind stays one row.
+    const name = String(u.name ?? '').toLowerCase()
+    const hasNannyRoom = /\+\s*n(?:\b|[^a-z])|nanny/.test(name)
+    const apartmentBedKey = beds === null || beds === 0 ? 'BED_NULL' : beds >= 5 ? 'BED_5' : `BED_${beds}`
     const key = type === 'APARTMENT'
-      ? beds === null || beds === 0 ? 'BED_NULL' : beds >= 5 ? 'BED_5' : `BED_${beds}`
+      ? `${apartmentBedKey}${hasNannyRoom && beds !== null && beds > 0 && beds < 5 ? '_N' : ''}`
       : type === 'VILLA' && (String(u.name ?? '').toLowerCase().includes('twin') || String(u.nameArabic ?? '').includes('توين'))
         ? 'VILLA_TWIN'
         : CATEGORY_ORDER.includes(type) ? type : 'OTHER'
-    const row = rows.get(key) ?? { key, labelEn: '', labelAr: '', count: 0, minArea: null, startingPrice: null }
+    const row = rows.get(key) ?? {
+      key,
+      labelEn: '',
+      labelAr: '',
+      count: 0,
+      minArea: null,
+      startingPrice: null,
+      areaLabel: /\b(?:avg|average)\s+area\b/i.test(String(u.name ?? '')) ? 'average' : 'primary',
+    }
     row.count += 1
     if (typeof u.area === 'number' && Number.isFinite(u.area) && u.area > 0) {
       row.minArea = row.minArea === null ? u.area : Math.min(row.minArea, u.area)

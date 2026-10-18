@@ -24,8 +24,11 @@ import { unitCategoryRows, type UnitsByTypeRow } from '@/lib/units-by-type'
 const CAT_GLYPH: Record<string, () => ReactNode> = {
   BED_1: () => <Bed className="h-3.5 w-3.5" />,
   BED_2: () => (<><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /></>),
+  BED_2_N: () => (<><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /><span className="text-[10px] font-bold leading-none">+N</span></>),
   BED_3: () => (<><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /></>),
+  BED_3_N: () => (<><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /><span className="text-[10px] font-bold leading-none">+N</span></>),
   BED_4: () => (<><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /></>),
+  BED_4_N: () => (<><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /><span className="text-[10px] font-bold leading-none">+N</span></>),
   BED_5: () => (<><Bed className="h-3.5 w-3.5" /><span className="text-[10px] font-bold leading-none">+</span></>),
   BED_NULL: () => <Home className="h-3.5 w-3.5" />,
   STUDIO: () => <Bed className="h-3.5 w-3.5" />,
@@ -821,7 +824,11 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                           <span className="font-display text-3xl font-extrabold tracking-tight">
                             {row.minArea.toLocaleString('en-US')}
                           </span>
-                          <span className="text-xs text-muted-foreground">{ar ? 'م² المساحة الأولية' : 'sqm primary area'}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {row.areaLabel === 'average'
+                              ? ar ? 'م² متوسط المساحة' : 'sqm average area'
+                              : ar ? 'م² المساحة الأولية' : 'sqm primary area'}
+                          </span>
                         </div>
                       )}
                       <div aria-hidden className="my-3 border-t border-dashed border-border/50" />

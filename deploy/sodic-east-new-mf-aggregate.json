@@ -1,0 +1,13 @@
+{
+  "source": "Owner-supplied SODIC EAST NEW MF price table",
+  "projectSlug": "2726-the-lakes-sodic",
+  "categories": [
+    { "key": "1B", "unitType": "APARTMENT", "bedrooms": 1, "averageArea": 76, "startingPrice": 6700000, "nameEn": "Apartment · 1B · average area 76 sqm", "nameAr": "شقة غرفة واحدة · متوسط المساحة 76 م²" },
+    { "key": "2B", "unitType": "APARTMENT", "bedrooms": 2, "averageArea": 123, "startingPrice": 10900000, "nameEn": "Apartment · 2B · average area 123 sqm", "nameAr": "شقة غرفتين · متوسط المساحة 123 م²" },
+    { "key": "2B+N", "unitType": "APARTMENT", "bedrooms": 2, "averageArea": 127, "startingPrice": 11200000, "nameEn": "Apartment · 2B+N · average area 127 sqm", "nameAr": "شقة غرفتين + N · متوسط المساحة 127 م²" },
+    { "key": "3B", "unitType": "APARTMENT", "bedrooms": 3, "averageArea": 149, "startingPrice": 13200000, "nameEn": "Apartment · 3B · average area 149 sqm", "nameAr": "شقة 3 غرف · متوسط المساحة 149 م²" },
+    { "key": "3B+N", "unitType": "APARTMENT", "bedrooms": 3, "averageArea": 160, "startingPrice": 14100000, "nameEn": "Apartment · 3B+N · average area 160 sqm", "nameAr": "شقة 3 غرف + N · متوسط المساحة 160 م²" },
+    { "key": "3B DUPLEX", "unitType": "DUPLEX", "bedrooms": 3, "averageArea": 200, "startingPrice": 17700000, "nameEn": "3B Duplex · average area 200 sqm", "nameAr": "دوبلكس 3 غرف · متوسط المساحة 200 م²" },
+    { "key": "4B+N", "unitType": "APARTMENT", "bedrooms": 4, "averageArea": 199, "startingPrice": 17500000, "nameEn": "Apartment · 4B+N · average area 199 sqm", "nameAr": "شقة 4 غرف + N · متوسط المساحة 199 م²" }
+  ]
+}

@@ -42,6 +42,19 @@ describe('unitCategoryRows', () => {
     expect(rows[1]).toMatchObject({ count: 2, minArea: 300, startingPrice: 30_000_000, labelAr: 'شقة 5 غرف وأكثر' })
   })
 
+  it('يفصل أنواع +N عن نفس عدد الغرف ويحافظ على متوسط المساحة من المصدر', () => {
+    const rows = unitCategoryRows([
+      u({ bedrooms: 2, name: '2B · Average area 123 sqm', area: 123, price: 10_900_000 }),
+      u({ bedrooms: 2, name: '2B+N · Average area 127 sqm', area: 127, price: 11_200_000 }),
+      u({ bedrooms: 3, name: '3B · Average area 149 sqm', area: 149, price: 13_200_000 }),
+      u({ bedrooms: 3, name: '3B+N · Average area 160 sqm', area: 160, price: 14_100_000 }),
+      u({ bedrooms: 4, name: '4B+N · Average area 199 sqm', area: 199, price: 17_500_000 }),
+    ])
+    expect(rows.map((r) => r.key)).toEqual(['BED_2', 'BED_2_N', 'BED_3', 'BED_3_N', 'BED_4_N'])
+    expect(rows.map((r) => r.areaLabel)).toEqual(['average', 'average', 'average', 'average', 'average'])
+    expect(rows[1]).toMatchObject({ labelEn: '2BR + N', labelAr: 'شقة غرفتين + N', minArea: 127, startingPrice: 11_200_000 })
+  })
+
   it('المساحة الأولية = أصغر مساحة والسعر = أرخص سعر (ممكن من وحدتين مختلفتين، أجريات حرة)', () => {
     const rows = unitCategoryRows([
       u({ bedrooms: 2, area: 140, price: 10_426_000 }), // أصغر مساحة

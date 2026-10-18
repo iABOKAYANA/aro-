@@ -47,6 +47,9 @@ export function UnitCard({ unit, projectName, projectSlug, projectCoverImage }: 
   const pName = projectName || project?.name || ''
   const pSlug = projectSlug || project?.slug || ''
   const pCover = projectCoverImage || project?.coverImage
+  const unitName = unit.name.trim()
+  const looksLikeUnitCode = /^[A-Z0-9]+(?:[-/.][A-Z0-9]+)+$/i.test(unitName)
+  const cardTitle = unitName && !looksLikeUnitCode ? unitName : pName
   const gallery = typeof unit.gallery === 'string' ? JSON.parse(unit.gallery) : (unit.gallery || [])
   // Display chain: unit gallery[0] → project cover → placeholder, stepped onError.
   const sources = coverChain(gallery[0], pCover)
@@ -81,9 +84,10 @@ export function UnitCard({ unit, projectName, projectSlug, projectCoverImage }: 
 
       <CardContent className="p-4">
         <Link href={`/units/${unit.slug || unit.id}`}>
+          {cardTitle !== pName && <p className="text-xs text-muted-foreground">{pName}</p>}
           <h3 className="mb-1 font-semibold hover:text-estate-gold transition-colors">
-            {pName}
-            {unit.phase && ` - ${unit.phase.name}`}
+            {cardTitle}
+            {unit.phase && ` · ${unit.phase.name}`}
           </h3>
         </Link>
 
