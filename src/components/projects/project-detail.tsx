@@ -582,7 +582,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
           <Tabs defaultValue={initialTab}>
             <TabsList className="h-auto max-w-full min-h-10 flex-wrap justify-start">
               <TabsTrigger value="overview" className="max-w-full whitespace-normal text-center min-h-[44px] md:min-h-0 md:whitespace-nowrap">{ar ? 'نظرة عامة' : 'Overview'}</TabsTrigger>
-              <TabsTrigger value="units" className="max-w-full whitespace-normal text-center min-h-[44px] md:min-h-0 md:whitespace-nowrap">{ar ? `الوحدات المتاحة (${availableCount} من ${listedCount} معروضة)` : `Available units (${availableCount} of ${listedCount} listed)`}</TabsTrigger>
+              <TabsTrigger value="units" className="max-w-full whitespace-normal text-center min-h-[44px] md:min-h-0 md:whitespace-nowrap">{ar ? 'الوحدات المتاحة' : 'Available units'}</TabsTrigger>
               <TabsTrigger value="payment" className="max-w-full whitespace-normal text-center min-h-[44px] md:min-h-0 md:whitespace-nowrap">{ar ? `السداد (${planCount} خطط)` : `Payment (${planCount} plans)`}</TabsTrigger>
               <TabsTrigger value="reviews" className="max-w-full whitespace-normal text-center min-h-[44px] md:min-h-0 md:whitespace-nowrap">
                 {ar
@@ -769,42 +769,29 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
             </TabsContent>
 
             <TabsContent value="units">
-              {/* ONE summary row per offered category — classic card look:
-                  type title + count badge, gold starting price, primary area.
-                  No unit codes, no flood (a 500-unit compound stays short). */}
+              {/* Brochure-style list: ONE line per offered category —
+                  type name · primary area · starting price. No count badges,
+                  no unit codes, no card boxes, no flood. */}
               {categoryRows.length > 0 ? (
-                <div className="mb-4 grid gap-3 sm:grid-cols-2">
-                  {categoryRows.map((row) => {
-                    const countLabel = ar
-                      ? row.count === 1
-                        ? 'وحدة واحدة'
-                        : row.count === 2
-                          ? 'وحدتين'
-                          : `${row.count} وحدات`
-                      : `${row.count} ${row.count === 1 ? 'unit' : 'units'}`
-                    return (
-                      <div key={row.key} className="rounded-2xl border p-4">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="font-display font-semibold">{ar ? row.labelAr : row.labelEn}</p>
-                          <Badge variant="secondary">{countLabel}</Badge>
-                        </div>
-                        <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                          {row.startingPrice !== null && (
-                            <p>
-                              {ar ? 'يبدأ من' : 'Starting from'}{' '}
-                              <span className="font-semibold text-estate-gold">{formatEGP(row.startingPrice)}</span>
-                            </p>
-                          )}
-                          {row.minArea !== null && (
-                            <p>
-                              {ar ? 'المساحة الأولية: ' : 'Primary area: '}
-                              {formatSQM(row.minArea)}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
+                <div className="mb-4">
+                  {categoryRows.map((row) => (
+                    <div
+                      key={row.key}
+                      className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5 border-b border-border/60 last:border-b-0"
+                    >
+                      <p className="font-display font-semibold">{ar ? row.labelAr : row.labelEn}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {row.minArea !== null && <span>{formatSQM(row.minArea)}</span>}
+                        {row.startingPrice !== null && (
+                          <>
+                            {row.minArea !== null && ' · '}
+                            {ar ? 'يبدأ من ' : 'Starting from '}
+                            <span className="font-semibold text-estate-gold">{formatEGP(row.startingPrice)}</span>
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <p className="py-4 text-center text-muted-foreground">
@@ -820,8 +807,8 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
               ) : (
                 <p className="text-center text-xs text-muted-foreground">
                   {ar
-                    ? `التفاصيل اللي فوق ملخصة من ${listedUnits.length} وحدة متاحة فعليًا — اسأل عين عن أي نوع أو مواصفة بالتحديد.`
-                    : `The summary above is drawn from ${listedUnits.length} live available units — ask Ayn for any exact unit or spec.`}
+                    ? 'اللي فوق مخزون متاح فعليًا حاليًا — اسأل عين عن أي نوع أو مواصفة بالتحديد.'
+                    : 'The list above reflects live available inventory — ask Ayn for any exact unit or spec.'}
                 </p>
               )}
             </TabsContent>
