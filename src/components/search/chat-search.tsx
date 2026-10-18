@@ -9,6 +9,7 @@ import { ChatPaymentBreakdown } from '@/components/search/chat-payment-breakdown
 import { useLanguage } from '@/lib/language-context'
 import { cn } from '@/lib/utils'
 import { readSSEStream, isSSEResponse } from '@/lib/chat-stream'
+import { useChatAutoScroll } from '@/components/search/use-chat-auto-scroll'
 
 const SUGGESTIONS_EN = [
   { icon: '🏠', label: '3 bedroom in New Cairo', query: '3 bedroom apartment in New Cairo' },
@@ -100,13 +101,13 @@ export function ChatSearch() {
 
   const [input, setInput] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const scrollPanelRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isTyping])
+  // Reader-respecting auto-scroll: panel-only, never on open, follows only
+  // while the reader is at the bottom (see use-chat-auto-scroll.ts).
+  const { restick } = useChatAutoScroll(scrollPanelRef, [messages, isTyping])
 
   const send = useCallback(async (text?: string) => {
     const q = (text || input).trim()
@@ -115,6 +116,7 @@ export function ChatSearch() {
     setError(null)
 
     addUserMessage(q)
+    restick()
     setIsTyping(true)
 
     try {
@@ -236,7 +238,7 @@ export function ChatSearch() {
     } finally {
       setIsTyping(false)
     }
-  }, [input, isTyping, conversationId, addUserMessage, addAssistantMessage, updateMessage, setConversationId, setIsTyping, updateFiltersFromSearch, ar])
+  }, [input, isTyping, conversationId, addUserMessage, addAssistantMessage, updateMessage, setConversationId, setIsTyping, updateFiltersFromSearch, ar, restick])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -265,7 +267,7 @@ export function ChatSearch() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 max-h-[500px] min-h-[200px] overflow-y-auto px-4 py-3 space-y-4">
+      <div ref={scrollPanelRef} className="flex-1 max-h-[500px] min-h-[200px] overflow-y-auto px-4 py-3 space-y-4">
         {showSuggestions ? (
           <div className="space-y-3">
             <div className="flex gap-2">
@@ -349,7 +351,7 @@ export function ChatSearch() {
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
+        <div />
       </div>
 
       {/* Input */}

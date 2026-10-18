@@ -8,6 +8,7 @@ import { ChatPropertyGrid } from '@/components/search/chat-property-grid'
 import { ChatComparisonTable } from '@/components/search/chat-comparison-table'
 import { ChatPaymentBreakdown } from '@/components/search/chat-payment-breakdown'
 import { BrandMark } from '@/components/layout/brand-logo'
+import { useChatAutoScroll } from '@/components/search/use-chat-auto-scroll'
 import { cn } from '@/lib/utils'
 import { readSSEStream, isSSEResponse } from '@/lib/chat-stream'
 
@@ -69,7 +70,7 @@ export function FullPageChat() {
   const [error, setError] = useState<string | null>(null)
   const [aiStatus, setAiStatus] = useState<'loading' | 'online' | 'offline'>('loading')
   const [logoOk, setLogoOk] = useState(true)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const scrollPanelRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -95,9 +96,9 @@ export function FullPageChat() {
 
   const showResults = lastPropertyGrid && lastPropertyGrid.total > 0
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isTyping])
+  // Reader-respecting auto-scroll: panel-only, never on open, follows only
+  // while the reader is at the bottom (see use-chat-auto-scroll.ts).
+  const { restick } = useChatAutoScroll(scrollPanelRef, [messages, isTyping])
 
   const send = useCallback(async (text?: string) => {
     const q = (text || input).trim()
@@ -105,6 +106,7 @@ export function FullPageChat() {
     setInput('')
     setError(null)
     addUserMessage(q)
+    restick()
     setIsTyping(true)
     try {
       abortRef.current?.abort()
@@ -177,7 +179,7 @@ export function FullPageChat() {
     } finally {
       setIsTyping(false)
     }
-  }, [input, isTyping, conversationId, addUserMessage, addAssistantMessage, updateMessage, setConversationId, setIsTyping, updateFiltersFromSearch])
+  }, [input, isTyping, conversationId, addUserMessage, addAssistantMessage, updateMessage, setConversationId, setIsTyping, updateFiltersFromSearch, restick])
 
   // Detect if last user message was Arabic
   const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')
@@ -209,8 +211,8 @@ export function FullPageChat() {
           'flex flex-col min-h-0',
           showResults ? 'w-full lg:w-[45%] lg:border-r border-gray-200 dark:border-[#262626]' : 'w-full'
         )}>
-          {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto min-h-0 px-3 py-4 sm:px-4 md:px-6">
+          {/* Chat Messages — the scroller the auto-scroll hook controls */}
+          <div ref={scrollPanelRef} className="flex-1 overflow-y-auto min-h-0 px-3 py-4 sm:px-4 md:px-6">
             <div className="mx-auto max-w-2xl space-y-4">
               {showWelcome ? (
                 <div className="space-y-6 pt-4 sm:pt-8">
@@ -342,7 +344,7 @@ export function FullPageChat() {
                   </div>
                 </div>
               )}
-              <div ref={messagesEndRef} />
+              <div />
             </div>
           </div>
 

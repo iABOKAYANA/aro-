@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { useLanguage } from '@/lib/language-context'
 import { Reveal } from '@/components/design'
+import { useChatAutoScroll } from '@/components/search/use-chat-auto-scroll'
 
 interface ChatMessage {
   id: string
@@ -67,9 +68,9 @@ export default function CEOAIPage() {
   const [loading, setLoading] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
-  }, [messages])
+  // Reader-respecting auto-scroll: panel-only, never on open, follows only
+  // while the reader is at the bottom (see use-chat-auto-scroll.ts).
+  const { restick } = useChatAutoScroll(scrollRef, [messages])
 
   async function sendMessage(text: string) {
     const trimmed = text.trim()
@@ -82,6 +83,7 @@ export default function CEOAIPage() {
       timestamp: new Date(),
     }
     setMessages((prev) => [...prev, userMsg])
+    restick()
     setInput('')
     setLoading(true)
 
