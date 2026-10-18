@@ -155,19 +155,43 @@ export function nextConsultQuestion(
   if (lang === 'ar') {
     switch (slot) {
       case 'budget':
-        return { slot, content: 'عشان أرشّح لك صح من الأول: الميزانية في حدود كام؟ (كاش ولا تقسيط؟)' }
+        return {
+          slot,
+          content:
+            'عشان أرشّح لك صح من الأول: الميزانية هي أمّ كل الأرقام — منها بنعمل الخريطة كلها (المنطقة، نوع الوحدة، خطة السداد). السؤال الكلاسيكي، بس هو فعلاً اللي يحدّد السطر الأول 🙂 الميزانية في حدود كام؟ (كاش ولا تقسيط؟)',
+        }
       case 'place':
-        return { slot, content: 'عشان أرشّح لك صح: تحب تكون فين بالظبط؟ (التجمع، زايد، الساحل… مثلًا)' }
+        return {
+          slot,
+          content:
+            'عشان أرشّح لك صح: المكان مش تفصيل بسيط — هو اللي بيرسم يومك الكامل (المواصلات، المدارس، الزحمة) وسعر المتر نفسه بيتغير جدًا من حي لآخر. تحب تكون فين بالظبط؟ (التجمع، زايد، الساحل… مثلًا)',
+        }
       default:
-        return { slot, content: 'عشان أرشّح لك صح: بتدور على إيه — شقة، فيلا، تاون هاوس؟ وده للسكن ولا استثمار؟' }
+        return {
+          slot,
+          content:
+            'عشان أرشّح لك صح: بتدور على إيه — شقة، فيلا، تاون هاوس؟ وده للسكن ولا استثمار؟ رأيي إن الجواب بقلب الاستراتيجية كلها: للسكن بنبص على المعيشة والمرافق، وللاستثمار بنبص على قابلية البيع والإيجار.',
+        }
     }
   }
   switch (slot) {
     case 'budget':
-      return { slot, content: 'To recommend the right fit — roughly what’s your budget? (cash or installment?)' }
+      return {
+        slot,
+        content:
+          'To recommend the right fit — and this question really is the map: the budget decides the area, the unit type and the payment structure. Roughly what’s your budget? (cash or installment?)',
+      }
     case 'place':
-      return { slot, content: 'To recommend the right fit — where would you like to be? (New Cairo, Sheikh Zayed, the Coast…)' }
+      return {
+        slot,
+        content:
+          'To recommend the right fit: the place shapes your daily life (commute, schools, traffic) and the price per meter changes street to street. Where would you like to be? (New Cairo, Sheikh Zayed, the Coast…)',
+      }
     default:
-      return { slot, content: 'To recommend the right fit — what are you after: apartment, villa, townhouse? To live in or invest?' }
+      return {
+        slot,
+        content:
+          'To recommend the right fit — what are you after: apartment, villa, townhouse? To live in or invest? My honest take: the answer flips the whole strategy — living is about lifestyle and amenities, investing is about resale and rent.',
+      }
   }
 }

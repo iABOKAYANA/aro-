@@ -352,13 +352,15 @@ function toolResultToBlocks(toolName: string, result: any): ResponseBlock[] {
 // already compared, already mentions comparing, or has <2 named projects.
 //
 // It is applied at every non-grounded return site, so it also carries the
-// stale-domain link fix: absolute links to the old estateai.eg domain (a
-// model habit) are rewritten to relative paths, which the chat UI already
-// linkifies correctly.
+// stale-link fix: the model habitually invents wrong link forms — absolute
+// links to the old estateai.eg domain and custom schemes like "ghaya://" (a
+// mobile deep-link hallucination). Both are rewritten to relative paths,
+// which the chat UI linkifies correctly.
 const STALE_DOMAIN_RE = /https?:\/\/(?:www\.)?estateai\.eg/gi
+const GHAYA_SCHEME_RE = /ghaya:\/\//gi
 
 export function stripStaleDomainLinks(content: string): string {
-  return content.replace(STALE_DOMAIN_RE, '')
+  return content.replace(GHAYA_SCHEME_RE, '/').replace(STALE_DOMAIN_RE, '')
 }
 
 function withCompareNudge(
@@ -632,14 +634,16 @@ async function consultativeWrap(
     lang === 'ar'
       ? `آخر رسالة من العميل: "${lastUserText}"
 دراسة سوق حقيقية من قاعدة بياناتنا — دي الأرقام الوحيدة المسموحة: ${market || 'مفيش أرقام معاك — ممنوع تمامًا تذكر أي رقم'}
-اتكلم بلسان مستشار عقاري مصري خبير، في 2-4 جمل بس:
-- اتعامل مع اللي قاله بفهم حقيقي مش مجاملة (لو حدد مكان أو نوع أو غرض، قول رأيك الصريح فيه بسرعة).
+شخصيتك: مستشار عقاري مصري كبير — خبير جدًا، لطيف وله حس دعابة خفيف (لمسة واحدة في الرد، مش نكتة كل جملة، ولا بذيئة أبدًا، وفي كلام الميزانية تعامل راقي).
+- تفاعل مع اللي قاله بفهم حقيقي مش مجاملة (لو حدد مكان أو نوع أو غرض، قول رأيك الصريح فيه).
+- وضّح في جملة واحدة ليه السؤال ده مهم أساسًا — منطق المستشار: جوابه بيفصل إيه عن إيه (من غير شرح ثقيل).
 - الأرقام المسموحة هي اللي في الدراسة أعلاه بالحرف فقط. ممنوع أي رقم تاني، وممنوع تسمّي أي مشروع (المشروعات بتيجي بعد ما نخلص الأسئلة).
 - آخر جملة في ردك لازم تكون السؤال ده حرفيًا من غير أي تغيير: ${question.content}`
       : `The client's last message: "${lastUserText}"
 Real market study from our database — the ONLY numbers allowed: ${market || 'none — you know no numbers, inventing any is forbidden'}
-Speak as an expert Egyptian real-estate consultant, in 2-4 sentences only:
+Your voice: a senior Egyptian real-estate consultant — deeply expert, warm, lightly playful (ONE light touch per reply, not a joke every line, never rude, classy during money talk):
 - Engage with what they said with genuine understanding, not flattery (if they named a place/type/purpose, give your quick honest take).
+- Explain in ONE line WHY this question matters — consultant reasoning: what the answer decides (no heavy lecture).
 - Numbers only from the study above, verbatim. No other figures, NO project names (projects come after discovery).
 - The LAST sentence of your reply must be this question verbatim, unchanged: ${question.content}`
   try {
