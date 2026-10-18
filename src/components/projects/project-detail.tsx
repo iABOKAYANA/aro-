@@ -769,32 +769,42 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
             </TabsContent>
 
             <TabsContent value="units">
-              {/* ONE summary row per offered category: شقة غرفتين — المساحة
-                  الأولية — يبدأ من. Real aggregates only, no unit codes,
-                  no flood: a 500-unit compound reads as a short type list. */}
+              {/* ONE summary row per offered category — classic card look:
+                  type title + count badge, gold starting price, primary area.
+                  No unit codes, no flood (a 500-unit compound stays short). */}
               {categoryRows.length > 0 ? (
                 <div className="mb-4 grid gap-3 sm:grid-cols-2">
-                  {categoryRows.map((row) => (
-                    <div key={row.key} className="rounded-2xl border p-4">
-                      <p className="font-display font-semibold">
-                        {ar ? row.labelAr : row.labelEn}
-                      </p>
-                      <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                        {row.minArea !== null && (
-                          <p>
-                            {ar ? 'المساحة الأولية: ' : 'Primary area: '}
-                            <span className="font-semibold text-foreground">{formatSQM(row.minArea)}</span>
-                          </p>
-                        )}
-                        {row.startingPrice !== null && (
-                          <p>
-                            {ar ? 'يبدأ من ' : 'Starting from '}
-                            <span className="font-semibold text-estate-gold">{formatEGP(row.startingPrice)}</span>
-                          </p>
-                        )}
+                  {categoryRows.map((row) => {
+                    const countLabel = ar
+                      ? row.count === 1
+                        ? 'وحدة واحدة'
+                        : row.count === 2
+                          ? 'وحدتين'
+                          : `${row.count} وحدات`
+                      : `${row.count} ${row.count === 1 ? 'unit' : 'units'}`
+                    return (
+                      <div key={row.key} className="rounded-2xl border p-4">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-display font-semibold">{ar ? row.labelAr : row.labelEn}</p>
+                          <Badge variant="secondary">{countLabel}</Badge>
+                        </div>
+                        <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+                          {row.startingPrice !== null && (
+                            <p>
+                              {ar ? 'يبدأ من' : 'Starting from'}{' '}
+                              <span className="font-semibold text-estate-gold">{formatEGP(row.startingPrice)}</span>
+                            </p>
+                          )}
+                          {row.minArea !== null && (
+                            <p>
+                              {ar ? 'المساحة الأولية: ' : 'Primary area: '}
+                              {formatSQM(row.minArea)}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               ) : (
                 <p className="py-4 text-center text-muted-foreground">
