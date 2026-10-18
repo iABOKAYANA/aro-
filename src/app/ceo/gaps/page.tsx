@@ -13,6 +13,7 @@ import {
   ArrowUpDown,
   Building2,
   CheckCircle2,
+  Download,
   FileText,
   ImageOff,
   Loader2,
@@ -136,6 +137,36 @@ export default function CEOInventoryGapsPage() {
     }
   }
 
+  const exportCsv = () => {
+    const headers = ar
+      ? ['المشروع', 'الاسم العربي', 'الرابط', 'نوع النقص', 'عدد النواقص', 'الوحدات', 'إجمالي الوحدات', 'خطط الدفع']
+      : ['Project', 'Arabic name', 'Slug', 'Gap type', 'Gap count', 'Units', 'Total units', 'Payment plans']
+    const csvRows = rows.flatMap((project) => {
+      const gaps: Array<GapKey | ''> = project.missing.length ? project.missing : ['']
+      return gaps.map((gap) => [
+        project.name,
+        project.nameArabic || '',
+        project.slug,
+        gap ? `${GAP_LABELS[gap].en} / ${GAP_LABELS[gap].ar}` : (ar ? 'كامل' : 'Complete'),
+        project.gapCount,
+        project.units,
+        project.unitsTotal,
+        project.plans,
+      ])
+    })
+    const escape = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`
+    const csv = '\uFEFF' + [headers, ...csvRows].map((row) => row.map(escape).join(',')).join('\r\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `inventory-gaps-${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  }
+
   // Soft-delete (archive) via the shared project endpoint — same semantics as
   // the CEO projects pages: isActive=false + APPROVED→ARCHIVED, nothing is
   // physically removed (units/plans/images stay in the DB). Archived projects
@@ -204,10 +235,16 @@ export default function CEOInventoryGapsPage() {
           </p>
           <hr className="gold-hairline mt-4" />
         </Reveal>
-        <Button onClick={load} variant="outline" className="gap-2 border-border bg-card text-gray-300 dark:border-[#262626] dark:bg-[#0A0A0A]">
-          <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
-          {ar ? 'حدّث' : 'Refresh'}
-        </Button>
+        <span className="flex flex-wrap gap-2">
+          <Button onClick={exportCsv} variant="outline" disabled={!rows.length} className="gap-2 border-border bg-card text-gray-300 dark:border-[#262626] dark:bg-[#0A0A0A]">
+            <Download className="h-4 w-4" />
+            {ar ? 'صدّر CSV' : 'Export CSV'}
+          </Button>
+          <Button onClick={load} variant="outline" className="gap-2 border-border bg-card text-gray-300 dark:border-[#262626] dark:bg-[#0A0A0A]">
+            <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+            {ar ? 'حدّث' : 'Refresh'}
+          </Button>
+        </span>
       </div>
 
       {/* Summary cards */}
