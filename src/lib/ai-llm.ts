@@ -13,6 +13,7 @@ import {
   nextConsultQuestion,
   wantsImmediateListings,
 } from '@/lib/ai-consultation'
+import { areaStats, nationalSnapshot } from '@/lib/ai-market-study'
 import { classifySiteIntent, answerSiteQuestion } from '@/lib/ai-site-knowledge'
 import {
   toolSearchProjects,
@@ -456,43 +457,131 @@ function isListingTurn(
 // on a listing turn. Same params the parser extracts; relaxation order keeps
 // the hardest user constraints (city, budget) longest — bedroom counts are
 // relaxed first because project-level bedroom data is sparse.
-// Consultation shortlist — never a wall of cards: the grid shows
-// the top 3 fits; `total` stays the honest match count.
-function shortlistBrief(blocks: ResponseBlock[]): string {
-  const items: Array<Record<string, unknown>> = []
+// Consultation deep-brief: the top-3 shortlist WITH FULL DETAILS (payment
+// plans, amenities, delivery, location, description) — pulled via the same
+// get_project_details tool the model uses — plus a REAL market study for
+// the client's area (project counts, developer activity, price bands,
+// per-type minimums from the DB; national breadth when no area is in play).
+async function studyBrief(
+  blocks: ResponseBlock[],
+  mergedQuery: string,
+): Promise<{ projects: string; market: string | null }> {
+  const slugs: string[] = []
   for (const b of blocks) {
     if (b.type !== 'property_grid' || !Array.isArray(b.projects)) continue
     for (const p of b.projects) {
-      if (items.length >= 3) break
-      items.push({
-        name: p.name,
-        slug: p.slug,
-        startPrice: p.startPrice ?? null,
-        city: p.city ?? p.governorate ?? null,
-        developer: p.developerName ?? null,
-        types: p.propertyTypes ?? [],
-        status: p.status ?? null,
-        completion: p.completionPercent ?? null,
-      })
+      if (slugs.length < 3 && p.slug) slugs.push(p.slug)
     }
   }
-  return JSON.stringify(items)
+
+  const projects: Array<Record<string, unknown>> = []
+  for (const slug of slugs) {
+    try {
+      const res = await toolGetProjectDetails(slug)
+      if (!res?.success) continue
+      const d = res.data as Record<string, any>
+      projects.push({
+        name: d.name,
+        link: `/projects/${d.slug}`,
+        city: d.city ?? d.governorate ?? null,
+        developer: d.developer?.companyName ?? null,
+        developerVerified: d.developer?.isVerified ?? null,
+        startPrice: d.startPrice ?? null,
+        endPrice: d.endPrice ?? null,
+        types: d.propertyTypes ?? [],
+        status: d.status ?? null,
+        completionPercent: d.completionPercent ?? null,
+        deliveryDate: d.deliveryDate ?? null,
+        address: d.address ?? null,
+        totalArea: d.totalArea ?? null,
+        amenities: Array.isArray(d.amenities) ? d.amenities.slice(0, 8) : [],
+        paymentPlans: Array.isArray(d.paymentPlans)
+          ? d.paymentPlans.slice(0, 3).map((pp: any) => ({
+              name: pp.name,
+              downPaymentPct: pp.downPaymentPct,
+              installmentYears: pp.installmentYears,
+              cashDiscount: pp.cashDiscount,
+              maintenanceFeePct: pp.maintenanceFeePct,
+            }))
+          : [],
+        nearbyPlaces: Array.isArray(d.nearbyPlaces)
+          ? d.nearbyPlaces.slice(0, 4).map((np: any) => ({ name: np.name, distance: np.distance }))
+          : [],
+        about: typeof d.description === 'string' ? d.description.slice(0, 240) : null,
+      })
+    } catch {
+      /* one failed detail fetch never sinks the study */
+    }
+  }
+
+  // Market study — the client's area first, national breadth otherwise.
+  let market: string | null = null
+  try {
+    const parsed = parseNaturalLanguageQuery(mergedQuery)
+    const place = String(
+      (parsed.filters as Record<string, unknown>).city ||
+        (parsed.filters as Record<string, unknown>).governorate ||
+        '',
+    )
+    const stats = place ? await areaStats(place) : null
+    if (stats) {
+      market = JSON.stringify({
+        areaStudy: stats.place,
+        publicProjectsThere: stats.projectsCount,
+        activeDevelopers: stats.developersCount,
+        priceStartsFrom: stats.minStart,
+        areaAverageStart: stats.avgStart,
+        byType: stats.byType,
+        leadingDevelopers: stats.topDevelopers,
+      })
+    } else {
+      const snap = await nationalSnapshot()
+      if (snap) {
+        market = JSON.stringify({
+          nationalStudy: snap.totalProjects,
+          developers: snap.totalDevelopers,
+          topAreas: snap.topAreas,
+        })
+      }
+    }
+  } catch {
+    /* market study is a bonus — never a dependency */
+  }
+
+  return { projects: JSON.stringify(projects), market }
 }
 
-// One extra "study" round over the forced-search shortlist: the model
-// recommends the best 2-3 with a one-line fit reason + tradeoff + ONE
-// next-step question. Falls back to the plain intro on any failure.
+// One extra "study" round over the shortlist with the FULL details + the
+// market study: the model reasons like a senior consultant. Falls back to
+// the plain intro on any failure.
 async function consultativeStudy(
-  brief: string,
+  brief: { projects: string; market: string | null },
   messages: OllamaMessage[],
   lang: 'ar' | 'en',
   track?: FallbackTrack,
   signal?: AbortSignal,
 ): Promise<string | null> {
+  const marketLine = brief.market
+    ? lang === 'ar'
+      ? `\nدراسة السوق الحقيقية (من قاعدة بياناتنا): ${brief.market}`
+      : `\nReal market study (from our database): ${brief.market}`
+    : ''
   const ask =
     lang === 'ar'
-      ? `نتائج البحث الحقيقية (أفضل 3): ${brief}\nرشّح أنسب 2-3 للعميل: سطر واحد لكل مشروع ليه مناسب له + ملاحظة واحدة تنتبه لها، وبعدين سؤال واحد للخطوة الجاية (مقارنة اتنين / معاينة / خطة سداد). مختصر جدًا وبالعربي المصري. ممنوع أي أرقام أو أسماء من خارج النتايج دي.`
-      : `Real search results (top 3): ${brief}\nRecommend the best 2-3 for this client: one line each on why it fits + one tradeoff to watch, then ONE next-step question (compare two / a viewing / payment plan). Very brief. Never use names or numbers outside these results.`
+      ? `نتائج البحث الحقيقية (أفضل 3 مشاريع بتفاصيلها الكاملة): ${brief.projects}${marketLine}
+اتكلم كأكبر مستشار عقاري في مصر — دي دراسة مش عرض:
+- لكل مشروع: موقعه في سوق منطقته (سعره مقارنة بالمتوسط لو متاح)، هيكل السداد (المقدم والسنين والخصم)، المرافق المهمة، ومخاطر التسليم/التشطيب.
+- اربط كل ترشيح ببروفايل العميل (غرضه وميزانيته ومكانة) — ليه ده مناسب ليه تحديدًا.
+- لو الغرض استثمار: اتكلم عن حركة المنطقة وقابلية البيع. لو سكن: اتكلم عن المعيشة والمرافق.
+- في الآخر: ملاحظة سوقية واحدة العميل ماسألش عنها + سؤال أو اتنين للنقاش (مقارنة / معاينة / خطة سداد).
+مختصر ومركز (10 جمل بحد أقصى) وبالعربي المصري. ممنوع أي أرقام أو أسماء من خارج النتايج دي.`
+      : `Real search results (top 3 full projects): ${brief.projects}${marketLine}
+Speak as a senior Egyptian real-estate consultant — a study, not a listing:
+- Per project: its position in its area's market (price vs area average when available), payment structure (down payment, years, cash discount), key amenities, and delivery/finishing risks.
+- Tie each pick to the CLIENT's profile (purpose, budget, place) — why THIS one for THEM.
+- Investment purpose → area demand and resale angle. Living → lifestyle, amenities, connectivity.
+- End with ONE market insight they didn't ask about + 1-2 discussion questions (compare / viewing / payment plan).
+Brief and sharp (max ~10 sentences). Never use names or numbers outside these results.`
   try {
     const { response, provider } = await chatOnce([...messages, { role: 'user', content: ask }], undefined, { signal })
     if (provider === 'local') track && (track.fellBack = true)
@@ -715,6 +804,32 @@ async function prepareLLMRequest(
       }
     }
   }
+
+  // ── Market study for the model path ──────────────────────────
+  // Real DB aggregates for the client's area (project counts, developer
+  // activity, price bands, per-type minimums) ground every market claim
+  // the model makes — it can say "few villa projects in Zayed" only when
+  // the numbers say so, and can never invent an average.
+  let marketBlock = ''
+  try {
+    if (listingTurn) {
+      const parsedFilters = parseNaturalLanguageQuery(mergedQuery).filters as Record<string, unknown>
+      const place = String(parsedFilters.city || parsedFilters.governorate || '')
+      const stats = place ? await areaStats(place) : null
+      if (stats) {
+        const byType = stats.byType
+          .map((t) => `${t.type}(${t.count}${t.minStart ? `, from ${t.minStart} EGP` : ''})`)
+          .join(', ')
+        marketBlock =
+          `\n[MARKET STUDY — real DB aggregates for ${stats.place}: ${stats.projectsCount} public projects, ` +
+          `${stats.developersCount} active developers, starts from ${stats.minStart ?? '—'} EGP, ` +
+          `average start ${stats.avgStart ?? '—'} EGP, by type: ${byType}. ` +
+          `Any market/supply/average claim MUST come from THESE numbers — never invent averages or trends.]`
+      }
+    }
+  } catch {
+    /* market study is a bonus — never a dependency */
+  }
   const deadline = Date.now() + TOOL_LOOP_BUDGET_MS
 
   // Build messages array
@@ -735,7 +850,9 @@ async function prepareLLMRequest(
   const messages: OllamaMessage[] = [
     { role: 'system', content: SYSTEM_PROMPT + dynamicNotes },
   ]
-  if (stateBlock) messages.push({ role: 'system', content: stateBlock })
+  if (stateBlock || marketBlock) {
+    messages.push({ role: 'system', content: [stateBlock, marketBlock].filter(Boolean).join('\n') })
+  }
 
   for (const msg of conversationHistory) {
     messages.push({ role: msg.role, content: msg.content })
@@ -782,7 +899,8 @@ export async function callLLM(
           // Study round: consultative recommendation over the shortlist
           // (falls back to the plain intro on any failure).
           content =
-            (await consultativeStudy(shortlistBrief(allBlocks), messages, lang, track)) || forced.intro
+            (await consultativeStudy(await studyBrief(allBlocks, mergedQuery), messages, lang, track)) ||
+            forced.intro
         }
       }
       content = await guardLanguage(content, messages, lang, allBlocks.length > 0, track)
@@ -926,8 +1044,13 @@ export async function callLLMStream(
           // (falls back to the plain intro on any failure). Emitted as one
           // token so both clients share the existing render path.
           cb.onStatus?.('summarizing', lang === 'ar' ? 'بدارس الاختيارات…' : 'Studying the options…')
-          const studied =
-            await consultativeStudy(shortlistBrief(allBlocks), messages, lang, track, cb.signal)
+          const studied = await consultativeStudy(
+            await studyBrief(allBlocks, mergedQuery),
+            messages,
+            lang,
+            track,
+            cb.signal,
+          )
           const finalText = studied || forced.intro
           const nudged = withCompareNudge(finalText, allBlocks, toolCallsMade, lang)
           cb.onToken?.(nudged)
