@@ -488,7 +488,12 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
   // Individual cards only for SMALL inventories (at most 12) — big compounds
   // (500+ units) read as the category summary alone, never a flood of cards,
   // and never a cheapest-12 skew (buyable inventory is price-ascending).
-  const showUnitCards = listedUnits.length > 0 && listedUnits.length <= 12
+  // Aggregate brochure/category rows have no unit code and should each remain
+  // visible as a card even when a project has >12 categories. Real inventories
+  // keep the compact category-ticket view to avoid flooding the project page.
+  const showUnitCards = listedUnits.length > 0 && (
+    listedUnits.length <= 12 || listedUnits.every((unit: any) => !unit.unitNumber)
+  )
   // Highest cash-discount percent across the project's payment plans (the
   // "up to X%" headline for the payment tab) — null when no plan discounts.
   const maxPlanDiscount = (() => {

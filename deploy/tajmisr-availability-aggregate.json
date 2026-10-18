@@ -1,0 +1,15 @@
+{
+  "source": "Owner-supplied Taj Misr availability message",
+  "pendingClarification": [
+    { "project": "Dejoya 3", "area": 188, "sourcePrice": "8,267,4000", "reason": "ambiguous extra zero; not imported until confirmed" }
+  ],
+  "groups": [
+    { "projectSlug": "730-de-joya--1", "phase": "Dejoya 1 · R8 · delivery 1 year · 10% DP over 10 years", "terms": "Delivery 1 year · 10% down payment over 10 years · prices include temporary 10% discount", "items": [["Apartment",70,3456000],["Apartment",118,4987800],["Apartment",141,6279300],["Apartment",175,7245000],["Apartment",224,9180000],["Apartment",314,12749400]] },
+    { "projectSlug": "732-de-joya--2", "phase": "Dejoya 2 · R8 · delivery 1 year · 10% DP over 10 years", "terms": "Delivery 1 year · 10% down payment over 10 years · prices include temporary 10% discount", "items": [["Apartment",68,3191400],["Apartment",111,5010300],["Apartment",139,5944500],["Apartment",174,7362000],["Apartment",280,11655000]] },
+    { "projectSlug": "733-de-joya--3", "phase": "Dejoya 3 · R7 · delivery 1 year · 10% DP over 10 years", "terms": "Delivery 1 year · 10% down payment over 10 years · prices include temporary 10% discount", "items": [["Apartment",164,7252200],["Apartment",201,9721800],["Apartment",288,11934000]] },
+    { "projectSlug": "1467-de-joya-4", "phase": "Dejoya 4 · R8 · delivery 4.5 years · 5% + 5% after 3 months over 15 years", "terms": "Delivery 4.5 years · 5% down payment + 5% after 3 months over 15 years · selected units include temporary 5% discount", "items": [["Apartment",143,7224000],["Apartment",150,7560000],["Apartment",168,8424000],["Apartment",190,9480000],["Apartment",202,10056000],["Duplex",192,9806400],["Villa",274,12525600],["Villa",254,12115200],["Villa",295,13812000]] },
+    { "projectSlug": "829-dejoya-villas", "phase": "Dejoya Villas New Zayed · delivery 3 years · 10% DP over 10 years", "terms": "Delivery 3 years · 10% down payment over 10 years", "items": [["Twin House",250,22500000],["Twin House",275,27000000],["Standalone",302,32000000],["Standalone",354,42500000],["Standalone",406,45000000]] },
+    { "projectSlug": "823-dejoya-residence", "phase": "Dejoya Residence New Zayed · delivery 2 years · 10% DP over 10 years", "terms": "Delivery 2 years · 10% down payment over 10 years · selected units include temporary 5% discount", "items": [["Apartment",169,11251344],["Apartment",175,11650800],["Apartment",178,13798560],["Apartment",185,14341200]] },
+    { "projectSlug": "823-dejoya-residence", "phase": "Dejoya Residence New Zayed · delivery 4 years · 5% + 5% after 3 months over 15 years", "terms": "Delivery 4 years · 5% down payment + 5% after 3 months over 15 years · selected units include temporary 5% discount", "items": [["Apartment",74,7170600],["Apartment",108,9072000],["Apartment",131,11790000],["Apartment",141,13662900],["Apartment",158,13840800],["Apartment",163,14278800],["Apartment",169,14804400],["Apartment",175,15330000],["Apartment",185,17926500]] }
+  ]
+}
