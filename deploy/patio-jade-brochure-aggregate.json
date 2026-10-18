@@ -1,0 +1,21 @@
+{
+  "source": "Owner-supplied Patio Jade brochure (parsed text, page 2)",
+  "projectSlug": "1954-el-patio-jade",
+  "availableCategories": [
+    {
+      "name": "Family House Type A Ground (brochure average price range EGP 19.8M–20.8M)",
+      "nameArabic": "بيت عائلي نوع A أرضي (نطاق متوسط السعر بالكتيب 19.8–20.8 مليون جنيه)",
+      "unitType": "VILLA",
+      "area": 165,
+      "gardenArea": 100,
+      "price": 19800000,
+      "priceRangeMax": 20800000,
+      "finishingType": "Core & Shell"
+    }
+  ],
+  "excludedSoldCategories": [
+    "Family House Type A Upper",
+    "Family House Type B Upper",
+    "Family House Type B Ground"
+  ]
+}
