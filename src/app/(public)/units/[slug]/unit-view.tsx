@@ -145,10 +145,12 @@ export default function UnitView({ unit, gallery }: { unit: UnitDetail; gallery:
                       <p className="text-sm font-medium">{unit.bathrooms} {ar ? (unit.bathrooms === 1 ? 'حمام' : 'حمامات') : (unit.bathrooms === 1 ? 'Bath' : 'Baths')}</p>
                     </div>
                   )}
-                  <div className="rounded-2xl border border-estate-gold/15 bg-gray-50 p-3 text-center dark:border-[#D4A843]/15 dark:bg-[#0A0A0A]">
-                    <Maximize className="mx-auto mb-1 h-5 w-5 text-estate-gold" />
-                    <p className="text-sm font-medium">{formatSQM(unit.area)}</p>
-                  </div>
+                  {unit.area > 0 && (
+                    <div className="rounded-2xl border border-estate-gold/15 bg-gray-50 p-3 text-center dark:border-[#D4A843]/15 dark:bg-[#0A0A0A]">
+                      <Maximize className="mx-auto mb-1 h-5 w-5 text-estate-gold" />
+                      <p className="text-sm font-medium">{formatSQM(unit.area)}</p>
+                    </div>
+                  )}
                   {unit.floor != null && (
                     <div className="rounded-2xl border border-estate-gold/15 bg-gray-50 p-3 text-center dark:border-[#D4A843]/15 dark:bg-[#0A0A0A]">
                       <Building2 className="mx-auto mb-1 h-5 w-5 text-estate-gold" />

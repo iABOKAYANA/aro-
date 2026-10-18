@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: UnitPageProps): Promise<Metad
   const title = unit.metaTitle || `${unit.project.name} - ${unit.name} | GHAYA REAL ESTATE`
   const description =
     unit.metaDescription ||
-    `${unit.unitType} unit in ${unit.project.name}, ${unit.area}sqm at ${unit.price.toLocaleString('en-US')} EGP.`
+    `${unit.unitType} unit in ${unit.project.name}${unit.area > 0 ? `, ${unit.area}sqm` : ''} at ${unit.price.toLocaleString('en-US')} EGP.`
   const cover = absoluteImage(unit.project.coverImage) ?? `${SITE_URL}/images/ghaya-logo.png`
   const url = `${SITE_URL}/units/${unit.slug}`
   return {

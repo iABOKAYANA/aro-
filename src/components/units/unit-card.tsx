@@ -100,10 +100,12 @@ export function UnitCard({ unit, projectName, projectSlug, projectCoverImage }: 
               {unit.bathrooms} {unit.bathrooms === 1 ? (ar ? 'حمام' : 'Bath') : (ar ? 'حمامات' : 'Baths')}
             </span>
           )}
-          <span className="flex items-center gap-1">
-            <Maximize className="h-4 w-4" />
-            {formatSQM(unit.area)}
-          </span>
+          {unit.area > 0 && (
+            <span className="flex items-center gap-1">
+              <Maximize className="h-4 w-4" />
+              {formatSQM(unit.area)}
+            </span>
+          )}
         </div>
 
         {unit.finishingType && (
