@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Fragment, type RefObject } from 'react'
+import { useState, useEffect, Fragment, type RefObject, type ReactNode } from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -8,7 +8,7 @@ import { useSearchParams } from 'next/navigation'
 import {
   MapPin, Bed, Bath, Maximize, Heart, Share2, Phone, Mail,
   ChevronRight, Building2, Calendar, CheckCircle2, Globe, ExternalLink, X, Check, Star,
-  Copy, MessageCircle
+  Copy, MessageCircle, Home, Store, Stethoscope, Layers, Warehouse, Tent, Briefcase
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,6 +19,26 @@ import { CompareToggle } from '@/lib/compare'
 import { coverChain, landmarkForCity } from '@/lib/landmarks'
 import { useLanguage } from '@/lib/language-context'
 import { unitCategoryRows, type UnitsByTypeRow } from '@/lib/units-by-type'
+
+/** Tiny blueprint glyphs for the category units cards (beds count / twin homes / shop…). */
+const CAT_GLYPH: Record<string, () => ReactNode> = {
+  BED_1: () => <Bed className="h-3.5 w-3.5" />,
+  BED_2: () => (<><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /></>),
+  BED_3: () => (<><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /></>),
+  BED_4: () => (<><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /><Bed className="h-3.5 w-3.5" /></>),
+  BED_5: () => (<><Bed className="h-3.5 w-3.5" /><span className="text-[10px] font-bold leading-none">+</span></>),
+  BED_NULL: () => <Home className="h-3.5 w-3.5" />,
+  STUDIO: () => <Bed className="h-3.5 w-3.5" />,
+  DUPLEX: () => <Layers className="h-3.5 w-3.5" />,
+  PENTHOUSE: () => <Building2 className="h-3.5 w-3.5" />,
+  VILLA: () => <Home className="h-3.5 w-3.5" />,
+  VILLA_TWIN: () => (<><Home className="h-3.5 w-3.5" /><Home className="h-3.5 w-3.5 -ms-2" /></>),
+  TOWNHOUSE: () => <Warehouse className="h-3.5 w-3.5" />,
+  CHALET: () => <Tent className="h-3.5 w-3.5" />,
+  COMMERCIAL: () => <Store className="h-3.5 w-3.5" />,
+  ADMINISTRATIVE: () => <Briefcase className="h-3.5 w-3.5" />,
+  MEDICAL: () => <Stethoscope className="h-3.5 w-3.5" />,
+}
 import { Reveal, SectionHeader, useParallax } from '@/components/design'
 import { UnitCard } from '@/components/units/unit-card'
 // Booking modal (533-line form + next-auth) splits into its own chunk; the
@@ -769,27 +789,50 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
             </TabsContent>
 
             <TabsContent value="units">
-              {/* Brochure-style list: ONE line per offered category —
-                  type name · primary area · starting price. No count badges,
-                  no unit codes, no card boxes, no flood. */}
+              {/* "Blueprint ticket" cards — one per offered category, a design
+                  the market hasn't seen: faint architect-grid backdrop, gold
+                  side rail, room glyphs (beds count / twin homes / shop),
+                  hero area numeral, perforated divider, gold starting price.
+                  No counts, no codes, no flood. */}
               {categoryRows.length > 0 ? (
-                <div className="mb-4">
+                <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   {categoryRows.map((row) => (
                     <div
                       key={row.key}
-                      className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5 border-b border-border/60 last:border-b-0"
+                      className="group relative overflow-hidden rounded-2xl border border-border/70 bg-background/80 p-4 pt-5 transition-all duration-300 hover:-translate-y-1 hover:border-estate-gold/50 hover:shadow-[0_12px_40px_-12px_rgba(212,168,67,0.35)]"
+                      style={{
+                        backgroundImage:
+                          'linear-gradient(rgba(212,168,67,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(212,168,67,0.05) 1px, transparent 1px)',
+                        backgroundSize: '18px 18px',
+                      }}
                     >
-                      <p className="font-display font-semibold">{ar ? row.labelAr : row.labelEn}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {row.minArea !== null && <span>{formatSQM(row.minArea)}</span>}
-                        {row.startingPrice !== null && (
-                          <>
-                            {row.minArea !== null && ' · '}
-                            {ar ? 'يبدأ من ' : 'Starting from '}
-                            <span className="font-semibold text-estate-gold">{formatEGP(row.startingPrice)}</span>
-                          </>
-                        )}
-                      </p>
+                      <span
+                        aria-hidden
+                        className="absolute inset-y-0 start-0 w-[3px] rounded-full bg-gradient-to-b from-estate-gold via-estate-gold/40 to-transparent"
+                      />
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="font-display font-semibold">{ar ? row.labelAr : row.labelEn}</p>
+                        <div aria-hidden className="flex shrink-0 items-center gap-1 text-estate-gold/75">
+                          {CAT_GLYPH[row.key]?.() ?? <Building2 className="h-3.5 w-3.5" />}
+                        </div>
+                      </div>
+                      {row.minArea !== null && (
+                        <div className="mt-3 flex flex-wrap items-baseline gap-2">
+                          <span className="font-display text-3xl font-extrabold tracking-tight">
+                            {row.minArea.toLocaleString('en-US')}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{ar ? 'م² المساحة الأولية' : 'sqm primary area'}</span>
+                        </div>
+                      )}
+                      <div aria-hidden className="my-3 border-t border-dashed border-border/50" />
+                      {row.startingPrice !== null && (
+                        <div>
+                          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                            {ar ? 'يبدأ من' : 'Starting from'}
+                          </p>
+                          <p className="font-display text-lg font-bold text-estate-gold">{formatEGP(row.startingPrice)}</p>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
