@@ -5,13 +5,19 @@ import { SYSTEM_PROMPT } from '@/lib/ai-system-prompt'
 import { AI_CONFIG } from '@/lib/ai/config'
 import { hasListingIntent, parseNaturalLanguageQuery } from '@/lib/ai-search-parser'
 import {
+  areaTakeOffered,
   askedConsultSlots,
   countConsultQuestions,
   CONSULT_MAX_QUESTIONS,
+  AREA_TAKE_SEGUE_AR,
+  AREA_TAKE_SEGUE_EN,
   discoveryExhausted,
+  hasRecommended,
   isReady,
   needsFromHistory,
   nextConsultQuestion,
+  slotsRevealedBy,
+  type ConsultNeeds,
   wantsImmediateListings,
 } from '@/lib/ai-consultation'
 import { areaStats, nationalSnapshot } from '@/lib/ai-market-study'
@@ -660,6 +666,108 @@ Your voice: a senior Egyptian real-estate consultant — deeply expert, warm, li
   return question.content
 }
 
+// ── Area take: the place-discussion round ──────────────────
+// Triggered ONCE when the client just settled a slot (usually named the
+// place) while already "ready" — instead of flooding listings on the
+// reveal turn, Ayn discusses the AREA as a consultant: real aggregates,
+// an honest take for their purpose, what their budget does there — and
+// never names a single project. Ends with the system-owned segue;
+// listings only on the NEXT turn. Falls back to a deterministic brief.
+async function areaTakeTurn(
+  needs: ConsultNeeds,
+  history: Array<{ role: string; content: string }>,
+  lang: 'ar' | 'en',
+  track?: FallbackTrack,
+): Promise<string> {
+  const segue = lang === 'ar' ? AREA_TAKE_SEGUE_AR : AREA_TAKE_SEGUE_EN
+  // Real area aggregates and the client's budget position in them.
+  let facts = ''
+  let factsFallback = ''
+  try {
+    const stats = needs.place ? await areaStats(needs.place) : null
+    if (stats) {
+      const topType = stats.byType[0]
+      facts = JSON.stringify({
+        area: stats.place,
+        publicProjects: stats.projectsCount,
+        activeDevelopers: stats.developersCount,
+        startsFrom: stats.minStart,
+        averageStart: stats.avgStart,
+        byType: stats.byType.slice(0, 5),
+      })
+      const position =
+        needs.budgetMax != null && stats.avgStart != null
+          ? needs.budgetMax < stats.avgStart
+            ? lang === 'ar'
+              ? 'ميزانيتك تحت متوسط بدايات المنطقة — هنعكسها في رأي صريح.'
+              : 'Your budget sits below the area average start — expect an honest take.'
+            : lang === 'ar'
+              ? 'ميزانيتك مارّة فوق المتوسط هنا — عندنا مساحة لعب.'
+              : 'Your budget clears the area average — room to play.'
+          : ''
+      factsFallback =
+        lang === 'ar'
+          ? `${stats.projectsCount} مشروع على يد ${stats.developersCount} مطور، بدايات من ${fmtEGP(stats.minStart ?? 0)} (المتوسط ${fmtEGP(stats.avgStart ?? 0)})${topType ? `، وأنشط نوع: ${topType.type}` : ''}. ${position}`
+          : `${stats.projectsCount} projects by ${stats.developersCount} developers, starts from ${fmtEGP(stats.minStart ?? 0)} (average ${fmtEGP(stats.avgStart ?? 0)}). ${position}`
+    }
+  } catch {
+    /* bonus, never a dependency */
+  }
+
+  const budgetLine =
+    needs.budgetMin != null || needs.budgetMax != null
+      ? `${needs.budgetMin ?? 0}–${needs.budgetMax ?? '—'} EGP`
+      : lang === 'ar'
+        ? 'مرنة (غير محددة)'
+        : 'flexible'
+  const purposeLine = needs.purpose === 'invest' ? (lang === 'ar' ? 'استثمار' : 'invest') : needs.purpose === 'live' ? (lang === 'ar' ? 'سكن' : 'living') : '—'
+  const typeLine = needs.propertyType || '—'
+
+  const ask =
+    lang === 'ar'
+      ? `بروفايل العميل: ميزانية ${budgetLine}، النوع ${typeLine}، الغرض ${purposeLine}، المكان ${needs.place}
+دراسة المكان الحقيقية (الوحيدة المسموحة أرقام): ${facts || 'مفيش أرقام — ممنوع تذكر أي رقم'}
+اتكلم عن المكان كخبير جاهز، 4-6 جمل، ومن غير ذكر اسم أي مشروع نهائيًا (القايمة مش النهارده):
+- طبع المكان وشغله في السوق (من الأرقام فقط) + رأيك الصريح بالنسبة لغرض العميل.
+- ميزانية العميل بتعمل إيه هنا بالأرقام (تحت/فوق المتوسط، بداية من كام) — بالحرف من الأرقام.
+- لمستين شخصيتين (مثلاً: الزحمة الصبح، قرب المدارس، وصل الساحل — من معرفة عامة مش من مفهوم).
+الجملة الأخيرة حرفيًا: ${segue}`
+      : `Client profile: budget ${budgetLine}, type ${typeLine}, purpose ${purposeLine}, place ${needs.place}
+Real area study (the ONLY numbers allowed): ${facts || 'none — inventing numbers is forbidden'}
+Talk about the AREA as an informed consultant, 4-6 sentences, NO project names at all (the list comes later):
+- The area's character and market behavior (from the numbers only) + your honest take for the client's purpose.
+- What the client's budget does here, in real numbers (below/above average, starts from) — verbatim from the facts.
+- Two personality touches (morning traffic, school proximity, coast access — general knowledge, not averages).
+The LAST sentence verbatim: ${segue}`
+  try {
+    const { response, provider } = await chatOnce(
+      [
+        ...history.slice(-6).map((m) => ({ role: (m.role === 'tool' ? 'assistant' : m.role) as OllamaMessage['role'], content: m.content })),
+        { role: 'user', content: ask },
+      ],
+      undefined,
+    )
+    if (provider === 'local') track && (track.fellBack = true)
+    const text = (response.message?.content || '').trim()
+    if (
+      text.includes(segue) &&
+      !text.includes('/projects/') &&
+      !text.includes('ghaya://') &&
+      text.length <= 1200 &&
+      !replyNeedsRepair(text, lang)
+    ) {
+      return stripStaleDomainLinks(text)
+    }
+  } catch {
+    /* fall through to the deterministic brief */
+  }
+  if (lang === 'ar') {
+    const placeName = needs.place?.replace(/-/g, ' ') || ''
+    return `${placeName}: ${factsFallback} ${segue}`
+  }
+  return `${needs.place?.replace(/-/g, ' ') || ''}: ${factsFallback} ${segue}`
+}
+
 async function runForcedSearch(
   mergedQuery: string,
   lang: 'ar' | 'en',
@@ -856,11 +964,11 @@ async function prepareLLMRequest(
   let stateBlock = stateBlockRaw
   if (listingTurn && !wantsImmediateListings(currentMessage)) {
     const needs = needsFromHistory(conversationHistory, currentMessage)
+    const assistantTexts = conversationHistory
+      .filter((m) => m.role === 'assistant')
+      .map((m) => m.content)
+      .slice(-6)
     if (!isReady(needs)) {
-      const assistantTexts = conversationHistory
-        .filter((m) => m.role === 'assistant')
-        .map((m) => m.content)
-        .slice(-6)
       const asked = askedConsultSlots(assistantTexts)
       if (discoveryExhausted(needs, asked)) {
         // Keep discussing, never repeat: the client already heard every
@@ -891,6 +999,34 @@ async function prepareLLMRequest(
             allBlocks: [],
           }
         }
+      }
+    } else if (
+      needs.place &&
+      slotsRevealedBy(conversationHistory, currentMessage).length > 0 &&
+      !hasRecommended(assistantTexts) &&
+      !areaTakeOffered(assistantTexts)
+    ) {
+      // ── Area take: NO listings on the reveal turn ────────────
+      // The client just settled a slot (usually named the place). Before
+      // any shortlist, Ayn discusses the AREA like a consultant — real
+      // aggregates, honest opinion, no project names — and ends with a
+      // system-owned segue ("curated top-3 or keep talking?"). One-time.
+      const trackTake: FallbackTrack = { fellBack: false }
+      const take = await areaTakeTurn(needs, conversationHistory, lang, trackTake)
+      return {
+        lang,
+        grounded: {
+          content: take,
+          blocks: [{ type: 'text', content: take }],
+          toolCallsMade: [],
+          provider: servedProvider(trackTake),
+        },
+        messages: [],
+        mergedQuery,
+        listingTurn: false,
+        deadline: 0,
+        toolCallsMade: [],
+        allBlocks: [],
       }
     }
   }

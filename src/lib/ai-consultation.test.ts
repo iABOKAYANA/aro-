@@ -9,6 +9,10 @@ import {
   countConsultQuestions,
   nextConsultQuestion,
   discoveryExhausted,
+  slotsRevealedBy,
+  hasRecommended,
+  areaTakeOffered,
+  AREA_TAKE_SEGUE_AR,
   type ConsultNeeds,
   CONSULT_MARKER_AR,
 } from '@/lib/ai-consultation'
@@ -32,6 +36,29 @@ describe('ai-consultation gate', () => {
   it('discoveryExhausted: a complete profile is never exhausted (ready beats it)', () => {
     const needs = extractNeeds('عايز شقة في التجمع تحت 8 مليون')
     expect(discoveryExhausted(needs, new Set(['budget', 'place', 'typepurpose']))).toBe(false)
+  })
+
+  it('area take: first full-profile message triggers exactly one area discussion (slots revealed)', () => {
+    // Fresh conversation: everything arrives in one message → reveal.
+    const revealed = slotsRevealedBy([], 'عايز فيلا في زايد للاستثمار حوالي 12 مليون')
+    expect(revealed.length).toBeGreaterThan(0)
+    expect(hasRecommended([])).toBe(false)
+    expect(areaTakeOffered([])).toBe(false)
+  })
+
+  it('area take: after the segue was offered, the round never repeats', () => {
+    const assistant = [`بص يا باشا على المكان... ${AREA_TAKE_SEGUE_AR}`]
+    expect(areaTakeOffered(assistant)).toBe(true)
+    // and once projects were recommended, the round is a no-go too
+    expect(hasRecommended([`رشّح لك ده /projects/1291-elevation 👌`])).toBe(true)
+  })
+
+  it('area take: a later turn does NOT reveal again (nothing new settled)', () => {
+    const history = [
+      { role: 'user' as const, content: 'عايز فيلا في زايد للاستثمار حوالي 12 مليون' },
+      { role: 'assistant' as const, content: `خريطة المكان... ${AREA_TAKE_SEGUE_AR}` },
+    ]
+    expect(slotsRevealedBy(history, 'فصّل بالقائمة')).toEqual([])
   })
 
   it('extracts needs from a full Arabic query (digits, aliases, budget)', () => {

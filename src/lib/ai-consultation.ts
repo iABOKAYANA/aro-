@@ -105,6 +105,37 @@ export function discoveryExhausted(
   return missing.length > 0 && missing.every((s) => asked.has(s))
 }
 
+/**
+ * Slots the CURRENT message just settled (defined now, undefined before) —
+ * the trigger for the one-time area-take round.
+ */
+export function slotsRevealedBy(
+  history: Array<{ role: string; content: string }>,
+  currentMessage: string,
+): Array<'budget' | 'place' | 'typepurpose'> {
+  const prior = needsFromHistory(history, '')
+  const now = mergeNeeds(prior, extractNeeds(currentMessage))
+  const revealed: Array<'budget' | 'place' | 'typepurpose'> = []
+  const budgetBefore = prior.budgetMin !== undefined || prior.budgetMax !== undefined
+  const budgetNow = now.budgetMin !== undefined || now.budgetMax !== undefined
+  if (!budgetBefore && budgetNow) revealed.push('budget')
+  if (!prior.place && now.place) revealed.push('place')
+  if (!(prior.propertyType || prior.purpose) && (now.propertyType || now.purpose)) {
+    revealed.push('typepurpose')
+  }
+  return revealed
+}
+
+/** Has Ayn already recommended projects in the recent conversation? */
+export function hasRecommended(assistantTexts: string[]): boolean {
+  return assistantTexts.some((t) => t.includes('/projects/'))
+}
+
+/** Was the one-time area-take round already offered? */
+export function areaTakeOffered(assistantTexts: string[]): boolean {
+  return assistantTexts.some((t) => t.includes(AREA_TAKE_SEGUE_AR) || t.includes(AREA_TAKE_SEGUE_EN))
+}
+
 export function wantsImmediateListings(text: string): boolean {
   const t = text.trim().toLowerCase()
   return IMMEDIATE_PHRASES.some((p) => t.includes(p))
@@ -131,6 +162,14 @@ export function countConsultQuestions(assistantTexts: string[]): number {
 }
 
 export const CONSULT_MAX_QUESTIONS = 3
+
+// Area-take round: before a client who just revealed their place (or a
+// fresh profile) gets ANY listings, Ayn discusses the AREA first — a
+// consultative take on the market with REAL aggregates — and ends with a
+// system-owned segue question. The marker lets the gate know the round
+// already happened (it never happens twice).
+export const AREA_TAKE_SEGUE_AR = 'تحب فصّل بالقائمة لأقوى 3، ولا ندردش أكتر في المكان؟'
+export const AREA_TAKE_SEGUE_EN = 'Want the curated top-3 list, or keep talking about the area first?'
 
 export interface ConsultQuestion {
   slot: 'budget' | 'place' | 'typepurpose'
