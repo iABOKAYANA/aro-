@@ -4,6 +4,15 @@ import { AI_TOOLS } from '@/lib/ai/tools'
 import { SYSTEM_PROMPT } from '@/lib/ai-system-prompt'
 import { AI_CONFIG } from '@/lib/ai/config'
 import { hasListingIntent, parseNaturalLanguageQuery } from '@/lib/ai-search-parser'
+import {
+  askedConsultSlots,
+  countConsultQuestions,
+  CONSULT_MAX_QUESTIONS,
+  isReady,
+  needsFromHistory,
+  nextConsultQuestion,
+  wantsImmediateListings,
+} from '@/lib/ai-consultation'
 import { classifySiteIntent, answerSiteQuestion } from '@/lib/ai-site-knowledge'
 import {
   toolSearchProjects,
@@ -169,7 +178,14 @@ function toolResultToBlocks(toolName: string, result: any): ResponseBlock[] {
       if (d.total === 0) {
         blocks.push({ type: 'text', content: 'مفيش نتائج تطابق البحث.' })
       } else {
-        blocks.push({ type: 'property_grid', title: '', projects: d.projects, total: d.total })
+        // Consultation shortlist — never a wall of cards: the grid shows
+        // the top 3 fits; `total` stays the honest match count.
+        blocks.push({
+          type: 'property_grid',
+          title: '',
+          projects: Array.isArray(d.projects) ? d.projects.slice(0, 3) : d.projects,
+          total: d.total,
+        })
       }
       break
     }
@@ -332,6 +348,17 @@ function toolResultToBlocks(toolName: string, result: any): ResponseBlock[] {
 // natural-language compare offer naming the first pair. Text-only (no new
 // block type) so the mobile contract is unchanged. Skipped when the turn
 // already compared, already mentions comparing, or has <2 named projects.
+//
+// It is applied at every non-grounded return site, so it also carries the
+// stale-domain link fix: absolute links to the old estateai.eg domain (a
+// model habit) are rewritten to relative paths, which the chat UI already
+// linkifies correctly.
+const STALE_DOMAIN_RE = /https?:\/\/(?:www\.)?estateai\.eg/gi
+
+export function stripStaleDomainLinks(content: string): string {
+  return content.replace(STALE_DOMAIN_RE, '')
+}
+
 function withCompareNudge(
   content: string,
   blocks: ResponseBlock[],
@@ -339,6 +366,7 @@ function withCompareNudge(
   lang: 'ar' | 'en',
 ): string {
   try {
+    content = stripStaleDomainLinks(content)
     if (!shouldAppendNudge(content, blocks as Array<{ type: string; projects?: Array<{ name?: string }> }>, toolCallsMade)) {
       return content
     }
@@ -402,7 +430,7 @@ function buildConversationState(
   const stateBlock = [
     '[CONVERSATION STATE — slots already known from earlier turns. NEVER ask for these again, not even rephrased:]',
     ...lines,
-    'RULE: every slot above is settled. On a listing question, merge STATE with the new message and call the search tool immediately.',
+    'RULE: slots above are settled — never re-ask them. On a listing question, merge STATE with the new message, call the search tool yourself, then recommend the best 2-3 with a one-line reason each.',
   ].join('\n')
   return { stateBlock, mergedQuery }
 }
@@ -428,6 +456,54 @@ function isListingTurn(
 // on a listing turn. Same params the parser extracts; relaxation order keeps
 // the hardest user constraints (city, budget) longest — bedroom counts are
 // relaxed first because project-level bedroom data is sparse.
+// Consultation shortlist — never a wall of cards: the grid shows
+// the top 3 fits; `total` stays the honest match count.
+function shortlistBrief(blocks: ResponseBlock[]): string {
+  const items: Array<Record<string, unknown>> = []
+  for (const b of blocks) {
+    if (b.type !== 'property_grid' || !Array.isArray(b.projects)) continue
+    for (const p of b.projects) {
+      if (items.length >= 3) break
+      items.push({
+        name: p.name,
+        slug: p.slug,
+        startPrice: p.startPrice ?? null,
+        city: p.city ?? p.governorate ?? null,
+        developer: p.developerName ?? null,
+        types: p.propertyTypes ?? [],
+        status: p.status ?? null,
+        completion: p.completionPercent ?? null,
+      })
+    }
+  }
+  return JSON.stringify(items)
+}
+
+// One extra "study" round over the forced-search shortlist: the model
+// recommends the best 2-3 with a one-line fit reason + tradeoff + ONE
+// next-step question. Falls back to the plain intro on any failure.
+async function consultativeStudy(
+  brief: string,
+  messages: OllamaMessage[],
+  lang: 'ar' | 'en',
+  track?: FallbackTrack,
+  signal?: AbortSignal,
+): Promise<string | null> {
+  const ask =
+    lang === 'ar'
+      ? `نتائج البحث الحقيقية (أفضل 3): ${brief}\nرشّح أنسب 2-3 للعميل: سطر واحد لكل مشروع ليه مناسب له + ملاحظة واحدة تنتبه لها، وبعدين سؤال واحد للخطوة الجاية (مقارنة اتنين / معاينة / خطة سداد). مختصر جدًا وبالعربي المصري. ممنوع أي أرقام أو أسماء من خارج النتايج دي.`
+      : `Real search results (top 3): ${brief}\nRecommend the best 2-3 for this client: one line each on why it fits + one tradeoff to watch, then ONE next-step question (compare two / a viewing / payment plan). Very brief. Never use names or numbers outside these results.`
+  try {
+    const { response, provider } = await chatOnce([...messages, { role: 'user', content: ask }], undefined, { signal })
+    if (provider === 'local') track && (track.fellBack = true)
+    const text = response.message?.content || ''
+    if (text && !replyNeedsRepair(text, lang)) return text
+  } catch {
+    /* keep the deterministic intro */
+  }
+  return null
+}
+
 async function runForcedSearch(
   mergedQuery: string,
   lang: 'ar' | 'en',
@@ -480,8 +556,8 @@ async function runForcedSearch(
   })
 
   const intro = lang === 'ar'
-    ? `تمام، لقيت ${best.total} نتيجة مناسبة لطلبك 👇`
-    : `Got it — found ${best.total} matching results 👇`
+    ? `تمام — بعد ما درست اللي عندنا، دول أقرب ${best.total} اختيار لطلبك 👇`
+    : `Done — I studied our catalog; here are the closest ${best.total} fits 👇`
   return { tools: best.tools, blocks: best.blocks, intro, total: best.total }
 }
 
@@ -603,6 +679,42 @@ async function prepareLLMRequest(
 
   const { stateBlock, mergedQuery } = buildConversationState(conversationHistory, currentMessage)
   const listingTurn = isListingTurn(currentMessage, conversationHistory)
+
+  // ── Consultation gate ────────────────────────────────────────
+  // A listing turn with an incomplete client profile (no budget, no
+  // place/type) resolves to ONE deterministic discovery question —
+  // instant, free, consistent — instead of a project dump. Max
+  // CONSULT_MAX_QUESTIONS, then the search proceeds with whatever is
+  // known. "وريني اللي عندك" impatience skips discovery entirely.
+  if (listingTurn && !wantsImmediateListings(currentMessage)) {
+    const needs = needsFromHistory(conversationHistory, currentMessage)
+    if (!isReady(needs)) {
+      const assistantTexts = conversationHistory
+        .filter((m) => m.role === 'assistant')
+        .map((m) => m.content)
+        .slice(-6)
+      if (countConsultQuestions(assistantTexts) < CONSULT_MAX_QUESTIONS) {
+        const q = nextConsultQuestion(needs, lang, askedConsultSlots(assistantTexts))
+        if (q) {
+          return {
+            lang,
+            grounded: {
+              content: q.content,
+              blocks: [{ type: 'text', content: q.content }],
+              toolCallsMade: [],
+              provider: 'grounded',
+            },
+            messages: [],
+            mergedQuery,
+            listingTurn: false,
+            deadline: 0,
+            toolCallsMade: [],
+            allBlocks: [],
+          }
+        }
+      }
+    }
+  }
   const deadline = Date.now() + TOOL_LOOP_BUDGET_MS
 
   // Build messages array
@@ -667,7 +779,10 @@ export async function callLLM(
         if (forced.total > 0) {
           toolCallsMade.push(...forced.tools)
           allBlocks.push(...forced.blocks)
-          content = forced.intro
+          // Study round: consultative recommendation over the shortlist
+          // (falls back to the plain intro on any failure).
+          content =
+            (await consultativeStudy(shortlistBrief(allBlocks), messages, lang, track)) || forced.intro
         }
       }
       content = await guardLanguage(content, messages, lang, allBlocks.length > 0, track)
@@ -728,7 +843,7 @@ export async function callLLM(
   }
   const { response: finalResponse, provider: finalProvider } = await chatOnce([
     ...messages,
-    { role: 'user', content: 'لخص اللي لقيته للمستخدم.' },
+    { role: 'user', content: 'رشّح أنسب 2-3 للمستخدم: سطر لكل واحد ليه مناسب + سؤال واحد للخطوة الجاية. مختصر جدًا.' },
   ])
   if (finalProvider === 'local') track.fellBack = true
 
@@ -807,7 +922,14 @@ export async function callLLMStream(
         if (forced.total > 0) {
           toolCallsMade.push(...forced.tools)
           allBlocks.push(...forced.blocks)
-          const nudged = withCompareNudge(forced.intro, allBlocks, toolCallsMade, lang)
+          // Study round: consultative recommendation over the shortlist
+          // (falls back to the plain intro on any failure). Emitted as one
+          // token so both clients share the existing render path.
+          cb.onStatus?.('summarizing', lang === 'ar' ? 'بدارس الاختيارات…' : 'Studying the options…')
+          const studied =
+            await consultativeStudy(shortlistBrief(allBlocks), messages, lang, track, cb.signal)
+          const finalText = studied || forced.intro
+          const nudged = withCompareNudge(finalText, allBlocks, toolCallsMade, lang)
           cb.onToken?.(nudged)
           return {
             content: nudged,
@@ -884,7 +1006,7 @@ export async function callLLMStream(
   }
   cb.onStatus?.('summarizing', lang === 'ar' ? 'بكتب الإجابة…' : 'Writing the answer…')
   const streamed = await streamFinalText(
-    [...messages, { role: 'user', content: 'لخص اللي لقيته للمستخدم.' }],
+    [...messages, { role: 'user', content: 'رشّح أنسب 2-3 للمستخدم: سطر لكل واحد ليه مناسب + سؤال واحد للخطوة الجاية. مختصر جدًا.' }],
     cb,
     track,
   )
