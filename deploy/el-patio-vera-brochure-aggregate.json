@@ -1,0 +1,14 @@
+{
+  "source": "Owner-supplied Patio Vera brochure",
+  "projectSlug": "1138-el-patio-vera",
+  "phase": "Patio Vera · delivery 2 years",
+  "terms": "Delivery 2 years · 5% down payment + 5% after 1 month over 7 years · up to 10 years with 6% interest per extra year",
+  "groups": [
+    { "type": "Town House Middle", "unitType": "TOWNHOUSE", "area": 176, "areaMax": 199, "land": 200, "price": 18300000, "priceMax": 18900000 },
+    { "type": "Town House Corner", "unitType": "TOWNHOUSE", "area": 179, "areaMax": 206, "land": 250, "price": 19300000, "priceMax": 25900000 },
+    { "type": "Twin House Type V", "unitType": "VILLA", "area": 200, "land": 250, "price": 22500000, "priceMax": 24000000 },
+    { "type": "Twin House Type A", "unitType": "VILLA", "area": 241, "land": 300, "price": 25900000, "priceMax": 30000000 },
+    { "type": "Twin House Type B", "unitType": "VILLA", "area": 245, "land": 300, "price": 25400000, "priceMax": 29400000 },
+    { "type": "Stand Alone", "unitType": "VILLA", "area": 324, "land": 450, "price": 39400000, "priceMax": 42800000 }
+  ]
+}
