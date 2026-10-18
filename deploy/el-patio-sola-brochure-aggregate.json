@@ -1,0 +1,16 @@
+{
+  "source": "Owner-supplied El Patio Sola brochure",
+  "projectSlug": "1303-el-patio-sola",
+  "sold": ["4 BR Ground Floor · 270 sqm · 60 sqm garden"],
+  "phase": "El Patio Sola · delivery 3 years",
+  "terms": "Delivery 3 years · 5% over 31 instalments · up to 10 years with 6% interest per extra year · semi-finished · maintenance 8% · underground parking 450,000 EGP",
+  "groups": [
+    { "type": "2 BR Typical Floor", "unitType": "APARTMENT", "bedrooms": 2, "area": 123, "areaMax": 125, "price": 8200000, "priceMax": 9500000 },
+    { "type": "2 BR Ground Floor", "unitType": "APARTMENT", "bedrooms": 2, "area": 123, "areaMax": 125, "gardenArea": 21, "price": 9300000, "priceMax": 9800000 },
+    { "type": "2 BR Penthouse", "unitType": "PENTHOUSE", "bedrooms": 2, "area": 123, "areaMax": 125, "roofArea": 70, "price": 10300000, "priceMax": 12300000 },
+    { "type": "3 BR Typical Floor", "unitType": "APARTMENT", "bedrooms": 3, "area": 154, "areaMax": 200, "price": 9900000, "priceMax": 13200000 },
+    { "type": "3 BR Ground Floor", "unitType": "APARTMENT", "bedrooms": 3, "area": 154, "areaMax": 170, "gardenArea": 30, "price": 11800000, "priceMax": 14800000 },
+    { "type": "3 BR Penthouse", "unitType": "PENTHOUSE", "bedrooms": 3, "area": 154, "areaMax": 170, "roofArea": 90, "price": 12700000, "priceMax": 16900000 },
+    { "type": "4 & 5 BR Duplex", "unitType": "DUPLEX", "bedrooms": 4, "area": 328, "areaMax": 336, "gardenArea": 40, "price": 21100000, "priceMax": 21900000 }
+  ]
+}
