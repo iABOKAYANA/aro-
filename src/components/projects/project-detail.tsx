@@ -511,6 +511,8 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
   const soldOut = project.status === 'SOLD_OUT' || (listedCount > 0 && availableCount === 0)
   const planCount = Array.isArray(project.paymentPlans) ? project.paymentPlans.length : 0
   const masterCount = Array.isArray(project.masterPlanImages) ? project.masterPlanImages.length : 0
+  // Phases section: only phases actually carrying units (never empty stubs)
+  const phaseRows = (Array.isArray(project.phases) ? project.phases : []).filter((ph: any) => (typeof ph === 'object' && (ph.totalUnits ?? 0) > 0))
   const favCount = Number(project.favoriteCount) || 0
   const { average: revAvg, count: revCount, loaded: revLoaded, failed: revFailed } = useReviewsSummary(project.id)
   const searchParams = useSearchParams()
@@ -627,6 +629,9 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
               </TabsTrigger>
               {project.masterPlanImages?.length > 0 && (
                 <TabsTrigger value="masterplan" className="max-w-full whitespace-normal text-center min-h-[44px] md:min-h-0 md:whitespace-nowrap">{ar ? `المستر بلان (${masterCount})` : `Master Plan (${masterCount})`}</TabsTrigger>
+              )}
+              {phaseRows.length > 0 && (
+                <TabsTrigger value="phases" className="max-w-full whitespace-normal text-center min-h-[44px] md:min-h-0 md:whitespace-nowrap">{ar ? `المراحل (${phaseRows.length})` : `Phases (${phaseRows.length})`}</TabsTrigger>
               )}
               <TabsTrigger value="amenities" className="max-w-full whitespace-normal text-center min-h-[44px] md:min-h-0 md:whitespace-nowrap">{ar ? 'المرافق' : 'Amenities'}</TabsTrigger>
               <TabsTrigger value="location" className="max-w-full whitespace-normal text-center min-h-[44px] md:min-h-0 md:whitespace-nowrap">{ar ? 'الموقع' : 'Location'}</TabsTrigger>
@@ -998,6 +1003,39 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                 </div>
               </TabsContent>
             )}
+
+            <TabsContent value="phases" className="space-y-4">
+              <Reveal>
+                <SectionHeader
+                  kicker={ar ? 'المراحل' : 'Phases'}
+                  title={ar ? 'مراحل المشروع' : 'Project phases'}
+                  description={ar
+                    ? 'كل مرحلة بعدد وحداتها المتاحة وسعر بدايتها — كل القيم محسوبة من المخزون الحقيقي.'
+                    : 'Each phase with its available units and starting price — every value derives from real inventory.'}
+                />
+              </Reveal>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {phaseRows.map((ph: any, idx: number) => (
+                  <Reveal key={ph.id} variant="wipe" delay={(idx % 2) * 100}>
+                    <div className="h-full rounded-2xl border border-gray-200 bg-white p-4 dark:border-[#262626] dark:bg-[#0A0A0A]">
+                      <div className="mb-1 flex items-center justify-between gap-2">
+                        <h3 className="font-display min-w-0 break-words text-lg font-semibold">{ar ? (ph.nameArabic || ph.name) : ph.name}</h3>
+                        {(ph.totalUnits ?? 0) > 0 && (
+                          <Badge variant="gold" className="shrink-0">{ar ? `${ph.totalUnits} وحدة` : `${ph.totalUnits} units`}</Badge>
+                        )}
+                      </div>
+                      {ph.description && <p className="mb-2 text-sm text-muted-foreground">{ph.description}</p>}
+                      {(ph.startPrice != null || ph.endPrice != null) && (
+                        <p className="font-display break-words text-lg font-bold text-estate-gold">
+                          {ph.startPrice != null ? `${ar ? 'من' : 'From'} ${formatEGP(ph.startPrice)}` : ''}
+                          {ph.startPrice != null && ph.endPrice != null ? ` — ${ar ? 'إلى' : 'to'} ${formatEGP(ph.endPrice)}` : ''}
+                        </p>
+                      )}
+                    </div>
+                  </Reveal>
+                ))}
+              </div>
+            </TabsContent>
 
             <TabsContent value="amenities">
               {project.amenities?.length > 0 ? (
