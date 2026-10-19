@@ -118,7 +118,6 @@ export const translations = {
     'chat.subtitle': 'Tell me what you\'re looking for',
     'chat.placeholder': 'Ask about properties, projects, or payments...',
     'chat.aiOnline': 'AI Online',
-    'chat.aiOffline': 'AI Offline — Start Ollama',
 
     // Common
     'common.loading': 'Loading...',
@@ -271,7 +270,6 @@ export const translations = {
     'chat.subtitle': 'قولي بتدور على إيه',
     'chat.placeholder': 'اسأل عن عقارات، مشاريع، أو أقساط...',
     'chat.aiOnline': 'المساعد متصل',
-    'chat.aiOffline': 'المساعد غير متاح — شغّل Ollama',
 
     // Common
     'common.loading': 'جاري التحميل...',
