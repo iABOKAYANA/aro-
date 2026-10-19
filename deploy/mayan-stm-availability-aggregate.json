@@ -1,0 +1,37 @@
+{
+  "source": "Owner-supplied MAYAN (STM Developments) price tables — New Cairo & El Sherouk, 15-Oct-2026 image",
+  "soldExcluded": [
+    "El Sherouk 2BR Typical 93m — SOLD OUT",
+    "El Sherouk 2BR Typical 102m — SOLD OUT"
+  ],
+  "terms": "Limited-time offer: 0% down payment · 10 years of installments · Standard plan: 2.5% down payment, 2.5% after 1 month, 2.5% after 2 months, 2.5% after 3 months, then 10 years equal installments · 10% maintenance fees · 2% admin fees · 75K clubhouse fees · cash discount 35% · delivery 9 months · fully finished",
+  "groups": [
+    { "projectSlug": "2001-mayan", "type": "2BR Apartment", "unitType": "APARTMENT", "area": 98, "price": 10800000 },
+    { "projectSlug": "2001-mayan", "type": "2BR Apartment", "unitType": "APARTMENT", "area": 104, "price": 10100000 },
+    { "projectSlug": "2001-mayan", "type": "2BR Apartment", "unitType": "APARTMENT", "area": 111, "price": 10100000 },
+    { "projectSlug": "2001-mayan", "type": "2BR Apartment", "unitType": "APARTMENT", "area": 115, "price": 12500000 },
+    { "projectSlug": "2001-mayan", "type": "2BR Apartment", "unitType": "APARTMENT", "area": 148, "price": 15300000 },
+    { "projectSlug": "2001-mayan", "type": "Typical Apartment", "unitType": "APARTMENT", "area": 98, "price": 8500000 },
+    { "projectSlug": "2001-mayan", "type": "Typical Apartment", "unitType": "APARTMENT", "area": 104, "price": 10300000 },
+    { "projectSlug": "2001-mayan", "type": "Typical Apartment", "unitType": "APARTMENT", "area": 146, "price": 18000000 },
+    { "projectSlug": "2001-mayan", "type": "Ground Floor Apartment", "unitType": "APARTMENT", "area": 125, "price": 12300000 },
+    { "projectSlug": "2001-mayan", "type": "Ground Floor Apartment", "unitType": "APARTMENT", "area": 143, "price": 15200000 },
+    { "projectSlug": "2001-mayan", "type": "Ground Floor Apartment", "unitType": "APARTMENT", "area": 146, "price": 14200000 },
+    { "projectSlug": "2001-mayan", "type": "3BR Apartment", "unitType": "APARTMENT", "area": 126, "price": 10700000 },
+    { "projectSlug": "2001-mayan", "type": "3BR Apartment", "unitType": "APARTMENT", "area": 158, "price": 13600000 },
+    { "projectSlug": "2001-mayan", "type": "3BR Apartment", "unitType": "APARTMENT", "area": 155, "price": 14000000 },
+    { "projectSlug": "2001-mayan", "type": "3BR Apartment", "unitType": "APARTMENT", "area": 176, "price": 15500000 },
+    { "projectSlug": "2479-mayan-el-shorouk", "type": "2BR Apartment", "unitType": "APARTMENT", "area": 93, "price": 7200000 },
+    { "projectSlug": "2479-mayan-el-shorouk", "type": "2BR Apartment", "unitType": "APARTMENT", "area": 110, "price": 7200000 },
+    { "projectSlug": "2479-mayan-el-shorouk", "type": "2BR Apartment", "unitType": "APARTMENT", "area": 138, "price": 8000000 },
+    { "projectSlug": "2479-mayan-el-shorouk", "type": "2BR Apartment", "unitType": "APARTMENT", "area": 145, "price": 9400000 },
+    { "projectSlug": "2479-mayan-el-shorouk", "type": "2BR Apartment", "unitType": "APARTMENT", "area": 160, "price": 10300000 },
+    { "projectSlug": "2479-mayan-el-shorouk", "type": "3BR Ground Floor Apartment", "unitType": "APARTMENT", "area": 121, "price": 8200000 },
+    { "projectSlug": "2479-mayan-el-shorouk", "type": "3BR Ground Floor Apartment", "unitType": "APARTMENT", "area": 141, "price": 9400000 },
+    { "projectSlug": "2479-mayan-el-shorouk", "type": "3BR Apartment", "unitType": "APARTMENT", "area": 126, "price": 7000000 },
+    { "projectSlug": "2479-mayan-el-shorouk", "type": "3BR Apartment", "unitType": "APARTMENT", "area": 141, "price": 7900000 },
+    { "projectSlug": "2479-mayan-el-shorouk", "type": "3BR Apartment", "unitType": "APARTMENT", "area": 162, "price": 8900000 },
+    { "projectSlug": "2479-mayan-el-shorouk", "type": "3BR Apartment", "unitType": "APARTMENT", "area": 170, "price": 9300000 },
+    { "projectSlug": "2479-mayan-el-shorouk", "type": "3BR Apartment", "unitType": "APARTMENT", "area": 180, "price": 10400000 }
+  ]
+}
