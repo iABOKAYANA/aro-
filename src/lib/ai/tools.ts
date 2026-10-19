@@ -75,7 +75,7 @@ export const AI_TOOLS: OllamaTool[] = [
     type: 'function',
     function: {
       name: 'compare_projects',
-      description: 'Compare 2-4 GHAYA projects side by side on price, location, developer, payment, delivery. Names may be Arabic, English or slugs — one entry per project. THE TABLE RENDERS AUTOMATICALLY BELOW your reply — never repeat it in text. After this tool YOU must give the verdict: your pick for THIS client first, then the 2-3 deltas that decide it (price vs budget, payment structure, delivery date, property mix), ending with "اختار كذا لو … واختار كذا لو …".',
+      description: 'Side-by-side data for 2-4 GHAYA projects (price range, location, developer, payment, delivery). Names may be Arabic, English or slugs — one entry per project. DISCUSS the client question first; only call this when the client EXPLICITLY asks to see a comparison table, or after your text take when they still want the numbers. The table renders automatically below your reply — never repeat rows in text, give the verdict instead.',
       parameters: {
         type: 'object',
         properties: {
