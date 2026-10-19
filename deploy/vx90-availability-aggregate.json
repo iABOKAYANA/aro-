@@ -1,0 +1,21 @@
+{
+  "source": "Owner-supplied VX 90 availability message (New Cairo commercial/medic compound)",
+  "routingNote": "Catalog entry 679-gravity-7 is named VX 90 (في اكس 90); its startPrice 6,648,571 exactly equals the message's minimum row (Clinic 37m) — price-confirmed routing.",
+  "terms": "Fully Finished · payment: 10% over 2 years, or 30% over 4 years · delivery 6 months from contract · construction 95% · per meter: ground 500,000 · retail 380,000 · admin and clinic 180,000",
+  "groups": [
+    { "type": "Commercial", "unitType": "COMMERCIAL", "area": 39, "price": 19775000 },
+    { "type": "Commercial", "unitType": "COMMERCIAL", "area": 56, "price": 28175000 },
+    { "type": "Commercial", "unitType": "COMMERCIAL", "area": 59, "price": 29750000 },
+    { "type": "Duplex", "unitType": "DUPLEX", "area": 278, "price": 105285714 },
+    { "type": "Duplex", "unitType": "DUPLEX", "area": 318, "price": 92385714 },
+    { "type": "Retail", "unitType": "COMMERCIAL", "area": 84, "price": 19385714 },
+    { "type": "Retail", "unitType": "COMMERCIAL", "area": 103, "price": 23821428 },
+    { "type": "Retail", "unitType": "COMMERCIAL", "area": 179, "price": 44821428 },
+    { "type": "Admin Office", "unitType": "ADMINISTRATIVE", "area": 45, "price": 8180400 },
+    { "type": "Admin Office", "unitType": "ADMINISTRATIVE", "area": 71, "price": 12301491 },
+    { "type": "Admin Office", "unitType": "ADMINISTRATIVE", "area": 217, "price": 39520000 },
+    { "type": "Clinic", "unitType": "MEDICAL", "area": 37, "price": 6648571 },
+    { "type": "Clinic", "unitType": "MEDICAL", "area": 46, "price": 8357142 },
+    { "type": "Clinic", "unitType": "MEDICAL", "area": 77, "price": 13885714 }
+  ]
+}
