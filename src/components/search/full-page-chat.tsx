@@ -251,11 +251,6 @@ export function FullPageChat() {
                           <span className="text-[10px] text-green-600">{lang === 'ar' ? 'المساعد الذكي متصل' : 'AI Online'}</span>
                         </>
                       )}
-                      {aiStatus === 'offline' && (
-                        <>
-                          <span className="h-2 w-2 rounded-full bg-red-500" />
-                        </>
-                      )}
                     </div>
                   </div>
 
