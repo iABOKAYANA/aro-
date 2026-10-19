@@ -1,0 +1,14 @@
+{
+  "source": "Owner-supplied Beit Al Bahr 'Current Availability' message (Sidi Heneish)",
+  "routingNotes": "Stage entries match catalog by name + from-price: Shores 1653 (19.77M), Roots 1654, Rays 1740, Hills by the Sea 2769, The Hills 1658 (54.57M exact). Skies entry 2773 is INACTIVE → rows stay under the ACTIVE parent 1263-beit-al-bahr as Skies-labelled rows per owner's standing routing rule.",
+  "groups": [
+    { "projectSlug": "1653-shores-beit-al-bahr", "type": "Shores Lagoon Chalet 2 & 3 BR", "unitType": "CHALET", "area": 135, "areaMax": 245, "price": 19770000, "terms": "direct lagoon chalets · 3 years delivery" },
+    { "projectSlug": "1654-roots-beit-al-bahr", "type": "Roots Sea View Chalet 2 & 3 BR", "unitType": "CHALET", "area": 142, "areaMax": 190, "price": 26120000, "view": "Sea View", "terms": "sea view chalets · 2 years delivery" },
+    { "projectSlug": "1654-roots-beit-al-bahr", "type": "Roots Twin House", "unitType": "VILLA", "area": 182, "price": 38170000, "terms": "2 years delivery" },
+    { "projectSlug": "1654-roots-beit-al-bahr", "type": "Roots Sea View Villa", "unitType": "VILLA", "area": 200, "areaMax": 590, "price": 54900000, "view": "Sea View", "terms": "18 months & 3 years delivery" },
+    { "projectSlug": "1740-ray-beit-al-bahr", "type": "Rays Townhouse & Villa", "unitType": "TOWNHOUSE", "area": 185, "areaMax": 340, "price": 39950000, "terms": "3 years delivery" },
+    { "projectSlug": "2769-hills-by-the-sea-beit-al-bahr", "type": "Hills by the Sea Villa", "unitType": "VILLA", "area": 450, "areaMax": 475, "price": 127580000, "terms": "2–3 years delivery" },
+    { "projectSlug": "1263-beit-al-bahr", "type": "Skies Twin House & Villa", "unitType": "VILLA", "area": 250, "areaMax": 280, "price": 46750000, "terms": "Skies · 3 years delivery" },
+    { "projectSlug": "1658-hills-beit-al-bahr", "type": "The Hills Ready Villa", "unitType": "VILLA", "area": 180, "price": 54570000, "terms": "ready to move" }
+  ]
+}
