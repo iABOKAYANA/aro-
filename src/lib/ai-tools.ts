@@ -91,21 +91,24 @@ export interface PaymentCalculation {
 }
 
 export interface ComparisonData {
-  // Trimmed to exactly what ChatComparisonTable renders (names, prices,
-  // types, developers, completion, payment terms). Dropped: endPrice,
-  // totalUnits (= unitCount), deliveryDate, full amenities arrays,
-  // priceRange/avgPrice (derivable from start/end). Keeps the LLM tool
-  // context + `done` payload + stored blocks small.
+  // Rendered by ChatComparisonTable + consumed by the LLM as reasoning
+  // context. Still no full amenities arrays / unit lists — but carries the
+  // price range, delivery date, district and payment-plan count so the
+  // assistant can compare like a consultant, not a row dump.
   projects: Array<{
     name: string
     developer: string
     city: string | null
+    district: string | null
     startPrice: number | null
+    endPrice: number | null
     propertyTypes: string[]
     unitCount: number
     completionPercent: number | null
     downPaymentMin: number | null
     installmentYears: number | null
+    deliveryDate: string | null
+    paymentPlansCount: number
   }>
 }
 
@@ -412,15 +415,18 @@ export async function toolGetDeveloperDetails(name: string): Promise<ToolResult>
 const COMPARE_PROJECT_SELECT = {
   name: true,
   startPrice: true,
+  endPrice: true,
   propertyTypes: true,
   completionPercent: true,
   downPaymentMin: true,
   installmentYears: true,
+  deliveryDate: true,
   isActive: true,
   approvalStatus: true,
   city: { select: { name: true } },
+  district: { select: { name: true } },
   developer: { select: { companyName: true } },
-  _count: { select: { units: true } },
+  _count: { select: { units: true, paymentPlans: true } },
   // Price-gate probe: at most one tiny row, never the full unit list.
   units: { where: { price: { gt: 0 } }, select: { id: true }, take: 1 },
 }
@@ -480,12 +486,16 @@ export async function toolCompareProjects(projectNames: string[]): Promise<ToolR
         name: p.name,
         developer: p.developer?.companyName || 'N/A',
         city: p.city?.name || null,
+        district: p.district?.name || null,
         startPrice: p.startPrice,
+        endPrice: p.endPrice,
         propertyTypes,
         unitCount: p._count.units,
         completionPercent: p.completionPercent,
         downPaymentMin: p.downPaymentMin,
         installmentYears: p.installmentYears,
+        deliveryDate: p.deliveryDate ? p.deliveryDate.toISOString() : null,
+        paymentPlansCount: p._count.paymentPlans,
       })
     }
 

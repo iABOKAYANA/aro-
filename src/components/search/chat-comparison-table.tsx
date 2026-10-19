@@ -15,13 +15,23 @@ export function ChatComparisonTable({ title, data }: ChatComparisonTableProps) {
 
   const rows = [
     { label: 'المطوّر', labelEn: 'Developer', values: projects.map(p => p.developer || 'N/A') },
-    { label: 'الموقع', labelEn: 'Location', values: projects.map(p => p.city || 'N/A') },
-    { label: 'يبدأ من', labelEn: 'From', values: projects.map(p => p.startPrice ? `${(p.startPrice / 1_000_000).toFixed(1)}M` : 'N/A') },
+    { label: 'الموقع', labelEn: 'Location', values: projects.map(p => [p.city, p.district].filter(Boolean).join(' — ') || 'N/A') },
+    { label: 'السعر', labelEn: 'Price', values: projects.map(p => {
+        const from = p.startPrice ? `${(p.startPrice / 1_000_000).toFixed(1)}M` : null
+        if (!from) return 'N/A'
+        return p.endPrice && p.endPrice > p.startPrice ? `${from} – ${(p.endPrice / 1_000_000).toFixed(1)}M` : from
+      }) },
     { label: 'الأنواع', labelEn: 'Types', values: projects.map(p => (p.propertyTypes || []).slice(0, 2).join(', ').replace(/_/g, ' ') || 'N/A') },
     { label: 'الوحدات', labelEn: 'Units', values: projects.map(p => (p.unitCount || p.totalUnits || 'N/A').toString()) },
     { label: 'الإنجاز', labelEn: 'Completion', values: projects.map(p => p.completionPercent != null ? `${p.completionPercent}%` : 'N/A') },
+    { label: 'التسليم', labelEn: 'Delivery', values: projects.map(p => {
+        if (!p.deliveryDate) return 'N/A'
+        const d = new Date(p.deliveryDate)
+        return Number.isNaN(d.getTime()) ? 'N/A' : d.getFullYear().toString()
+      }) },
     { label: 'المقدم', labelEn: 'Down Payment', values: projects.map(p => p.downPaymentMin ? `${p.downPaymentMin}%` : 'N/A') },
     { label: 'التقسيط', labelEn: 'Installments', values: projects.map(p => p.installmentYears ? (ar ? `${p.installmentYears} سنة` : `${p.installmentYears} yrs`) : 'N/A') },
+    { label: 'خطط السداد', labelEn: 'Plans', values: projects.map(p => p.paymentPlansCount ? (ar ? `${p.paymentPlansCount} خطط` : `${p.paymentPlansCount} plans`) : 'N/A') },
   ]
 
   return (
