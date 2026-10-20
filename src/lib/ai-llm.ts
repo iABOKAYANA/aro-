@@ -90,7 +90,24 @@ const WEB_SEARCH_TOOL: OllamaTool = {
   },
 }
 
-const ACTIVE_TOOLS: OllamaTool[] = AI_CONFIG.searxng.baseUrl ? [...AI_TOOLS, WEB_SEARCH_TOOL] : AI_TOOLS
+// read_page: study ONE page from the web results in full (a developer's
+// official project page, a market article). Complements web_search snippets.
+const WEB_READ_TOOL: OllamaTool = {
+  type: 'function',
+  function: {
+    name: 'read_page',
+    description: 'Fetch and study the text of ONE web page from a web_search result (developer community page, market article) to answer an outside-catalog question. Text only — never used for GHAYA catalog facts.',
+    parameters: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', description: 'Absolute https URL from a web_search result' },
+      },
+      required: ['url'],
+    },
+  },
+}
+
+const ACTIVE_TOOLS: OllamaTool[] = AI_CONFIG.searxng.baseUrl ? [...AI_TOOLS, WEB_SEARCH_TOOL, WEB_READ_TOOL] : AI_TOOLS
 
 // ─── Role-gated tool schemas ───────────────────────────────
 // Buyer/anon sessions NEVER need the growth-system tools: the tool layer
@@ -136,6 +153,50 @@ async function toolWebSearch(args: { query?: unknown }): Promise<unknown> {
   }
 }
 
+/** read_page: fetch a page, strip HTML/script/style, return bounded plain text. */
+async function toolReadPage(args: { url?: unknown }): Promise<unknown> {
+  const raw = typeof args?.url === 'string' ? args.url.trim() : ''
+  let target: URL
+  try {
+    target = new URL(raw)
+    if (target.protocol !== 'http:' && target.protocol !== 'https:') throw new Error('scheme')
+    // SSRF guard: never follow the service into its own internals.
+    if (/^(localhost|127\.|0\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/.test(target.hostname)) {
+      throw new Error('blocked-host')
+    }
+  } catch {
+    return { success: false, error: 'invalid url' }
+  }
+  try {
+    const res = await fetch(target.href, {
+      signal: AbortSignal.timeout(12_000),
+      headers: { 'User-Agent': 'GHAYA-Ayn/1.0 (+https://ghayaestate.com)', Accept: 'text/html,*/*' },
+      redirect: 'follow',
+    })
+    if (!res.ok) return { success: false, error: `fetch failed (${res.status})` }
+    const MAX = 1_000_000
+    const type = res.headers.get('content-type') || ''
+    if (!/text\/|html|json|xml/.test(type)) return { success: false, error: 'unsupported content type' }
+    const html = (await res.text()).slice(0, MAX)
+    const cleaned = html
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/\s+/g, ' ')
+      .trim()
+    const m = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)
+    const title = (m ? m[1] : target.hostname).replace(/\s+/g, ' ').trim().slice(0, 120)
+    const content = cleaned.slice(0, 4000)
+    if (content.length < 80) return { success: false, error: 'page too thin to read' }
+    return { success: true, data: { url: target.href, title, content: content + (cleaned.length > 4000 ? ' …' : '') } }
+  } catch {
+    return { success: false, error: 'fetch unavailable' }
+  }
+}
+
 // ─── Tool Execution ──────────────────────────────────────
 
 async function executeTool(name: string, args: Record<string, unknown>, ctx?: AICtx): Promise<unknown> {
@@ -161,6 +222,8 @@ async function executeTool(name: string, args: Record<string, unknown>, ctx?: AI
       return await toolCreateInquiry(args as any, ctx)
     case 'web_search':
       return await toolWebSearch(args as { query?: unknown })
+    case 'read_page':
+      return await toolReadPage(args as { url?: unknown })
     case 'get_lead_details':
       return await toolGetLeadDetails(args, emptyCtx)
     case 'get_pipeline_summary':
@@ -296,6 +359,11 @@ function toolResultToBlocks(toolName: string, result: any): ResponseBlock[] {
         const lines = d.results.map((r, i) => `${i + 1}. **${r.title}**\n   ${r.snippet}${r.url ? `\n   ${r.url}` : ''}`)
         blocks.push({ type: 'text', content: `نتائج البحث المباشر عن "${d.query}" (مصادر خارجية، مش أسعار غاية):\n\n${lines.join('\n\n')}` })
       }
+      break
+    }
+    case 'read_page': {
+      const d = data as { url: string; title: string; content: string }
+      blocks.push({ type: 'text', content: `قرأت الصفحة: **${d.title}** (${d.url})\n\n${d.content.slice(0, 700)}` })
       break
     }
     case 'get_lead_details': {
@@ -1088,6 +1156,15 @@ async function prepareLLMRequest(
   if (AI_CONFIG.searxng.baseUrl) {
     dynamicNotes += '\n[WEB SEARCH — you have a web_search tool for CURRENT market news only (launches, rates, laws). Catalog questions always use DB tools / site STATE first. Present web results as external results, never as GHAYA listings or prices.]'
   }
+
+  // Trained knowledge: injected bounded blocks, only when retrieval hits.
+  try {
+    const { retrieveKnowledge } = await import('@/lib/ai-knowledge')
+    const learned = await retrieveKnowledge(`${currentMessage} ${mergedQuery}`.trim())
+    if (learned) {
+      dynamicNotes += '\n\n' + learned
+    }
+  } catch { /* learned context is a nicety — never fail the chat */ }
 
   const messages: OllamaMessage[] = [
     { role: 'system', content: SYSTEM_PROMPT + dynamicNotes },

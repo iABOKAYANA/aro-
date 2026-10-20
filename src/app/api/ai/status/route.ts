@@ -3,6 +3,7 @@ import { AI_CONFIG } from '@/lib/ai/config'
 import { checkOllamaStatus } from '@/lib/ai/ollama'
 import { checkLlamacppStatus } from '@/lib/ai/llamacpp'
 import { checkGeminiStatus } from '@/lib/ai/gemini'
+import { knowledgeCount } from '@/lib/ai-knowledge'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +14,8 @@ export async function GET() {
       : AI_CONFIG.provider === 'llamacpp'
         ? await checkLlamacppStatus()
         : await checkOllamaStatus()
-    return NextResponse.json({ available: status.available })
+    const learnedChunks = await knowledgeCount()
+    return NextResponse.json({ available: status.available, learnedChunks })
   } catch {
     return NextResponse.json({ available: false })
   }

@@ -10,58 +10,58 @@ datasource db {
 // ─── USER & AUTH ─────────────────────────────────────────
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  phone         String?   @unique
-  passwordHash  String?
-  name          String
-  nameArabic    String?
-  avatar        String?
-  role          String    @default("BUYER") // CEO | ADMIN | BROKER | DEVELOPER | SELLER | BUYER
-  status        String    @default("PENDING") // PENDING | ACTIVE | SUSPENDED | REJECTED | DISABLED
-  isVerified    Boolean   @default(false)
-  isActive      Boolean   @default(false)
-  preferredLang String    @default("en")
-  preferredCurrency String @default("EGP")
-  lastLoginAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                String    @id @default(cuid())
+  email             String    @unique
+  phone             String?   @unique
+  passwordHash      String?
+  name              String
+  nameArabic        String?
+  avatar            String?
+  role              String    @default("BUYER") // CEO | ADMIN | BROKER | DEVELOPER | SELLER | BUYER
+  status            String    @default("PENDING") // PENDING | ACTIVE | SUSPENDED | REJECTED | DISABLED
+  isVerified        Boolean   @default(false)
+  isActive          Boolean   @default(false)
+  preferredLang     String    @default("en")
+  preferredCurrency String    @default("EGP")
+  lastLoginAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  profile         UserProfile?
-  brokerProfile   BrokerProfile?
-  developerProfile DeveloperProfile?
-  sellerProfile   SellerProfile?
-  inquiries       Inquiry[]
-  favorites       Favorite[]
-  savedSearches   SavedSearch[]
-  viewings        Viewing[]            @relation("ViewingUser")
-  appointments    Appointment[]        @relation("AppointmentUser")
-  notifications   Notification[]
-  auditLogs       AuditLog[]
-  sessions        Session[]
-  accounts        Account[]
-  documents       UserDocument[]
-  notificationsPref NotificationPreference?
-  aiConversations AIConversation[]
-  aiSearchHistory AISearchHistory[]
-  watches        Watch[]
-  marketingConsents MarketingConsent[]
-  brokerClients   BrokerClient[]       @relation("ClientBroker")
-  approvalRequests ApprovalRequest[] @relation("RequestedApprovals")
-  reviewedApprovals ApprovalRequest[] @relation("ReviewedApprovals")
-  accessRequests  AccessRequest[]     @relation("AccessRequestUser")
-  reviewedAccess  AccessRequest[]     @relation("AccessRequestReviewer")
-  invitationsSent Invitation[]        @relation("InvitationSender")
-  invitedUser     Invitation[]        @relation("InvitationUser")
-  pushSubscriptions PushSubscription[]
-  sharedComparisons SharedComparison[]
-  reviews           Review[]
-  voiceNotes        VoiceNote[]
-  brokerReviewsGiven BrokerReview[] @relation("BrokerReviewRater")
-  brokerReviewsReceived BrokerReview[] @relation("BrokerReviewBroker")
-  brokerTargets BrokerTarget[] @relation("BrokerTargetBroker")
-  dealDisputes DealDispute[] @relation("DealDisputeClaimant")
-  editRequests EditRequest[]
+  profile               UserProfile?
+  brokerProfile         BrokerProfile?
+  developerProfile      DeveloperProfile?
+  sellerProfile         SellerProfile?
+  inquiries             Inquiry[]
+  favorites             Favorite[]
+  savedSearches         SavedSearch[]
+  viewings              Viewing[]               @relation("ViewingUser")
+  appointments          Appointment[]           @relation("AppointmentUser")
+  notifications         Notification[]
+  auditLogs             AuditLog[]
+  sessions              Session[]
+  accounts              Account[]
+  documents             UserDocument[]
+  notificationsPref     NotificationPreference?
+  aiConversations       AIConversation[]
+  aiSearchHistory       AISearchHistory[]
+  watches               Watch[]
+  marketingConsents     MarketingConsent[]
+  brokerClients         BrokerClient[]          @relation("ClientBroker")
+  approvalRequests      ApprovalRequest[]       @relation("RequestedApprovals")
+  reviewedApprovals     ApprovalRequest[]       @relation("ReviewedApprovals")
+  accessRequests        AccessRequest[]         @relation("AccessRequestUser")
+  reviewedAccess        AccessRequest[]         @relation("AccessRequestReviewer")
+  invitationsSent       Invitation[]            @relation("InvitationSender")
+  invitedUser           Invitation[]            @relation("InvitationUser")
+  pushSubscriptions     PushSubscription[]
+  sharedComparisons     SharedComparison[]
+  reviews               Review[]
+  voiceNotes            VoiceNote[]
+  brokerReviewsGiven    BrokerReview[]          @relation("BrokerReviewRater")
+  brokerReviewsReceived BrokerReview[]          @relation("BrokerReviewBroker")
+  brokerTargets         BrokerTarget[]          @relation("BrokerTargetBroker")
+  dealDisputes          DealDispute[]           @relation("DealDisputeClaimant")
+  editRequests          EditRequest[]
 }
 
 model Account {
@@ -99,74 +99,74 @@ model VerificationToken {
 }
 
 model UserProfile {
-  id            String  @id @default(cuid())
-  userId        String  @unique
-  dateOfBirth   DateTime?
-  gender        String?
-  nationalId    String?
-  passportNumber String?
-  address       String?
-  city          String?
-  governorate   String?
-  country       String  @default("EGP")
-  bio           String?
-  budgetMin     Float?
-  budgetMax     Float?
-  preferredPropertyTypes String @default("[]") // JSON array
-  preferredAreas String @default("[]") // JSON array
-  language      String  @default("en")
+  id                     String    @id @default(cuid())
+  userId                 String    @unique
+  dateOfBirth            DateTime?
+  gender                 String?
+  nationalId             String?
+  passportNumber         String?
+  address                String?
+  city                   String?
+  governorate            String?
+  country                String    @default("EGP")
+  bio                    String?
+  budgetMin              Float?
+  budgetMax              Float?
+  preferredPropertyTypes String    @default("[]") // JSON array
+  preferredAreas         String    @default("[]") // JSON array
+  language               String    @default("en")
 
   // ─── AI Client DNA (F1) — derived from REAL interactions only ───
-  dnaData       String    @default("{}")   // JSON: structured profile {budget,locations,property,financial,intent,urgency,...}
-  dnaEvidence   String    @default("[]")   // JSON array: [{field,value,source,refId,at}] — every claim traces to an interaction
-  dnaConfidence Float     @default(0)      // 0..1 — based on evidence count/diversity
+  dnaData       String    @default("{}") // JSON: structured profile {budget,locations,property,financial,intent,urgency,...}
+  dnaEvidence   String    @default("[]") // JSON array: [{field,value,source,refId,at}] — every claim traces to an interaction
+  dnaConfidence Float     @default(0) // 0..1 — based on evidence count/diversity
   dnaUpdatedAt  DateTime?
 
-  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // ─── BROKER ──────────────────────────────────────────────
 
 model BrokerProfile {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  licenseNumber   String?
-  agencyName      String?
+  id               String  @id @default(cuid())
+  userId           String  @unique
+  licenseNumber    String?
+  agencyName       String?
   agencyNameArabic String?
-  specialization  String @default("[]") // JSON array
-  yearsExperience Int?
-  totalDeals      Int      @default(0)
-  rating          Float    @default(0)
-  reviewCount     Int      @default(0)
-  commissionRate  Float?
-  bio             String?
-  coverImage      String?
-  socialLinks     String? // JSON
-  isVerified      Boolean  @default(false)
-  featuredRank    Int?
-  serviceAreas    String @default("[]") // JSON array
-  languagesSpoken String @default("[\"en\",\"ar\"]") // JSON array
+  specialization   String  @default("[]") // JSON array
+  yearsExperience  Int?
+  totalDeals       Int     @default(0)
+  rating           Float   @default(0)
+  reviewCount      Int     @default(0)
+  commissionRate   Float?
+  bio              String?
+  coverImage       String?
+  socialLinks      String? // JSON
+  isVerified       Boolean @default(false)
+  featuredRank     Int?
+  serviceAreas     String  @default("[]") // JSON array
+  languagesSpoken  String  @default("[\"en\",\"ar\"]") // JSON array
 
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  leads           Lead[]
-  clients         BrokerClient[]
-  viewings        Viewing[]      @relation("ViewingBroker")
-  deals           Deal[]
-  projectAccess   BrokerProjectAccess[]
-  ownershipFrom   LeadOwnershipHistory[] @relation("OwnershipFrom")
-  ownershipTo     LeadOwnershipHistory[] @relation("OwnershipTo")
+  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leads         Lead[]
+  clients       BrokerClient[]
+  viewings      Viewing[]              @relation("ViewingBroker")
+  deals         Deal[]
+  projectAccess BrokerProjectAccess[]
+  ownershipFrom LeadOwnershipHistory[] @relation("OwnershipFrom")
+  ownershipTo   LeadOwnershipHistory[] @relation("OwnershipTo")
 }
 
 model BrokerClient {
-  id           String      @id @default(cuid())
+  id           String   @id @default(cuid())
   brokerId     String
   clientId     String
   relationship String?
   notes        String?
-  createdAt    DateTime    @default(now())
+  createdAt    DateTime @default(now())
 
-  broker       BrokerProfile @relation(fields: [brokerId], references: [id], onDelete: Cascade)
-  client       User          @relation("ClientBroker", fields: [clientId], references: [id], onDelete: Cascade)
+  broker BrokerProfile @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  client User          @relation("ClientBroker", fields: [clientId], references: [id], onDelete: Cascade)
 
   @@unique([brokerId, clientId])
 }
@@ -174,31 +174,31 @@ model BrokerClient {
 // ─── DEVELOPER ───────────────────────────────────────────
 
 model DeveloperProfile {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  companyName     String
+  id                String  @id @default(cuid())
+  userId            String  @unique
+  companyName       String
   companyNameArabic String?
-  logo            String?
-  coverImage      String?
-  crNumber        String?
-  taxId           String?
-  website         String?
-  foundedYear     Int?
-  description     String?
+  logo              String?
+  coverImage        String?
+  crNumber          String?
+  taxId             String?
+  website           String?
+  foundedYear       Int?
+  description       String?
   descriptionArabic String?
-  headquarters    String?
-  totalProjects   Int      @default(0)
-  totalUnitsSold  Int      @default(0)
-  rating          Float    @default(0)
-  reviewCount     Int      @default(0)
-  isVerified      Boolean  @default(false)
-  featuredRank    Int?
-  socialLinks     String? // JSON
-  contactEmail    String?
-  contactPhone    String?
-  editMode        String    @default("REQUEST") // DIRECT | REQUEST — REQUEST default per owner approval (direct PATCH/DELETE blocked, edit-request flow only)
+  headquarters      String?
+  totalProjects     Int     @default(0)
+  totalUnitsSold    Int     @default(0)
+  rating            Float   @default(0)
+  reviewCount       Int     @default(0)
+  isVerified        Boolean @default(false)
+  featuredRank      Int?
+  socialLinks       String? // JSON
+  contactEmail      String?
+  contactPhone      String?
+  editMode          String  @default("REQUEST") // DIRECT | REQUEST — REQUEST default per owner approval (direct PATCH/DELETE blocked, edit-request flow only)
 
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   projects        Project[]
   leads           Lead[]
   deals           Deal[]
@@ -210,22 +210,22 @@ model DeveloperProfile {
 // ─── LOCATIONS ───────────────────────────────────────────
 
 model Governorate {
-  id          String  @id @default(cuid())
-  name        String  @unique
-  nameArabic  String
-  nameSlug    String  @unique
-  latitude    Float?
-  longitude   Float?
-  image       String?
-  isActive    Boolean @default(true)
-  sortOrder   Int     @default(0)
+  id         String  @id @default(cuid())
+  name       String  @unique
+  nameArabic String
+  nameSlug   String  @unique
+  latitude   Float?
+  longitude  Float?
+  image      String?
+  isActive   Boolean @default(true)
+  sortOrder  Int     @default(0)
 
-  cities      City[]
-  projects    Project[]
+  cities   City[]
+  projects Project[]
 }
 
 model City {
-  id            String      @id @default(cuid())
+  id            String  @id @default(cuid())
   name          String
   nameArabic    String
   nameSlug      String
@@ -233,30 +233,30 @@ model City {
   latitude      Float?
   longitude     Float?
   image         String?
-  isActive      Boolean     @default(true)
-  sortOrder     Int         @default(0)
+  isActive      Boolean @default(true)
+  sortOrder     Int     @default(0)
 
-  governorate   Governorate @relation(fields: [governorateId], references: [id], onDelete: Cascade)
-  districts     District[]
-  projects      Project[]
+  governorate Governorate @relation(fields: [governorateId], references: [id], onDelete: Cascade)
+  districts   District[]
+  projects    Project[]
 
   @@unique([governorateId, name])
 }
 
 model District {
-  id          String      @id @default(cuid())
-  name        String
-  nameArabic  String
-  nameSlug    String
-  cityId      String
-  latitude    Float?
-  longitude   Float?
-  image       String?
-  isActive    Boolean     @default(true)
-  sortOrder   Int         @default(0)
+  id         String  @id @default(cuid())
+  name       String
+  nameArabic String
+  nameSlug   String
+  cityId     String
+  latitude   Float?
+  longitude  Float?
+  image      String?
+  isActive   Boolean @default(true)
+  sortOrder  Int     @default(0)
 
-  city        City        @relation(fields: [cityId], references: [id], onDelete: Cascade)
-  projects    Project[]
+  city     City      @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  projects Project[]
 
   @@unique([cityId, name])
 }
@@ -264,230 +264,230 @@ model District {
 // ─── PROJECTS / COMPOUNDS ────────────────────────────────
 
 model Project {
-  id                String         @id @default(cuid())
+  id                String  @id @default(cuid())
   developerId       String
   name              String
   nameArabic        String?
-  slug              String         @unique
+  slug              String  @unique
   tagline           String?
   taglineArabic     String?
   description       String?
   descriptionArabic String?
   coverImage        String?
-  gallery           String @default("[]") // JSON array
+  gallery           String  @default("[]") // JSON array
   videoUrl          String?
   virtualTourUrl    String?
   panoramaImages    String? // JSON array of 360° image URLs
 
-  governorateId     String?
-  cityId            String?
-  districtId        String?
-  address           String?
-  latitude          Float?
-  longitude         Float?
-  lat               Float?
-  lng               Float?
-  googleMapsUrl     String?
+  governorateId String?
+  cityId        String?
+  districtId    String?
+  address       String?
+  latitude      Float?
+  longitude     Float?
+  lat           Float?
+  lng           Float?
+  googleMapsUrl String?
 
-  propertyTypes     String @default("[]") // JSON array
-  listingTypes      String @default("[]") // JSON array
-  status            String    @default("COMING_SOON")
-  approvalStatus    String    @default("DRAFT") // DRAFT | PENDING | APPROVED | REJECTED | PUBLISHED | HIDDEN | ARCHIVED
-  rejectionReason   String?
-  totalUnits        Int?
-  totalArea         Float?
-  completionPercent Int?      @default(0)
-  deliveryDate      DateTime?
-  deliveryTerms     String?
-  startPrice        Float?
-  endPrice          Float?
-  pricePerSqm       Float?
-  downPaymentMin    Float?
-  installmentYears  Int?
+  propertyTypes         String    @default("[]") // JSON array
+  listingTypes          String    @default("[]") // JSON array
+  status                String    @default("COMING_SOON")
+  approvalStatus        String    @default("DRAFT") // DRAFT | PENDING | APPROVED | REJECTED | PUBLISHED | HIDDEN | ARCHIVED
+  rejectionReason       String?
+  totalUnits            Int?
+  totalArea             Float?
+  completionPercent     Int?      @default(0)
+  deliveryDate          DateTime?
+  deliveryTerms         String?
+  startPrice            Float?
+  endPrice              Float?
+  pricePerSqm           Float?
+  downPaymentMin        Float?
+  installmentYears      Int?
   MaintenanceFeePercent Float?
-  compoundArea      Float?
+  compoundArea          Float?
 
-  metaTitle         String?
-  metaDescription   String?
-  keywords          String @default("[]") // JSON array
-  dataTrust         String @default("{}") // F10: JSON {field:{status,source,verifiedAt,verifiedById,updatedAt}}
+  metaTitle       String?
+  metaDescription String?
+  keywords        String  @default("[]") // JSON array
+  dataTrust       String  @default("{}") // F10: JSON {field:{status,source,verifiedAt,verifiedById,updatedAt}}
 
-  isFeatured        Boolean        @default(false)
-  isVerified        Boolean        @default(false)
-  isActive          Boolean        @default(true)
-  viewCount         Int            @default(0)
-  favoriteCount     Int            @default(0)
-  inquiryCount      Int            @default(0)
-  featuredRank      Int?
+  isFeatured    Boolean @default(false)
+  isVerified    Boolean @default(false)
+  isActive      Boolean @default(true)
+  viewCount     Int     @default(0)
+  favoriteCount Int     @default(0)
+  inquiryCount  Int     @default(0)
+  featuredRank  Int?
 
-  publishedAt       DateTime?
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  developer         DeveloperProfile @relation(fields: [developerId], references: [id], onDelete: Cascade)
-  governorate       Governorate?     @relation(fields: [governorateId], references: [id])
-  city              City?            @relation(fields: [cityId], references: [id])
-  district          District?        @relation(fields: [districtId], references: [id])
-  units             Unit[]
-  phases            ProjectPhase[]
-  milestones        ProjectMilestone[]
-  paymentPlans      PaymentPlan[]
-  amenities         ProjectAmenity[]
-  nearbyPlaces      NearbyPlace[]
-  masterPlanImages  MasterPlanImage[]
-  brochures         ProjectBrochure[]
-  blogs             Blog[]
-  viewings          Viewing[]
-  leads             Lead[]
-  deals             Deal[]
-  commissionRules   CommissionRule[]
-  brokerAccess      BrokerProjectAccess[]
-  reviews           Review[]
+  developer        DeveloperProfile      @relation(fields: [developerId], references: [id], onDelete: Cascade)
+  governorate      Governorate?          @relation(fields: [governorateId], references: [id])
+  city             City?                 @relation(fields: [cityId], references: [id])
+  district         District?             @relation(fields: [districtId], references: [id])
+  units            Unit[]
+  phases           ProjectPhase[]
+  milestones       ProjectMilestone[]
+  paymentPlans     PaymentPlan[]
+  amenities        ProjectAmenity[]
+  nearbyPlaces     NearbyPlace[]
+  masterPlanImages MasterPlanImage[]
+  brochures        ProjectBrochure[]
+  blogs            Blog[]
+  viewings         Viewing[]
+  leads            Lead[]
+  deals            Deal[]
+  commissionRules  CommissionRule[]
+  brokerAccess     BrokerProjectAccess[]
+  reviews          Review[]
 }
 
 model ProjectPhase {
-  id              String   @id @default(cuid())
-  projectId       String
-  name            String
-  nameArabic      String?
-  description     String?
-  status          String   @default("COMING_SOON")
-  deliveryDate    DateTime?
-  totalUnits      Int?
-  startPrice      Float?
-  endPrice        Float?
-  sortOrder       Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id           String    @id @default(cuid())
+  projectId    String
+  name         String
+  nameArabic   String?
+  description  String?
+  status       String    @default("COMING_SOON")
+  deliveryDate DateTime?
+  totalUnits   Int?
+  startPrice   Float?
+  endPrice     Float?
+  sortOrder    Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  units           Unit[]
-  paymentPlans    PaymentPlan[]
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  units        Unit[]
+  paymentPlans PaymentPlan[]
 }
 
 model Unit {
-  id              String         @id @default(cuid())
-  projectId       String
-  phaseId         String?
-  name            String
-  nameArabic      String?
-  unitNumber      String?
-  floor           Int?
-  unitType        String // APARTMENT | VILLA | etc.
-  listingType     String // SALE | RENT | etc.
-  status          String         @default("AVAILABLE")
-  bedrooms        Int?
-  bathrooms       Int?
-  area            Float
-  netArea         Float?
-  roofArea        Float?
-  gardenArea      Float?
-  price           Float
-  pricePerSqm     Float?
-  currency        String         @default("EGP")
-  downPayment     Float?
+  id                 String   @id @default(cuid())
+  projectId          String
+  phaseId            String?
+  name               String
+  nameArabic         String?
+  unitNumber         String?
+  floor              Int?
+  unitType           String // APARTMENT | VILLA | etc.
+  listingType        String // SALE | RENT | etc.
+  status             String   @default("AVAILABLE")
+  bedrooms           Int?
+  bathrooms          Int?
+  area               Float
+  netArea            Float?
+  roofArea           Float?
+  gardenArea         Float?
+  price              Float
+  pricePerSqm        Float?
+  currency           String   @default("EGP")
+  downPayment        Float?
   monthlyInstallment Float?
-  installmentYears Int?
-  deliveryTerms   String?
-  finishingType   String?
-  view            String?
-  isCorner        Boolean        @default(false)
-  hasBalcony      Boolean        @default(false)
-  hasParking      Boolean        @default(false)
-  parkingNumber   String?
-  gallery         String @default("[]") // JSON array
-  floorPlan       String?
-  brochureUrl     String?
-  isFeatured      Boolean        @default(false)
-  isSample        Boolean        @default(false)
-  viewCount       Int            @default(0)
-  favoriteCount   Int            @default(0)
-  metaTitle       String?
-  metaDescription String?
-  slug            String?        @unique
-  dataTrust       String        @default("{}") // F10: JSON {price:{status,source,verifiedAt,updatedAt}}
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  installmentYears   Int?
+  deliveryTerms      String?
+  finishingType      String?
+  view               String?
+  isCorner           Boolean  @default(false)
+  hasBalcony         Boolean  @default(false)
+  hasParking         Boolean  @default(false)
+  parkingNumber      String?
+  gallery            String   @default("[]") // JSON array
+  floorPlan          String?
+  brochureUrl        String?
+  isFeatured         Boolean  @default(false)
+  isSample           Boolean  @default(false)
+  viewCount          Int      @default(0)
+  favoriteCount      Int      @default(0)
+  metaTitle          String?
+  metaDescription    String?
+  slug               String?  @unique
+  dataTrust          String   @default("{}") // F10: JSON {price:{status,source,verifiedAt,updatedAt}}
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  project         Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  phase           ProjectPhase?  @relation(fields: [phaseId], references: [id])
-  leads           Lead[]
-  deals           Deal[]
-  inquiries       Inquiry[]
-  favorites       Favorite[]
-  viewings        Viewing[]
-  priceHistory    PriceHistory[]
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phase        ProjectPhase?  @relation(fields: [phaseId], references: [id])
+  leads        Lead[]
+  deals        Deal[]
+  inquiries    Inquiry[]
+  favorites    Favorite[]
+  viewings     Viewing[]
+  priceHistory PriceHistory[]
 }
 
 model UnitFeature {
-  id     String @id @default(cuid())
+  id     String  @id @default(cuid())
   name   String
   nameAr String?
 }
 
 model PriceHistory {
-  id        String   @id @default(cuid())
-  unitId    String
-  price     Float
-  change    Float?
-  reason    String?
+  id         String   @id @default(cuid())
+  unitId     String
+  price      Float
+  change     Float?
+  reason     String?
   recordedAt DateTime @default(now())
 
-  unit      Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
 }
 
 // ─── PAYMENT PLANS ───────────────────────────────────────
 
 model PaymentPlan {
-  id              String        @id @default(cuid())
-  projectId       String
-  phaseId         String?
-  name            String
-  nameArabic      String?
-  description     String?
-  downPaymentPct  Float
-  installmentYears Int
-  maintenanceFeePct Float?
-  semiAnnualPct   Float?
+  id                 String   @id @default(cuid())
+  projectId          String
+  phaseId            String?
+  name               String
+  nameArabic         String?
+  description        String?
+  downPaymentPct     Float
+  installmentYears   Int
+  maintenanceFeePct  Float?
+  semiAnnualPct      Float?
   deliveryPaymentPct Float?
-  cashDiscount    Float?
-  isDefault       Boolean       @default(false)
-  isActive        Boolean       @default(true)
-  sortOrder       Int           @default(0)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  cashDiscount       Float?
+  isDefault          Boolean  @default(false)
+  isActive           Boolean  @default(true)
+  sortOrder          Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  project         Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  phase           ProjectPhase? @relation(fields: [phaseId], references: [id])
-  milestones      PaymentMilestone[]
+  project    Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phase      ProjectPhase?      @relation(fields: [phaseId], references: [id])
+  milestones PaymentMilestone[]
 }
 
 model PaymentMilestone {
-  id              String      @id @default(cuid())
-  paymentPlanId   String
-  name            String
-  nameArabic      String?
-  percentage      Float
-  monthNumber     Int?
-  description     String?
-  sortOrder       Int         @default(0)
+  id            String  @id @default(cuid())
+  paymentPlanId String
+  name          String
+  nameArabic    String?
+  percentage    Float
+  monthNumber   Int?
+  description   String?
+  sortOrder     Int     @default(0)
 
-  paymentPlan     PaymentPlan @relation(fields: [paymentPlanId], references: [id], onDelete: Cascade)
+  paymentPlan PaymentPlan @relation(fields: [paymentPlanId], references: [id], onDelete: Cascade)
 }
 
 // ─── AMENITIES ───────────────────────────────────────────
 
 model Amenity {
-  id          String  @id @default(cuid())
-  name        String  @unique
-  nameArabic  String
-  icon        String?
-  image       String?
-  category    String  @default("LIFESTYLE")
-  isActive    Boolean @default(true)
-  sortOrder   Int     @default(0)
+  id         String  @id @default(cuid())
+  name       String  @unique
+  nameArabic String
+  icon       String?
+  image      String?
+  category   String  @default("LIFESTYLE")
+  isActive   Boolean @default(true)
+  sortOrder  Int     @default(0)
 
-  projects    ProjectAmenity[]
+  projects ProjectAmenity[]
 }
 
 model ProjectAmenity {
@@ -497,14 +497,14 @@ model ProjectAmenity {
   isPremium Boolean @default(false)
   notes     String?
 
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  amenity   Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  amenity Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, amenityId])
 }
 
 model NearbyPlace {
-  id        String  @id @default(cuid())
+  id        String @id @default(cuid())
   projectId String
   name      String
   type      String
@@ -513,7 +513,7 @@ model NearbyPlace {
   latitude  Float?
   longitude Float?
 
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 // ─── MEDIA ───────────────────────────────────────────────
@@ -525,11 +525,11 @@ model MasterPlanImage {
   caption   String?
   sortOrder Int     @default(0)
 
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model ProjectBrochure {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   projectId String
   url       String
   name      String
@@ -537,7 +537,7 @@ model ProjectBrochure {
   pageCount Int?
   createdAt DateTime @default(now())
 
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 // ─── INQUIRIES & LEADS ──────────────────────────────────
@@ -561,9 +561,9 @@ model Inquiry {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  user        User?         @relation(fields: [userId], references: [id])
-  unit        Unit?         @relation(fields: [unitId], references: [id])
-  responses   InquiryResponse[]
+  user      User?             @relation(fields: [userId], references: [id])
+  unit      Unit?             @relation(fields: [unitId], references: [id])
+  responses InquiryResponse[]
 }
 
 model InquiryResponse {
@@ -573,62 +573,62 @@ model InquiryResponse {
   message   String
   createdAt DateTime @default(now())
 
-  inquiry   Inquiry  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  inquiry Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
 }
 
 model Lead {
-  id          String      @id @default(cuid())
-  leadCode    String?     @unique // EA-10482 (EstateAI public lead id)
-  brokerId    String? // null = unassigned (e.g. auto-created from a booking)
-  developerId String? // developer this lead is registered against
-  projectId   String?
-  unitId      String?
-  name        String
-  email       String?
-  phone       String
-  normalizedPhone String? // digits-only copy for duplicate matching
-  normalizedEmail String? // lowercased copy for duplicate matching
-  source      String      @default("WEBSITE")
-  status      String      @default("NEW")
-  reviewStatus String     @default("ACTIVE") // ACTIVE | DUPLICATE_REVIEW | TRANSFERRED | CLOSED
-  duplicateOfId String? // lead id that won a duplicate match (plain scalar, no FK)
-  duplicateNote String? // neutral explanation shown instead of owner details
-  resolutionNote String?
-  resolvedById String?
-  resolvedAt  DateTime?
+  id                     String    @id @default(cuid())
+  leadCode               String?   @unique // EA-10482 (EstateAI public lead id)
+  brokerId               String? // null = unassigned (e.g. auto-created from a booking)
+  developerId            String? // developer this lead is registered against
+  projectId              String?
+  unitId                 String?
+  name                   String
+  email                  String?
+  phone                  String
+  normalizedPhone        String? // digits-only copy for duplicate matching
+  normalizedEmail        String? // lowercased copy for duplicate matching
+  source                 String    @default("WEBSITE")
+  status                 String    @default("NEW")
+  reviewStatus           String    @default("ACTIVE") // ACTIVE | DUPLICATE_REVIEW | TRANSFERRED | CLOSED
+  duplicateOfId          String? // lead id that won a duplicate match (plain scalar, no FK)
+  duplicateNote          String? // neutral explanation shown instead of owner details
+  resolutionNote         String?
+  resolvedById           String?
+  resolvedAt             DateTime?
   // Lead protection (EstateAI attribution window)
-  protectionStartsAt DateTime?
-  protectionExpiresAt DateTime?
-  protectionDays Int? // snapshot of the rule applied at registration
-  protectionSource String? // PLATFORM | DEVELOPER | PROJECT | MANUAL
-  budgetMin   Float?
-  budgetMax   Float?
-  preferredPropertyTypes String @default("[]") // JSON array
-  preferredAreas String @default("[]") // JSON array
-  notes       String?
-  contactedAt DateTime?
-  lastContactAt DateTime?
-  nextFollowUp DateTime?
-  convertedAt DateTime?
-  lostReason  String?
-  score       Int?        @default(0)
-  tags        String @default("[]") // JSON array
-  createdBy   String? // user id who registered the lead
-  updatedBy   String?
-  lastActivityAt DateTime?
-  jobFlags    String      @default("{}") // JSON: {expiringNotified, expiredNotified, inactivityNotified}
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  protectionStartsAt     DateTime?
+  protectionExpiresAt    DateTime?
+  protectionDays         Int? // snapshot of the rule applied at registration
+  protectionSource       String? // PLATFORM | DEVELOPER | PROJECT | MANUAL
+  budgetMin              Float?
+  budgetMax              Float?
+  preferredPropertyTypes String    @default("[]") // JSON array
+  preferredAreas         String    @default("[]") // JSON array
+  notes                  String?
+  contactedAt            DateTime?
+  lastContactAt          DateTime?
+  nextFollowUp           DateTime?
+  convertedAt            DateTime?
+  lostReason             String?
+  score                  Int?      @default(0)
+  tags                   String    @default("[]") // JSON array
+  createdBy              String? // user id who registered the lead
+  updatedBy              String?
+  lastActivityAt         DateTime?
+  jobFlags               String    @default("{}") // JSON: {expiringNotified, expiredNotified, inactivityNotified}
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
-  broker      BrokerProfile? @relation(fields: [brokerId], references: [id], onDelete: Cascade)
-  developer   DeveloperProfile? @relation(fields: [developerId], references: [id], onDelete: SetNull)
-  project     Project?    @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  unit        Unit?       @relation(fields: [unitId], references: [id], onDelete: SetNull)
-  activities  LeadActivity[]
-  viewings    Viewing[]
-  deals       Deal[]
+  broker           BrokerProfile?         @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  developer        DeveloperProfile?      @relation(fields: [developerId], references: [id], onDelete: SetNull)
+  project          Project?               @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  unit             Unit?                  @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  activities       LeadActivity[]
+  viewings         Viewing[]
+  deals            Deal[]
   ownershipHistory LeadOwnershipHistory[]
-  voiceNotes  VoiceNote[]
+  voiceNotes       VoiceNote[]
 
   @@index([status])
   @@index([reviewStatus])
@@ -649,52 +649,52 @@ model LeadActivity {
   content   String?
   createdAt DateTime @default(now())
 
-  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
 }
 
 // ─── VIEWINGS & APPOINTMENTS ─────────────────────────────
 
 model Viewing {
-  id          String    @id @default(cuid())
-  userId      String? // null = guest booking (no account)
-  unitId      String?
-  projectId   String?
-  brokerId    String?
-  leadId      String?
-  scheduledAt DateTime
-  duration    Int       @default(30)
-  status      String    @default("scheduled")
-  meetingType String    @default("in_person") // in_person | online
-  meetingLink String?
-  contactPhone String?   // phone the client leaves when booking
-  notes       String?
-  feedback    String?
-  rating      Int?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id           String   @id @default(cuid())
+  userId       String? // null = guest booking (no account)
+  unitId       String?
+  projectId    String?
+  brokerId     String?
+  leadId       String?
+  scheduledAt  DateTime
+  duration     Int      @default(30)
+  status       String   @default("scheduled")
+  meetingType  String   @default("in_person") // in_person | online
+  meetingLink  String?
+  contactPhone String? // phone the client leaves when booking
+  notes        String?
+  feedback     String?
+  rating       Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  user        User?     @relation("ViewingUser", fields: [userId], references: [id])
-  unit        Unit?     @relation(fields: [unitId], references: [id])
-  project     Project?  @relation(fields: [projectId], references: [id])
-  broker      BrokerProfile? @relation("ViewingBroker", fields: [brokerId], references: [id])
-  lead        Lead?     @relation(fields: [leadId], references: [id])
-  review      Review?
+  user    User?          @relation("ViewingUser", fields: [userId], references: [id])
+  unit    Unit?          @relation(fields: [unitId], references: [id])
+  project Project?       @relation(fields: [projectId], references: [id])
+  broker  BrokerProfile? @relation("ViewingBroker", fields: [brokerId], references: [id])
+  lead    Lead?          @relation(fields: [leadId], references: [id])
+  review  Review?
 }
 
 model Appointment {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   userId      String
   title       String
   description String?
   scheduledAt DateTime
-  duration    Int       @default(30)
+  duration    Int      @default(30)
   type        String
-  status      String    @default("scheduled")
+  status      String   @default("scheduled")
   location    String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  user        User      @relation("AppointmentUser", fields: [userId], references: [id])
+  user User @relation("AppointmentUser", fields: [userId], references: [id])
 }
 
 // ─── FAVORITES & SAVED SEARCHES ──────────────────────────
@@ -705,8 +705,8 @@ model Favorite {
   unitId    String?
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  unit      Unit?    @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  unit Unit? @relation(fields: [unitId], references: [id], onDelete: Cascade)
 
   @@unique([userId, unitId])
 }
@@ -715,25 +715,25 @@ model SavedSearch {
   id        String   @id @default(cuid())
   userId    String
   name      String
-  filters   String   // JSON string
+  filters   String // JSON string
   notifyNew Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // ─── FEATURE 7: PRICE & AVAILABILITY WATCH ─────────────────
 model Watch {
   id             String    @id @default(cuid())
   userId         String
-  targetType     String    // UNIT | PROJECT
+  targetType     String // UNIT | PROJECT
   targetId       String
   alertsEnabled  Boolean   @default(true)
   snapshot       String    @default("{}") // last notified state {price,status,...} — only notify on real change
   lastNotifiedAt DateTime?
   createdAt      DateTime  @default(now())
 
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, targetType, targetId])
   @@index([targetType, targetId])
@@ -743,10 +743,10 @@ model Watch {
 // ─── FEATURE 6 (+ F1 evidence): BUYER JOURNEY EVENTS ───────
 model UserEvent {
   id         String   @id @default(cuid())
-  userId     String?  // set when authenticated
-  anonId     String?  // random visitor id (no PII) when anonymous
-  type       String   // VISIT | PROJECT_VIEW | UNIT_VIEW | SEARCH | AI_CHAT | SAVE | CONTACT | VIEWING_BOOKED | REGISTER | RESERVATION | CONTRACT | SOLD
-  entityType String?  // PROJECT | UNIT | LEAD | DEAL ...
+  userId     String? // set when authenticated
+  anonId     String? // random visitor id (no PII) when anonymous
+  type       String // VISIT | PROJECT_VIEW | UNIT_VIEW | SEARCH | AI_CHAT | SAVE | CONTACT | VIEWING_BOOKED | REGISTER | RESERVATION | CONTRACT | SOLD
+  entityType String? // PROJECT | UNIT | LEAD | DEAL ...
   entityId   String?
   meta       String   @default("{}") // JSON
   createdAt  DateTime @default(now())
@@ -759,25 +759,25 @@ model UserEvent {
 
 // ─── FEATURE 8: PROJECT TIMELINE ───────────────────────────
 model ProjectMilestone {
-  id               String   @id @default(cuid())
-  projectId        String
-  type             String   @default("CUSTOM") // LAUNCH | CONSTRUCTION | PROGRESS | DELIVERY | HANDOVER | CUSTOM
-  title            String
-  titleArabic      String?
-  description      String?
-  date             DateTime?
-  status           String   @default("PLANNED") // PLANNED | IN_PROGRESS | COMPLETED | DELAYED
-  progressPercent  Int?     // only when developer actually reports it
-  imageUrl         String?
-  sortOrder        Int      @default(0)
-  approvalStatus   String   @default("APPROVED") // DRAFT | PENDING | APPROVED | REJECTED — developer submissions go PENDING
-  rejectionReason  String?
-  submittedById    String?
-  approvedById     String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id              String    @id @default(cuid())
+  projectId       String
+  type            String    @default("CUSTOM") // LAUNCH | CONSTRUCTION | PROGRESS | DELIVERY | HANDOVER | CUSTOM
+  title           String
+  titleArabic     String?
+  description     String?
+  date            DateTime?
+  status          String    @default("PLANNED") // PLANNED | IN_PROGRESS | COMPLETED | DELAYED
+  progressPercent Int? // only when developer actually reports it
+  imageUrl        String?
+  sortOrder       Int       @default(0)
+  approvalStatus  String    @default("APPROVED") // DRAFT | PENDING | APPROVED | REJECTED — developer submissions go PENDING
+  rejectionReason String?
+  submittedById   String?
+  approvedById    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
   @@index([approvalStatus])
@@ -786,38 +786,38 @@ model ProjectMilestone {
 // ─── BLOG & CONTENT ──────────────────────────────────────
 
 model Blog {
-  id            String   @id @default(cuid())
-  projectId     String?
-  title         String
-  titleArabic   String?
-  slug          String   @unique
-  excerpt       String?
-  content       String
-  coverImage    String?
-  author        String?
-  tags          String @default("[]") // JSON array
-  category      String?
-  isPublished   Boolean  @default(false)
-  publishedAt   DateTime?
-  viewCount     Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String    @id @default(cuid())
+  projectId   String?
+  title       String
+  titleArabic String?
+  slug        String    @unique
+  excerpt     String?
+  content     String
+  coverImage  String?
+  author      String?
+  tags        String    @default("[]") // JSON array
+  category    String?
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+  viewCount   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  project       Project? @relation(fields: [projectId], references: [id])
+  project Project? @relation(fields: [projectId], references: [id])
 }
 
 // ─── AI FEATURES ─────────────────────────────────────────
 
 model AIConversation {
-  id        String      @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String?
   sessionId String?
   title     String?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user      User?       @relation(fields: [userId], references: [id])
-  messages  AIMessage[]
+  user     User?       @relation(fields: [userId], references: [id])
+  messages AIMessage[]
 }
 
 model AIMessage {
@@ -825,69 +825,85 @@ model AIMessage {
   conversationId String
   role           String
   content        String
-  metadata       String?  // JSON string
+  metadata       String? // JSON string
   tokenCount     Int?
   createdAt      DateTime @default(now())
 
-  conversation   AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 }
 
 model AISearchHistory {
   id        String   @id @default(cuid())
   userId    String?
   query     String
-  filters   String?  // JSON string
-  results   String?  // JSON string
+  filters   String? // JSON string
+  results   String? // JSON string
   rating    Int?
   createdAt DateTime @default(now())
 
-  user      User?    @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 }
 
 model AIInsight {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   type       String
   entityType String
   entityId   String
-  data       String   // JSON string
+  data       String // JSON string
   confidence Float?
   expiresAt  DateTime?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
+}
+
+// Persistent "training" knowledge for the عين assistant: chunks fetched from
+// developer/official sites and our own guides. Public marketing content only —
+// never PII. Retrieved at chat time and injected as grounded context.
+model AIKnowledge {
+  id        String   @id @default(cuid())
+  source    String // 'developer-site' | 'own-site'
+  url       String   @unique
+  title     String
+  content   String // chunk body (plain text)
+  chunkIdx  Int      @default(0) // 0 = first chunk of the page
+  wordCount Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ─── MARKETING & NOTIFICATIONS ───────────────────────────
 
 model Notification {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
-  type      String    @default("SYSTEM")
+  type      String   @default("SYSTEM")
   title     String
   message   String
   link      String?
-  isRead    Boolean   @default(false)
-  metadata  String?   // JSON string
-  createdAt DateTime  @default(now())
+  isRead    Boolean  @default(false)
+  metadata  String? // JSON string
+  createdAt DateTime @default(now())
 
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model NotificationPreference {
-  id                  String  @id @default(cuid())
-  userId              String  @unique
-  emailInquiries      Boolean @default(true)
-  emailLeads          Boolean @default(true)
-  emailPayments       Boolean @default(true)
-  emailViewings       Boolean @default(true)
-  emailMarketing      Boolean @default(false)
-  pushInquiries       Boolean @default(true)
-  pushLeads           Boolean @default(true)
-  pushPayments        Boolean @default(true)
-  pushViewings        Boolean @default(true)
-  smsNotifications    Boolean @default(false)
+  id                    String  @id @default(cuid())
+  userId                String  @unique
+  emailInquiries        Boolean @default(true)
+  emailLeads            Boolean @default(true)
+  emailPayments         Boolean @default(true)
+  emailViewings         Boolean @default(true)
+  emailMarketing        Boolean @default(false)
+  pushInquiries         Boolean @default(true)
+  pushLeads             Boolean @default(true)
+  pushPayments          Boolean @default(true)
+  pushViewings          Boolean @default(true)
+  smsNotifications      Boolean @default(false)
   whatsappNotifications Boolean @default(false)
-  watchAlerts         Boolean @default(true) // F7: price/availability alerts for watched items
+  watchAlerts           Boolean @default(true) // F7: price/availability alerts for watched items
 
-  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // An Expo push token registered by the mobile app.
@@ -898,7 +914,7 @@ model NotificationPreference {
 model PushSubscription {
   id         String   @id @default(cuid())
   userId     String
-  token      String   // ExponentPushToken[xxxxxxxx] as issued by expo-notifications
+  token      String // ExponentPushToken[xxxxxxxx] as issued by expo-notifications
   platform   String   @default("ios") // ios | android | web
   deviceName String?
   createdAt  DateTime @default(now())
@@ -911,15 +927,15 @@ model PushSubscription {
 }
 
 model MarketingConsent {
-  id        String   @id @default(cuid())
-  userId    String
-  channel   String
-  purpose   String
-  isActive  Boolean  @default(true)
-  optedAt   DateTime @default(now())
-  optedOut  DateTime?
+  id       String    @id @default(cuid())
+  userId   String
+  channel  String
+  purpose  String
+  isActive Boolean   @default(true)
+  optedAt  DateTime  @default(now())
+  optedOut DateTime?
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, channel, purpose])
 }
@@ -932,33 +948,33 @@ model AuditLog {
   action    String
   entity    String
   entityId  String?
-  changes   String?  // JSON string
+  changes   String? // JSON string
   ipAddress String?
   userAgent String?
   createdAt DateTime @default(now())
 
-  user      User?    @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 }
 
 model UserDocument {
-  id        String     @id @default(cuid())
-  userId    String
-  type      String
-  url       String
-  name      String
-  fileSize  Int?
-  isVerified Boolean  @default(false)
+  id         String    @id @default(cuid())
+  userId     String
+  type       String
+  url        String
+  name       String
+  fileSize   Int?
+  isVerified Boolean   @default(false)
   verifiedAt DateTime?
-  expiresAt DateTime?
-  createdAt DateTime   @default(now())
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
 
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SystemSetting {
   id        String   @id @default(cuid())
   key       String   @unique
-  value     String   // JSON string
+  value     String // JSON string
   category  String?
   updatedAt DateTime @updatedAt
 }
@@ -977,100 +993,100 @@ model RegionSetting {
 // ─── APPROVALS ────────────────────────────────────────────
 
 model ApprovalRequest {
-  id          String   @id @default(cuid())
-  type        String   // PROJECT | DEVELOPER | BROKER | UNIT | PRICE_CHANGE | FEATURED | ACCOUNT
+  id          String    @id @default(cuid())
+  type        String // PROJECT | DEVELOPER | BROKER | UNIT | PRICE_CHANGE | FEATURED | ACCOUNT
   entityType  String
   entityId    String?
   title       String
   description String?
-  status      String   @default("PENDING") // PENDING | APPROVED | REJECTED | CHANGES_REQUESTED
+  status      String    @default("PENDING") // PENDING | APPROVED | REJECTED | CHANGES_REQUESTED
   requestedBy String?
   reviewedBy  String?
   reviewNote  String?
-  metadata    String?  // JSON string
-  requestedAt DateTime @default(now())
+  metadata    String? // JSON string
+  requestedAt DateTime  @default(now())
   reviewedAt  DateTime?
 
-  requestor   User?    @relation("RequestedApprovals", fields: [requestedBy], references: [id])
-  reviewer    User?    @relation("ReviewedApprovals", fields: [reviewedBy], references: [id])
+  requestor User? @relation("RequestedApprovals", fields: [requestedBy], references: [id])
+  reviewer  User? @relation("ReviewedApprovals", fields: [reviewedBy], references: [id])
 }
 
 // ─── SELLER ───────────────────────────────────────────────
 
 model SellerProfile {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  companyName     String?
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  companyName       String?
   companyNameArabic String?
-  licenseNumber   String?
-  bio             String?
-  coverImage      String?
-  isVerified      Boolean  @default(false)
-  rating          Float    @default(0)
-  reviewCount     Int      @default(0)
-  totalListings   Int      @default(0)
-  totalSales      Int      @default(0)
-  contactEmail    String?
-  contactPhone    String?
-  socialLinks     String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  licenseNumber     String?
+  bio               String?
+  coverImage        String?
+  isVerified        Boolean  @default(false)
+  rating            Float    @default(0)
+  reviewCount       Int      @default(0)
+  totalListings     Int      @default(0)
+  totalSales        Int      @default(0)
+  contactEmail      String?
+  contactPhone      String?
+  socialLinks       String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // ─── CAREERS ─────────────────────────────────────────────
 
 model Job {
-  id            String   @id @default(cuid())
-  title         String
-  titleArabic   String?
-  slug          String   @unique
-  department    String
-  location      String
-  type          String   @default("FULL_TIME") // FULL_TIME | PART_TIME | CONTRACT | INTERNSHIP
-  description   String
+  id                String   @id @default(cuid())
+  title             String
+  titleArabic       String?
+  slug              String   @unique
+  department        String
+  location          String
+  type              String   @default("FULL_TIME") // FULL_TIME | PART_TIME | CONTRACT | INTERNSHIP
+  description       String
   descriptionArabic String?
-  requirements  String   @default("[]") // JSON array
-  salaryMin     Float?
-  salaryMax     Float?
-  isPublished   Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  requirements      String   @default("[]") // JSON array
+  salaryMin         Float?
+  salaryMax         Float?
+  isPublished       Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  applications  JobApplication[]
+  applications JobApplication[]
 }
 
 model JobApplication {
-  id        String   @id @default(cuid())
-  jobId     String
-  name      String
-  email     String
-  phone     String?
-  resumeUrl String?
+  id          String   @id @default(cuid())
+  jobId       String
+  name        String
+  email       String
+  phone       String?
+  resumeUrl   String?
   coverLetter String?
-  status    String   @default("PENDING") // PENDING | REVIEWED | SHORTLISTED | REJECTED | HIRED
-  createdAt DateTime @default(now())
+  status      String   @default("PENDING") // PENDING | REVIEWED | SHORTLISTED | REJECTED | HIRED
+  createdAt   DateTime @default(now())
 
-  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
 }
 
 // ─── PRESS ───────────────────────────────────────────────
 
 model PressRelease {
-  id            String   @id @default(cuid())
-  title         String
-  titleArabic   String?
-  slug          String   @unique
-  excerpt       String?
-  content       String
-  coverImage    String?
-  source        String?
-  sourceUrl     String?
-  isPublished   Boolean  @default(false)
-  publishedAt   DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String    @id @default(cuid())
+  title       String
+  titleArabic String?
+  slug        String    @unique
+  excerpt     String?
+  content     String
+  coverImage  String?
+  source      String?
+  sourceUrl   String?
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 // ─── CONTACT FORM ────────────────────────────────────────
@@ -1089,63 +1105,63 @@ model ContactSubmission {
 // ─── ACCESS REQUESTS ──────────────────────────────────────
 
 model AccessRequest {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   userId          String?
   email           String
   name            String
   phone           String?
   company         String?
-  role            String   @default("BUYER") // BUYER | BROKER | DEVELOPER | SELLER
-  status          String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  role            String    @default("BUYER") // BUYER | BROKER | DEVELOPER | SELLER
+  status          String    @default("PENDING") // PENDING | APPROVED | REJECTED
   message         String?
-  metadata        String?  // JSON string for extra fields
+  metadata        String? // JSON string for extra fields
   rejectionReason String?
   reviewedById    String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
   reviewedAt      DateTime?
 
-  user            User?    @relation("AccessRequestUser", fields: [userId], references: [id])
-  reviewer        User?    @relation("AccessRequestReviewer", fields: [reviewedById], references: [id])
+  user     User? @relation("AccessRequestUser", fields: [userId], references: [id])
+  reviewer User? @relation("AccessRequestReviewer", fields: [reviewedById], references: [id])
 }
 
 // ─── INVITATIONS ──────────────────────────────────────────
 
 model Invitation {
-  id              String   @id @default(cuid())
-  email           String
-  role            String   // BROKER | DEVELOPER | SELLER | ADMIN | BUYER
-  token           String   @unique
-  senderId        String
-  invitedUserId   String?
-  message         String?
-  status          String   @default("PENDING") // PENDING | ACCEPTED | EXPIRED | REVOKED
-  expiresAt       DateTime
-  acceptedAt      DateTime?
-  createdAt       DateTime @default(now())
+  id            String    @id @default(cuid())
+  email         String
+  role          String // BROKER | DEVELOPER | SELLER | ADMIN | BUYER
+  token         String    @unique
+  senderId      String
+  invitedUserId String?
+  message       String?
+  status        String    @default("PENDING") // PENDING | ACCEPTED | EXPIRED | REVOKED
+  expiresAt     DateTime
+  acceptedAt    DateTime?
+  createdAt     DateTime  @default(now())
 
-  sender          User     @relation("InvitationSender", fields: [senderId], references: [id])
-  invitedUser     User?    @relation("InvitationUser", fields: [invitedUserId], references: [id])
+  sender      User  @relation("InvitationSender", fields: [senderId], references: [id])
+  invitedUser User? @relation("InvitationUser", fields: [invitedUserId], references: [id])
 }
 
 // ─── LEAD PROTECTION, DEALS & COMMISSIONS ───────────────
 
 model LeadOwnershipHistory {
-  id              String    @id @default(cuid())
-  leadId          String
-  action          String // ASSIGNED | TRANSFERRED | EXTENDED | EXPIRED | DUPLICATE_RESOLVED | REVERTED
-  fromBrokerId    String?
-  toBrokerId      String?
-  changedById     String
-  reason          String?
+  id                String    @id @default(cuid())
+  leadId            String
+  action            String // ASSIGNED | TRANSFERRED | EXTENDED | EXPIRED | DUPLICATE_RESOLVED | REVERTED
+  fromBrokerId      String?
+  toBrokerId        String?
+  changedById       String
+  reason            String?
   previousExpiresAt DateTime?
-  newExpiresAt    DateTime?
-  metadata        String? // JSON string
-  createdAt       DateTime  @default(now())
+  newExpiresAt      DateTime?
+  metadata          String? // JSON string
+  createdAt         DateTime  @default(now())
 
-  lead            Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  fromBroker      BrokerProfile? @relation("OwnershipFrom", fields: [fromBrokerId], references: [id], onDelete: SetNull)
-  toBroker        BrokerProfile? @relation("OwnershipTo", fields: [toBrokerId], references: [id], onDelete: SetNull)
+  lead       Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  fromBroker BrokerProfile? @relation("OwnershipFrom", fields: [fromBrokerId], references: [id], onDelete: SetNull)
+  toBroker   BrokerProfile? @relation("OwnershipTo", fields: [toBrokerId], references: [id], onDelete: SetNull)
 
   @@index([leadId])
   @@index([action])
@@ -1171,14 +1187,14 @@ model Deal {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  lead            Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  broker          BrokerProfile? @relation(fields: [brokerId], references: [id], onDelete: SetNull)
-  developer       DeveloperProfile @relation(fields: [developerId], references: [id], onDelete: Cascade)
-  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  unit            Unit?     @relation(fields: [unitId], references: [id], onDelete: SetNull)
-  commissions     Commission[]
-  brokerReviews   BrokerReview[]
-  disputes        DealDispute[]
+  lead          Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  broker        BrokerProfile?   @relation(fields: [brokerId], references: [id], onDelete: SetNull)
+  developer     DeveloperProfile @relation(fields: [developerId], references: [id], onDelete: Cascade)
+  project       Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  unit          Unit?            @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  commissions   Commission[]
+  brokerReviews BrokerReview[]
+  disputes      DealDispute[]
 
   @@index([leadId])
   @@index([brokerId])
@@ -1190,56 +1206,56 @@ model Deal {
 }
 
 model Commission {
-  id              String    @id @default(cuid())
-  dealId          String
-  ruleId          String?
-  status          String    @default("PENDING") // PENDING | APPROVED | INVOICED | DUE | PAID | CANCELLED | DISPUTED
-  dealValue       Float
-  currency        String    @default("EGP")
-  totalPct        Float
-  estateaiPct     Float
-  brokerPct       Float
-  otherPct        Float     @default(0)
-  otherLabel      String?
-  totalAmount     Float
-  estateaiAmount  Float
-  brokerAmount    Float
-  otherAmount     Float     @default(0)
-  dueDate         DateTime?
-  paidDate        DateTime?
-  notes           String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  dealId         String
+  ruleId         String?
+  status         String    @default("PENDING") // PENDING | APPROVED | INVOICED | DUE | PAID | CANCELLED | DISPUTED
+  dealValue      Float
+  currency       String    @default("EGP")
+  totalPct       Float
+  estateaiPct    Float
+  brokerPct      Float
+  otherPct       Float     @default(0)
+  otherLabel     String?
+  totalAmount    Float
+  estateaiAmount Float
+  brokerAmount   Float
+  otherAmount    Float     @default(0)
+  dueDate        DateTime?
+  paidDate       DateTime?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  deal            Deal      @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  rule            CommissionRule? @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+  deal Deal            @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  rule CommissionRule? @relation(fields: [ruleId], references: [id], onDelete: SetNull)
 
   @@index([dealId])
   @@index([status])
 }
 
 model CommissionRule {
-  id              String    @id @default(cuid())
-  name            String
-  developerId     String? // null = platform-wide default rule
-  projectId       String? // project-specific rule (more specific wins)
-  totalPct        Float
-  estateaiPct     Float
-  brokerPct       Float
-  otherPct        Float     @default(0)
-  otherLabel      String?
-  isActive        Boolean   @default(true)
-  isDefault       Boolean   @default(false) // platform default when no other rule matches
-  priority        Int       @default(0)
-  minDealValue    Float?
-  maxDealValue    Float?
-  createdById     String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id           String   @id @default(cuid())
+  name         String
+  developerId  String? // null = platform-wide default rule
+  projectId    String? // project-specific rule (more specific wins)
+  totalPct     Float
+  estateaiPct  Float
+  brokerPct    Float
+  otherPct     Float    @default(0)
+  otherLabel   String?
+  isActive     Boolean  @default(true)
+  isDefault    Boolean  @default(false) // platform default when no other rule matches
+  priority     Int      @default(0)
+  minDealValue Float?
+  maxDealValue Float?
+  createdById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  developer       DeveloperProfile? @relation(fields: [developerId], references: [id], onDelete: Cascade)
-  project         Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  commissions     Commission[]
+  developer   DeveloperProfile? @relation(fields: [developerId], references: [id], onDelete: Cascade)
+  project     Project?          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  commissions Commission[]
 
   @@index([developerId])
   @@index([projectId])
@@ -1248,41 +1264,41 @@ model CommissionRule {
 }
 
 model DeveloperPartnership {
-  id              String    @id @default(cuid())
-  developerId     String    @unique
-  status          String    @default("PENDING") // PENDING | UNDER_REVIEW | APPROVED | ACTIVE | SUSPENDED | REJECTED | EXPIRED
-  allProjectsApproved Boolean @default(false)
-  approvedProjectIds String  @default("[]") // JSON array of project ids
+  id                  String    @id @default(cuid())
+  developerId         String    @unique
+  status              String    @default("PENDING") // PENDING | UNDER_REVIEW | APPROVED | ACTIVE | SUSPENDED | REJECTED | EXPIRED
+  allProjectsApproved Boolean   @default(false)
+  approvedProjectIds  String    @default("[]") // JSON array of project ids
   commissionAgreement String? // free-text/JSON terms
-  leadProtectionDays   Int? // developer-specific protection period override
-  allowedBrokerIds     String @default("[]") // JSON array; empty = no per-broker restriction
-  blockedBrokerIds     String @default("[]") // JSON array; always wins
-  startDate       DateTime?
-  endDate         DateTime?
-  terms           String?
-  isActive        Boolean   @default(true)
-  reviewedById    String?
-  reviewNote      String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  leadProtectionDays  Int? // developer-specific protection period override
+  allowedBrokerIds    String    @default("[]") // JSON array; empty = no per-broker restriction
+  blockedBrokerIds    String    @default("[]") // JSON array; always wins
+  startDate           DateTime?
+  endDate             DateTime?
+  terms               String?
+  isActive            Boolean   @default(true)
+  reviewedById        String?
+  reviewNote          String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  developer       DeveloperProfile @relation(fields: [developerId], references: [id], onDelete: Cascade)
+  developer DeveloperProfile @relation(fields: [developerId], references: [id], onDelete: Cascade)
 }
 
 model BrokerProjectAccess {
-  id              String    @id @default(cuid())
-  brokerId        String
-  developerId     String?
-  projectId       String?
-  access          String    @default("APPROVED") // APPROVED | BLOCKED
-  expiresAt       DateTime?
-  createdById     String?
-  notes           String?
-  createdAt       DateTime  @default(now())
+  id          String    @id @default(cuid())
+  brokerId    String
+  developerId String?
+  projectId   String?
+  access      String    @default("APPROVED") // APPROVED | BLOCKED
+  expiresAt   DateTime?
+  createdById String?
+  notes       String?
+  createdAt   DateTime  @default(now())
 
-  broker          BrokerProfile @relation(fields: [brokerId], references: [id], onDelete: Cascade)
-  developer       DeveloperProfile? @relation(fields: [developerId], references: [id], onDelete: Cascade)
-  project         Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  broker    BrokerProfile     @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  developer DeveloperProfile? @relation(fields: [developerId], references: [id], onDelete: Cascade)
+  project   Project?          @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([brokerId, developerId, projectId])
   @@index([brokerId])
@@ -1293,13 +1309,13 @@ model BrokerProjectAccess {
 // ─── SHARED COMPARISONS ───────────────────────────────
 
 model SharedComparison {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  projectIds String  // JSON array of Project ids
-  userId    String?
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  token      String   @unique
+  projectIds String // JSON array of Project ids
+  userId     String?
+  createdAt  DateTime @default(now())
 
-  user      User?    @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
@@ -1318,9 +1334,9 @@ model Review {
   status    String   @default("PENDING") // PENDING | APPROVED | REJECTED
   createdAt DateTime @default(now())
 
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  viewing   Viewing? @relation(fields: [viewingId], references: [id], onDelete: SetNull)
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  viewing Viewing? @relation(fields: [viewingId], references: [id], onDelete: SetNull)
 
   @@index([projectId])
   @@index([userId])
@@ -1347,15 +1363,15 @@ model VoiceNote {
 // ─── BROKER REVIEWS ─────────────────────────────────────
 
 model BrokerReview {
-  id       String  @id @default(cuid())
-  brokerId String
-  userId   String
-  dealId   String?
+  id        String   @id @default(cuid())
+  brokerId  String
+  userId    String
+  dealId    String?
   /// 1..5 (range validated at the API layer)
-  rating   Int
-  comment  String?
+  rating    Int
+  comment   String?
   /// PENDING | APPROVED | REJECTED
-  status   String  @default("PENDING") // PENDING | APPROVED | REJECTED
+  status    String   @default("PENDING") // PENDING | APPROVED | REJECTED
   createdAt DateTime @default(now())
 
   broker User  @relation("BrokerReviewBroker", fields: [brokerId], references: [id], onDelete: Cascade)
