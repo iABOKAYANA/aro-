@@ -92,7 +92,7 @@ export function Footer({ appType = 'all' }: { appType?: AppType }) {
           </div>
 
           <div>
-            <h3 className="section-kicker font-display mb-4">{t('footer.properties')}</h3>
+            <h2 className="section-kicker font-display mb-4">{t('footer.properties')}</h2>
             <ul className="space-y-2">
               {footerLinks.properties.map((link) => (
                 <li key={link.href}>
@@ -105,7 +105,7 @@ export function Footer({ appType = 'all' }: { appType?: AppType }) {
           </div>
 
           <div>
-            <h3 className="section-kicker font-display mb-4">{t('footer.locations')}</h3>
+            <h2 className="section-kicker font-display mb-4">{t('footer.locations')}</h2>
             <ul className="space-y-2">
               {footerLinks.locations.map((link) => (
                 <li key={link.href}>
@@ -118,7 +118,7 @@ export function Footer({ appType = 'all' }: { appType?: AppType }) {
           </div>
 
           <div>
-            <h3 className="section-kicker font-display mb-4">{t('footer.aiTools')}</h3>
+            <h2 className="section-kicker font-display mb-4">{t('footer.aiTools')}</h2>
             <ul className="space-y-2">
               {footerLinks.tools.map((link) => (
                 <li key={link.href}>
@@ -131,7 +131,7 @@ export function Footer({ appType = 'all' }: { appType?: AppType }) {
           </div>
 
           <div>
-            <h3 className="section-kicker font-display mb-4">{t('footer.company')}</h3>
+            <h2 className="section-kicker font-display mb-4">{t('footer.company')}</h2>
             <ul className="space-y-2">
               {footerLinks.company.map((link) => (
                 <li key={link.href}>

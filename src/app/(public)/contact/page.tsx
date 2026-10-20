@@ -142,7 +142,7 @@ function ContactForm() {
             <Reveal delay={80}>
             <Card className="border-estate-gold/20 dark:border-[#D4A843]/20">
               <CardHeader>
-                <CardTitle className="font-display display-3">{ar ? 'ابعت لنا رسالة' : 'Send Us a Message'}</CardTitle>
+                <CardTitle as="h2" className="font-display display-3">{ar ? 'ابعت لنا رسالة' : 'Send Us a Message'}</CardTitle>
                 <hr className="gold-hairline mt-4" />
               </CardHeader>
               <CardContent>
@@ -181,6 +181,7 @@ function ContactForm() {
                       <label className="text-sm font-medium">{ar ? 'نوع الاستفسار' : 'Inquiry Type'}</label>
                       <select
                         className="flex h-12 w-full rounded-xl border border-input bg-background px-3 py-2 text-base sm:h-10 sm:text-sm"
+                        aria-label={ar ? 'نوع الاستفسار' : 'Inquiry Type'}
                         {...register('type')}
                       >
                         <option value="GENERAL">{ar ? 'استفسار عام' : 'General Inquiry'}</option>

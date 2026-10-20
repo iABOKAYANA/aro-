@@ -172,9 +172,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
         {/* Title + Location */}
         <Link href={`/projects/${project.slug}`}>
-          <h3 className="font-display mb-1 text-lg font-semibold leading-snug text-gray-900 transition-colors group-hover:text-estate-gold-dark dark:text-white dark:group-hover:text-estate-gold">
+          <h2 className="font-display mb-1 text-lg font-semibold leading-snug text-gray-900 transition-colors group-hover:text-estate-gold-dark dark:text-white dark:group-hover:text-estate-gold">
             {projectName}
-          </h3>
+          </h2>
         </Link>
         {location && (
           <div className="mb-3 flex min-w-0 items-center gap-1 text-xs text-gray-400">

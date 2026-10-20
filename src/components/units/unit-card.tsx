@@ -85,10 +85,10 @@ export function UnitCard({ unit, projectName, projectSlug, projectCoverImage }: 
       <CardContent className="p-4">
         <Link href={`/units/${unit.slug || unit.id}`}>
           {cardTitle !== pName && <p className="text-xs text-muted-foreground">{pName}</p>}
-          <h3 className="mb-1 font-semibold hover:text-estate-gold transition-colors">
+          <h2 className="mb-1 font-semibold hover:text-estate-gold transition-colors">
             {cardTitle}
             {unit.phase && ` · ${unit.phase.name}`}
-          </h3>
+          </h2>
         </Link>
 
         <div className="mb-3 flex flex-wrap gap-3 text-sm text-muted-foreground">

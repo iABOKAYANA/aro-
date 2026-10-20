@@ -42,7 +42,7 @@ export function ProjectsResults({ results, searchParams }: ProjectsResultsProps)
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
         </div>
-        <h3 className="font-display mb-1 text-lg font-semibold text-gray-900 dark:text-white">{t('projects.noResults')}</h3>
+        <h2 className="font-display mb-1 text-lg font-semibold text-gray-900 dark:text-white">{t('projects.noResults')}</h2>
         <p className="mb-4 max-w-sm text-sm text-gray-500">{t('projects.noResultsHint')}</p>
         <Link href="/projects" className="gold-shimmer inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-estate-gold px-4 py-2 text-sm font-medium text-[#0F1A2C] hover:bg-estate-gold-dark md:min-h-0 dark:bg-estate-gold dark:hover:bg-estate-gold-dark">
           {t('projects.clearFilters')}
