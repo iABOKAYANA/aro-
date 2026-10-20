@@ -29,7 +29,11 @@ export async function generateMetadata({ params }: UnitPageProps): Promise<Metad
     include: { project: { select: { name: true, slug: true, coverImage: true } } },
   })
   if (!unit) return { title: 'Unit Not Found', robots: { index: false, follow: false } }
-  const title = unit.metaTitle || `${unit.project.name} - ${unit.name} | GHAYA REAL ESTATE`
+  // Suffix once, exactly: metaTitle may or may not end with the brand, and the
+  // root layout template would otherwise stack "| GHAYA REAL ESTATE" on top of
+  // an already-suffixed string (the doubled title seen on /units pages).
+  const rawTitle = unit.metaTitle || `${unit.project.name} - ${unit.name}`
+  const title = rawTitle.includes('| GHAYA REAL ESTATE') ? rawTitle : `${rawTitle} | GHAYA REAL ESTATE`
   const description =
     unit.metaDescription ||
     `${unit.unitType} unit in ${unit.project.name}${unit.area > 0 ? `, ${unit.area}sqm` : ''} at ${unit.price.toLocaleString('en-US')} EGP.`
@@ -37,7 +41,8 @@ export async function generateMetadata({ params }: UnitPageProps): Promise<Metad
   const canonical = unit.slug || unit.id
   const url = `${SITE_URL}/units/${canonical}`
   return {
-    title,
+    // absolute: title already carries exactly one "| GHAYA REAL ESTATE" suffix.
+    title: { absolute: title },
     description,
     alternates: languageAlternates(`/units/${canonical}`),
     openGraph: {

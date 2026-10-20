@@ -172,7 +172,7 @@ function PlanCalculator({ plans, basePrice }: { plans: any[]; basePrice: number 
   return (
     <Card className="border-estate-gold/30">
       <CardHeader>
-        <CardTitle className="font-display flex items-center gap-2 text-xl">
+        <CardTitle as="h2" className="font-display flex items-center gap-2 text-xl">
           {ar ? 'حاسبة القسط — على خطة حقيقية' : 'Installment calculator — real plan'}
           {manual && (
             <Badge variant="secondary">{ar ? 'أرقام مخصصة' : 'Custom'}</Badge>
@@ -695,7 +695,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                 <Reveal>
                   <Card>
                     <CardHeader>
-                      <CardTitle className="font-display flex items-center gap-2 text-xl">
+                      <CardTitle as="h2" className="font-display flex items-center gap-2 text-xl">
                         <Building2 className="h-5 w-5 shrink-0 text-estate-gold" />
                         {ar ? `عن ${project.name}` : `About ${project.name}`}
                       </CardTitle>
@@ -728,7 +728,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                   <Reveal>
                     <Card>
                       <CardHeader>
-                        <CardTitle className="font-display flex items-center gap-2 text-xl">
+                        <CardTitle as="h2" className="font-display flex items-center gap-2 text-xl">
                           <CheckCircle2 className="h-5 w-5 shrink-0 text-estate-gold" />
                           {ar ? 'المميزات والمرافق' : 'Features & amenities'}
                         </CardTitle>
@@ -764,7 +764,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                 <Reveal>
                   <Card>
                     <CardHeader>
-                      <CardTitle className="font-display flex items-center gap-2 text-xl">
+                      <CardTitle as="h2" className="font-display flex items-center gap-2 text-xl">
                         <MapPin className="h-5 w-5 shrink-0 text-estate-gold" />
                         {ar ? 'الموقع' : 'Location'}
                       </CardTitle>
@@ -905,7 +905,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                   <Reveal key={plan.id} delay={(idx % 4) * 80}>
                   <Card>
                     <CardHeader>
-                      <CardTitle className="font-display flex items-center gap-2 text-xl">
+                      <CardTitle as="h2" className="font-display flex items-center gap-2 text-xl">
                         {plan.name}
                         {plan.isDefault && <Badge variant="gold">{ar ? 'الأساسية' : 'Default'}</Badge>}
                       </CardTitle>
@@ -936,7 +936,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                       </div>
                       {plan.milestones?.length > 0 && (
                         <div className="space-y-2">
-                          <h4 className="font-medium">{ar ? 'دفعات السداد' : 'Payment Milestones'}</h4>
+                          <h3 className="font-medium">{ar ? 'دفعات السداد' : 'Payment Milestones'}</h3>
                           <div className="space-y-2">
                             {plan.milestones.map((m: any) => (
                               <div key={m.id} className="flex items-center justify-between gap-3 rounded-2xl border p-3">
@@ -1301,6 +1301,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                   </label>
                   <input
                     type="range"
+                    aria-label={ar ? 'المقدم' : 'Down payment'}
                     min={10}
                     max={50}
                     step={5}
@@ -1314,6 +1315,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                   </label>
                   <input
                     type="range"
+                    aria-label={ar ? 'المدة' : 'Duration'}
                     min={1}
                     max={15}
                     step={1}

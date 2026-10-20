@@ -206,9 +206,9 @@ export function HeroSearch() {
                 />
               </div>
 
-              <div className="absolute -bottom-4 -left-2 rounded-2xl bg-estate-copper px-4 py-3 text-white shadow-xl sm:-left-4 sm:px-6 sm:py-5">
+              <div className="absolute -bottom-4 -left-2 rounded-2xl bg-estate-copper px-4 py-3 text-[#0F1A2C] shadow-xl sm:-left-4 sm:px-6 sm:py-5">
                 <p className="text-2xl font-bold sm:text-3xl">4,280</p>
-                <p className="text-sm opacity-90">{isRtl ? 'وحدة في مشاريع' : 'Units in Projects'}</p>
+                <p className="text-sm">{isRtl ? 'وحدة في مشاريع' : 'Units in Projects'}</p>
                 <p className="text-sm font-medium">{isRtl ? 'مميزة' : 'Featured'}</p>
               </div>
 

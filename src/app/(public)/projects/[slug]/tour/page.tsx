@@ -33,8 +33,13 @@ export async function generateMetadata({ params }: TourPageProps): Promise<Metad
   // Viewer page: canonical to itself (query variants like ?i= collapse here),
   // no hreflang — it is a tool view, not a language destination.
   const canonical = languageAlternates(`/projects/${project.slug}/tour`).canonical;
+  // Suffix once, exactly: metaTitle may or may not end with the brand, and the
+  // root layout template would otherwise stack "| GHAYA REAL ESTATE" on top of
+  // an already-suffixed string (the doubled title seen on /tour pages).
+  const rawTitle = project.metaTitle || `360° Tour — ${project.name}`
+  const suffixed = rawTitle.includes('| GHAYA REAL ESTATE') ? rawTitle : `${rawTitle} | GHAYA REAL ESTATE`
   return {
-    title: project.metaTitle || `360° Tour — ${project.name} | GHAYA REAL ESTATE`,
+    title: { absolute: suffixed },
     description: project.metaDescription || `Take an interactive 360° virtual tour of ${project.name}.`,
     alternates: { canonical },
   };

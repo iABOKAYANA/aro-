@@ -40,7 +40,7 @@ export default function CurrencySwitcher() {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label="Change currency"
+        aria-label={`Change currency — ${currency}`}
         className="flex items-center gap-1.5 rounded-full border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:border-[#262626] dark:text-gray-300 dark:hover:bg-[#0A0A0A]"
       >
         <Banknote className="h-3.5 w-3.5" />

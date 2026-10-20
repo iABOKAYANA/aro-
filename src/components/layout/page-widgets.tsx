@@ -72,7 +72,7 @@ export function PageWidgets() {
       {pathname !== '/ai-tools/chat' && (
         <Link
           href="/ai-tools/chat"
-          aria-label={isRtl ? 'اسأل مساعدك العقاري «عين»' : 'Ask your real-estate assistant Ain'}
+          aria-label={isRtl ? 'اسأل «عين» — مساعدك العقاري' : 'Ask “Ain” — your real-estate assistant'}
           className={cn(
             'group fixed z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-estate-navy text-estate-gold shadow-xl ring-1 ring-estate-gold/40 transition-all duration-300 hover:bg-estate-gold hover:text-estate-navy dark:bg-black dark:hover:bg-estate-gold dark:hover:text-black',
             bottomPos,

@@ -40,11 +40,11 @@ interface ProjectCardProps {
 }
 
 const STATUS_MAP: Record<string, { bg: string; text: string; label: string; labelAr: string }> = {
-  AVAILABLE: { bg: 'bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400', label: 'Available', labelAr: 'متاح' },
-  UNDER_CONSTRUCTION: { bg: 'bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', label: 'Under Construction', labelAr: 'تحت الإنشاء' },
-  COMING_SOON: { bg: 'bg-purple-500/10', text: 'text-purple-600 dark:text-purple-400', label: 'Coming Soon', labelAr: 'قريباً' },
-  DELIVERED: { bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', label: 'Delivered', labelAr: 'تم التسليم' },
-  SOLD_OUT: { bg: 'bg-red-500/10', text: 'text-red-500', label: 'Sold Out', labelAr: 'نفدت' },
+  AVAILABLE: { bg: 'bg-emerald-500/10', text: 'text-emerald-700 dark:text-emerald-400', label: 'Available', labelAr: 'متاح' },
+  UNDER_CONSTRUCTION: { bg: 'bg-amber-500/10', text: 'text-amber-700 dark:text-amber-400', label: 'Under Construction', labelAr: 'تحت الإنشاء' },
+  COMING_SOON: { bg: 'bg-purple-500/10', text: 'text-purple-700 dark:text-purple-400', label: 'Coming Soon', labelAr: 'قريباً' },
+  DELIVERED: { bg: 'bg-blue-500/10', text: 'text-blue-700 dark:text-blue-400', label: 'Delivered', labelAr: 'تم التسليم' },
+  SOLD_OUT: { bg: 'bg-red-500/10', text: 'text-red-700 dark:text-red-400', label: 'Sold Out', labelAr: 'نفدت' },
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
@@ -109,7 +109,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
             type="button"
             onClick={() => setPlanIdx(0)}
             className="absolute left-3 top-11 inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm transition-colors hover:bg-estate-gold hover:text-[#0F1A2C] md:min-h-0"
-            aria-label={lang === 'ar' ? 'عرض المستر بلان' : 'View master plan'}
+            aria-label={lang === 'ar' ? 'المستر بلان — عرض المستر بلان' : 'MASTER PLAN — View master plan'}
           >
             <LayoutGrid className="h-3 w-3" />
             {lang === 'ar' ? 'المستر بلان' : 'Master Plan'}
@@ -144,6 +144,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         {/* Arrow link */}
         <Link
           href={`/projects/${project.slug}`}
+          aria-label={lang === 'ar' ? `فتح مشروع ${project.name}` : `Open ${project.name}`}
           className="gold-shimmer absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white text-gray-900 opacity-0 shadow-lg transition-all duration-300 group-hover:opacity-100 hover:bg-estate-gold hover:text-white"
         >
           <ArrowUpRight className="h-4 w-4" />

@@ -49,7 +49,7 @@ export function FloatingContactCta() {
         key: 'whatsapp',
         number: whatsapp,
         href: toWhatsAppHref(whatsapp),
-        label: isRtl ? 'كلمنا واتساب' : 'Chat on WhatsApp',
+        label: isRtl ? `كلمنا واتساب — ${whatsapp}` : `Chat on WhatsApp — ${whatsapp}`,
         Icon: MessageCircle,
         external: true,
       },
