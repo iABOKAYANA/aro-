@@ -171,6 +171,17 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
                           {t('nav.brokerPortal')}
                         </Link>
                       )}
+                      {(user?.role === 'CEO' || user?.role === 'ADMIN') && (
+                        <Link
+                          href="/broker"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-estate-gold hover:bg-gray-50 dark:hover:bg-[#1a1a1a]"
+                        >
+                          <LayoutDashboard className="h-4 w-4" />
+                          {t('nav.brokerPortal')}
+                          <span className="text-[10px] text-muted-foreground">(معاينة)</span>
+                        </Link>
+                      )}
                       {user?.role === 'DEVELOPER' && (
                         <Link
                           href="/developer"
@@ -179,6 +190,17 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
                         >
                           <LayoutDashboard className="h-4 w-4" />
                           {t('nav.developerPortal')}
+                        </Link>
+                      )}
+                      {(user?.role === 'CEO' || user?.role === 'ADMIN') && (
+                        <Link
+                          href="/developer"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-estate-gold hover:bg-gray-50 dark:hover:bg-[#1a1a1a]"
+                        >
+                          <LayoutDashboard className="h-4 w-4" />
+                          {t('nav.developerPortal')}
+                          <span className="text-[10px] text-muted-foreground">(معاينة)</span>
                         </Link>
                       )}
                       <Link

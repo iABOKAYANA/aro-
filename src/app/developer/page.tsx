@@ -11,11 +11,71 @@ export const metadata: Metadata = {
   robots: { index: false },
 }
 
-export default async function DeveloperPortalPage() {
+export default async function DeveloperPortalPage({
+  searchParams,
+}: {
+  /** CEO/ADMIN preview: ?as=<developerProfileId> opens THAT developer's portal. */
+  searchParams: { as?: string }
+}) {
   const user = await requirePortalUser('DEVELOPER')
+  const isOverseer = user.role === 'CEO' || user.role === 'ADMIN'
+
+  let target: { id: string; name: string; email: string } = { id: user.id, name: user.name, email: user.email }
+  if (isOverseer) {
+    const requested = searchParams?.as
+    const dev = requested
+      ? await db.developerProfile.findUnique({
+          where: { id: requested },
+          include: { user: { select: { id: true, name: true, email: true } } },
+        })
+      : null
+    if (dev) {
+      target = { id: dev.id, name: dev.user.name, email: dev.user.email }
+    } else {
+      const rows = await db.developerProfile.findMany({
+        select: {
+          id: true,
+          companyName: true,
+          companyNameArabic: true,
+          isVerified: true,
+          rating: true,
+          user: { select: { name: true, email: true } },
+          _count: { select: { projects: true } },
+        },
+        orderBy: { companyName: 'asc' },
+        take: 200,
+      })
+      return (
+        <div className="container px-4 py-16">
+          <p className="section-kicker">CEO preview</p>
+          <h1 className="font-display display-3 mt-3 text-white">اختار المطور اللي عايز تعاين بوابه</h1>
+          <p className="mt-3 mb-8 max-w-xl text-sm text-muted-foreground">
+            كل كارت يفتح بوابة المطور بكامل بياناته — معاينة و إشراف، مش بياناتك انت.
+          </p>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {rows.map((d) => (
+              <a
+                key={d.id}
+                href={`/developer?as=${encodeURIComponent(d.id)}`}
+                className="block rounded-2xl border border-estate-gold/15 bg-white/[0.03] p-5 transition-colors hover:border-estate-gold/40 dark:border-[#D4A843]/15 dark:bg-[#0A0A0A]"
+              >
+                <p className="font-display truncate text-lg font-semibold">{d.companyNameArabic || d.companyName}</p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{d.user.name} · {d.user.email}</p>
+                <p className="mt-3 text-xs text-estate-gold">
+                  {d._count.projects} مشاريع · {d.rating.toFixed(1)} ★
+                  {d.isVerified ? ' · Verified' : ''}
+                </p>
+              </a>
+            ))}
+            {rows.length === 0 && <p className="text-sm text-muted-foreground">مفيش مطورين مسجلين بعد.</p>}
+          </div>
+        </div>
+      )
+    }
+  }
 
   const developer = await db.developerProfile.findUnique({
-    where: { userId: user.id },
+    where: isOverseer ? { id: target.id } : { userId: user.id },
     include: { user: { select: { isActive: true, status: true } } },
   })
 
@@ -28,9 +88,9 @@ export default async function DeveloperPortalPage() {
           <p className="section-kicker">Developer portal</p>
           <h1 className="font-display display-3 mt-3 text-white">No developer profile yet</h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            Your account is signed in as <span className="text-estate-gold">{user.email}</span>, but
-            it doesn&apos;t have a company profile attached. Ask an administrator to link one, or
-            request access again.
+            {isOverseer
+              ? 'المطور اللي اخترته مالوش بروفايل مرتبط. رجِع تاني واختار واحد تاني.'
+              : `الحساب ${user.email} موثّق، بس ملوش بروفايل شركة مرتبط. اطلب من الإدارة يربطوه.`}
           </p>
           </div>
         </div>
@@ -189,7 +249,19 @@ export default async function DeveloperPortalPage() {
   for (const l of leads) statusCounts[l.status] = (statusCounts[l.status] || 0) + 1
 
   return (
-    <DeveloperPortal
+    <>
+      {isOverseer && (
+        <div className="container px-4 pt-4">
+          <div className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-700 dark:text-amber-400">
+            <span aria-hidden>👀</span>
+            <span>
+              وضع معاينة CEO — بتشوف بوابة <strong>{target.name}</strong> ({target.email}). بيانات القراءة حقيقية، والتعديلات من هنا محظورة.
+            </span>
+            <a href="/developer" className="ms-auto shrink-0 underline">رجوع للاختيار</a>
+          </div>
+        </div>
+      )}
+      <DeveloperPortal
       profile={{
         companyName: developer.companyName,
         logo: developer.logo,
@@ -203,7 +275,7 @@ export default async function DeveloperPortalPage() {
         accountStatus: developer.user.status,
         isActive: developer.user.isActive,
       }}
-      viewer={{ name: user.name, role: user.role }}
+      viewer={{ name: isOverseer ? target.name : user.name, role: user.role }}
       partnership={
         partnership
           ? {
@@ -238,6 +310,7 @@ export default async function DeveloperPortalPage() {
       deals={deals}
       commissions={commissions}
     />
+    </>
   )
 }
 

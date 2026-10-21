@@ -95,13 +95,86 @@ type CommissionRuleRow = {
   projectName: string | null
 }
 
-export default async function BrokerPortalPage() {
+export default async function BrokerPortalPage({
+  searchParams,
+}: {
+  /** CEO/ADMIN preview: ?as=<brokerProfileId> opens THAT broker's portal. */
+  searchParams: { as?: string }
+}) {
   const user = await requirePortalUser('BROKER')
+  const isOverseer = user.role === 'CEO' || user.role === 'ADMIN'
 
-  const broker = await db.brokerProfile.findUnique({
-    where: { userId: user.id },
-    include: { user: { select: { isActive: true, status: true, phone: true } } },
-  })
+  // Overseer mode: load a SPECIFIC broker's portal (or pick one). The
+  // signed-in CEO/ADMIN has no broker profile of their own, so without
+  // ?as= we render a picker instead of the "No broker profile" screen.
+  let target: { id: string; name: string; email: string; role: string } = { id: user.id, name: user.name, email: user.email, role: user.role }
+  if (isOverseer) {
+    const requested = searchParams?.as
+    const broker = requested
+      ? await db.brokerProfile.findUnique({
+          where: { id: requested },
+          include: { user: { select: { id: true, name: true, email: true, role: true } } },
+        })
+      : null
+    if (broker) {
+      target = {
+        id: broker.id,
+        name: broker.user.name,
+        email: broker.user.email,
+        role: broker.user.role,
+      }
+    } else {
+      const rows = await db.brokerProfile.findMany({
+        select: {
+          id: true,
+          agencyName: true,
+          isVerified: true,
+          rating: true,
+          totalDeals: true,
+          user: { select: { name: true, email: true } },
+          _count: { select: { leads: true, deals: true } },
+        },
+        orderBy: { agencyName: 'asc' },
+        take: 200,
+      })
+      return (
+        <div className="container px-4 py-16">
+          <p className="section-kicker">CEO preview</p>
+          <h1 className="font-display display-3 mt-3 text-white">اختر البروكر اللي عايز تعاين بوابه</h1>
+          <p className="mt-3 mb-8 max-w-xl text-sm text-muted-foreground">
+            كل كارت يفتح بوابة البروكر بكامل بياناته — معاينة و إشراف، مش بياناتك انت.
+          </p>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {rows.map((b) => (
+              <a
+                key={b.id}
+                href={`/broker?as=${encodeURIComponent(b.id)}`}
+                className="block rounded-2xl border border-estate-gold/15 bg-white/[0.03] p-5 transition-colors hover:border-estate-gold/40 dark:border-[#D4A843]/15 dark:bg-[#0A0A0A]"
+              >
+                <p className="font-display truncate text-lg font-semibold">{b.agencyName}</p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{b.user.name} · {b.user.email}</p>
+                <p className="mt-3 text-xs text-estate-gold">
+                  {b._count.leads} leads · {b._count.deals} deals · {b.rating.toFixed(1)} ★
+                  {b.isVerified ? ' · Verified' : ''}
+                </p>
+              </a>
+            ))}
+            {rows.length === 0 && <p className="text-sm text-muted-foreground">مفيش بروكرز مسجلين بعد.</p>}
+          </div>
+        </div>
+      )
+    }
+  }
+
+  const broker = isOverseer
+    ? await db.brokerProfile.findUnique({
+        where: { id: target.id },
+        include: { user: { select: { isActive: true, status: true, phone: true } } },
+      })
+    : await db.brokerProfile.findUnique({
+        where: { userId: user.id },
+        include: { user: { select: { isActive: true, status: true, phone: true } } },
+      })
 
   if (!broker) {
     return (
@@ -112,9 +185,9 @@ export default async function BrokerPortalPage() {
           <p className="section-kicker">Broker portal</p>
           <h1 className="font-display display-3 mt-3 text-white">No broker profile yet</h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            Your account is signed in as <span className="text-estate-gold">{user.email}</span>, but
-            it doesn&apos;t have a broker profile attached. Ask an administrator to link one, or
-            request access again.
+            {isOverseer
+              ? 'البروكر اللي اخترته مالوش بروفايل مرتبط. رجِع تاني واختار واحد تاني.'
+              : `الحساب ${user.email} موثّق، بس ملوش بروفايل بروكر مرتبط. اطلب من الإدارة يربطوه.`}
           </p>
           </div>
         </div>
@@ -425,7 +498,19 @@ export default async function BrokerPortalPage() {
   )
 
   return (
-    <BrokerPortal
+    <>
+      {isOverseer && (
+        <div className="container px-4 pt-4">
+          <div className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-700 dark:text-amber-400">
+            <span aria-hidden>👀</span>
+            <span>
+              وضع معاينة CEO — بتشوف بوابة <strong>{target.name}</strong> ({target.email}). بيانات القراءة حقيقية، والتعديلات من هنا محظورة.
+            </span>
+            <a href="/broker" className="ms-auto shrink-0 underline">رجوع للاختيار</a>
+          </div>
+        </div>
+      )}
+      <BrokerPortal
       profile={{
         id: broker.id,
         agencyName: broker.agencyName,
@@ -442,7 +527,7 @@ export default async function BrokerPortalPage() {
         accountStatus: broker.user.status,
         isActive: broker.user.isActive,
       }}
-      viewer={{ name: user.name, role: user.role }}
+      viewer={{ name: isOverseer ? target.name : user.name, role: user.role }}
       partnership={{
         accessRules,
         commissionRules: applicableRules,
@@ -469,5 +554,6 @@ export default async function BrokerPortalPage() {
       upcomingViewings={upcomingViewings}
       pastViewings={pastViewings}
     />
+    </>
   )
 }
