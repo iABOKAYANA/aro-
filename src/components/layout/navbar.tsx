@@ -7,6 +7,7 @@ import { useTheme } from 'next-themes'
 import { Menu, X, Globe, User, LogOut, LayoutDashboard, Heart, Sun, Moon, Monitor, BellRing } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
 import { useLanguage } from '@/lib/language-context'
+import { useFeatureFlag } from '@/components/flags/flags-provider'
 import { BrandLogo } from '@/components/layout/brand-logo'
 import CurrencySwitcher from '@/components/currency/currency-switcher'
 import NotificationBell from '@/components/notification-bell'
@@ -15,6 +16,8 @@ import type { AppType } from '@/lib/app-type'
 export function Navbar({ appType = 'all' }: { appType?: AppType }) {
   const { data: session, status } = useSession()
   const { lang, setLang, t } = useLanguage()
+  // Feature switch: price explorer link visibility (fetches once, fails open).
+  const priceExplorerOn = useFeatureFlag('price_explorer')
   const { theme, setTheme } = useTheme()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
@@ -58,7 +61,9 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
       ]
   // Public host: the saved/favorites entry is an account surface — hidden
   // with the rest of the auth chrome (`/saved` itself stays anonymous-first).
-  const navLinks = showAuth ? allNavLinks : allNavLinks.filter((l) => l.href !== '/saved')
+  // Feature switches: a feature the CEO turned OFF disappears from the nav too.
+  let navLinks = showAuth ? allNavLinks : allNavLinks.filter((l) => l.href !== '/saved')
+  if (priceExplorerOn === false) navLinks = navLinks.filter((l) => l.href !== '/prices')
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:border-[#262626] dark:bg-black/95 dark:supports-[backdrop-filter]:bg-black/60">

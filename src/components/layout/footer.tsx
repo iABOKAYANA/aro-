@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useLanguage } from '@/lib/language-context'
+import { useFeatureFlag } from '@/components/flags/flags-provider'
 import { BrandLogo } from '@/components/layout/brand-logo'
 import type { AppType } from '@/lib/app-type'
 
@@ -71,6 +72,14 @@ const locationLabels: Record<string, Record<string, string>> = {
 
 export function Footer({ appType = 'all' }: { appType?: AppType }) {
   const { lang, t } = useLanguage()
+  // Feature switches: tools the CEO turned OFF vanish from the footer too.
+  const pricesOn = useFeatureFlag('price_explorer')
+  const guideOn = useFeatureFlag('buying_guide')
+  const visibleTools = footerLinks.tools.filter((l) => {
+    if (l.key === 'prices' && pricesOn === false) return false
+    if (l.key === 'buyingGuide' && guideOn === false) return false
+    return true
+  })
 
   // Chrome split: the footer holds zero staff entries (all links are public
   // marketing/product pages), so it renders identically on every host — when
@@ -122,7 +131,7 @@ export function Footer({ appType = 'all' }: { appType?: AppType }) {
           <div>
             <h2 className="section-kicker font-display mb-4">{t('footer.aiTools')}</h2>
             <ul className="space-y-2">
-              {footerLinks.tools.map((link) => (
+              {visibleTools.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-sm text-gray-400 underline-offset-4 transition-colors hover:text-[#E8C56D] hover:underline hover:decoration-estate-gold/50">
                     {toolLabels[lang][link.key]}

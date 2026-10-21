@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getFeatureFlags } from '@/lib/feature-flags'
 import { SITE_URL, languageAlternates } from '@/lib/site'
@@ -67,13 +68,7 @@ const STEPS = [
 
 export default async function BuyingGuidePage() {
   const flags = await getFeatureFlags()
-  if (!flags.buying_guide) {
-    return (
-      <div className="mx-auto max-w-xl p-10 text-center text-sm text-muted-foreground" dir="rtl">
-        الخدمة دي مقفولة حاليًا.
-      </div>
-    )
-  }
+  if (!flags.buying_guide) notFound()
 
   return (
     <div dir="rtl" lang="ar" className="mx-auto max-w-3xl px-4 py-10">

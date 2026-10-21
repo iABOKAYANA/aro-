@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getFeatureFlags } from '@/lib/feature-flags'
@@ -46,17 +47,10 @@ interface AreaStat {
   avgPsm: number
 }
 
-async function notEnabled() {
-  return (
-    <div className="mx-auto max-w-xl p-10 text-center text-sm text-muted-foreground" dir="rtl" lang="ar">
-      الخدمة دي مقفولة حاليًا.
-    </div>
-  )
-}
-
 export default async function PricesPage() {
   const flags = await getFeatureFlags()
-  if (!flags.price_explorer) return notEnabled()
+  // Flag off → the page is GONE for people (404), not a "closed" notice.
+  if (!flags.price_explorer) notFound()
 
   // Real inventory only: AVAILABLE, not showroom samples, positive price+area.
   const units = await db.unit.findMany({

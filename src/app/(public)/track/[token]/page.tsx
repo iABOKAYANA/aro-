@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getFeatureFlags } from '@/lib/feature-flags'
@@ -25,13 +26,7 @@ const dtf = new Intl.DateTimeFormat('ar-EG', { dateStyle: 'long', timeStyle: 'sh
 
 export default async function TrackPage({ params }: { params: { token: string } }) {
   const flags = await getFeatureFlags()
-  if (!flags.inquiry_tracking) {
-    return (
-      <div className="mx-auto max-w-xl p-10 text-center text-sm text-muted-foreground">
-        الخدمة دي مقفولة حاليًا.
-      </div>
-    )
-  }
+  if (!flags.inquiry_tracking) notFound()
 
   const inquiry = await db.inquiry.findUnique({
     where: { trackToken: params.token },
