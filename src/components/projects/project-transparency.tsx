@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useLanguage } from '@/lib/language-context'
 import { AppAccountPanel } from '@/components/app-account-panel'
 import { useAppType } from '@/lib/use-app-type'
+import { useFeatureFlag } from '@/components/flags/flags-provider'
 
 // ─── PUBLIC TRANSPARENCY COMPONENTS (Features 7 + 8 + 10) ────
 // Rendered on the public project detail page: watch toggle,
@@ -70,9 +71,11 @@ export function WatchButton({
   const [checked, setChecked] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [showAppNote, setShowAppNote] = useState(false)
+  const flagOn = useFeatureFlag('price_alerts')
 
   useEffect(() => {
     let cancelled = false
+    if (flagOn === false) return
     if (!session?.user) {
       setChecked(true)
       return

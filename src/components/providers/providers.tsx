@@ -5,11 +5,20 @@ import { LanguageProvider } from '@/lib/language-context'
 import { SessionProvider } from '@/components/providers/session-provider'
 import { CurrencyProvider } from '@/components/currency/currency-provider'
 import { CompareProvider } from '@/lib/compare'
+import { FlagsProvider } from '@/components/flags/flags-provider'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
 import { PageWidgets } from '@/components/layout/page-widgets'
 import { WhatsAppBubble } from '@/components/layout/whatsapp-bubble'
 import { VisitSourceTracker } from '@/components/analytics/visit-source-tracker'
+import { InstallPwaBanner } from '@/components/pwa/install-pwa-banner'
+import { useFeatureFlag } from '@/components/flags/flags-provider'
+
+function PwaBannerGate() {
+  const on = useFeatureFlag('pwa_install')
+  if (!on) return null
+  return <InstallPwaBanner />
+}
 import type { ReactNode } from 'react'
 import type { AppType } from '@/lib/app-type'
 
@@ -23,7 +32,8 @@ export function Providers({ children, appType = 'all' }: { children: ReactNode; 
       storageKey="estateai-theme"
     >
       <LanguageProvider>
-        <CurrencyProvider>
+        <FlagsProvider>
+          <CurrencyProvider>
           <CompareProvider>
             <SessionProvider>
               <VisitSourceTracker />
@@ -32,9 +42,11 @@ export function Providers({ children, appType = 'all' }: { children: ReactNode; 
               <Footer appType={appType} />
               <PageWidgets />
               <WhatsAppBubble />
+              <PwaBannerGate />
             </SessionProvider>
           </CompareProvider>
-        </CurrencyProvider>
+          </CurrencyProvider>
+        </FlagsProvider>
       </LanguageProvider>
     </ThemeProvider>
   )

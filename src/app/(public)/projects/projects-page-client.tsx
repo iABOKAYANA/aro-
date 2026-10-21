@@ -15,6 +15,7 @@ import { SearchProvider } from '@/components/search/search-context'
 import { useLanguage } from '@/lib/language-context'
 import { cn } from '@/lib/utils'
 import SaveSearchButton from '@/components/saved-searches/save-search-button'
+import { NlSearchBox } from '@/components/projects/nl-search-box'
 
 interface ProjectItem {
   id: string
@@ -78,6 +79,9 @@ export function ProjectsPageClient({ results, searchParams, q }: ProjectsPageCli
               <p className="mt-3 text-sm text-white/60">
                 Browse premium compounds and developments across Egypt
               </p>
+              <div className="mt-4">
+                <NlSearchBox />
+              </div>
             </div>
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-b from-transparent to-gray-50 dark:to-black" />

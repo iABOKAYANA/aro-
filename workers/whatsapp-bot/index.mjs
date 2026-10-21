@@ -3,7 +3,7 @@
 // Forwards monitored group messages to POST {API_BASE}/api/whatsapp/ingest.
 // NEVER replies/sends in groups. NEVER crashes on bad input.
 
-import { mkdir, writeFile, rm, readdir } from "node:fs/promises";
+import { mkdir, writeFile, rm, readdir, appendFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -12,11 +12,14 @@ import {
   MAX_MEDIA_BYTES,
   MAX_MEDIA_FILES,
   RETRY_ATTEMPTS,
+  docExtForMime,
+  isImageMime,
 } from "./config.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const AUTH_DIR = path.join(__dirname, "auth");
 const MEDIA_DIR = path.join(__dirname, "media");
+const LOG_FILE = path.join(__dirname, "bot.log");
 
 // Dedupe by message id (in-memory, cap 1000, FIFO eviction).
 const seenIds = new Set();
@@ -32,8 +35,14 @@ function markSeen(id) {
 }
 
 function log(...args) {
-  console.log(new Date().toISOString(), "[wa-bot]", ...args);
+  const line = new Date().toISOString() + " [wa-bot] " + args.join(" ");
+  // Write ONLY to the worker's own file. Under pm2 this umbrella's stdout
+  // capture has been dead since day one (0-byte logs) and long-lived console
+  // output can BLOCK the event loop if the capture pipe stalls — so we never
+  // rely on console for any lifecycle line. Fire-and-forget, never blocks.
+  appendFile(LOG_FILE, line + "\n").catch(() => {});
 }
+
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
@@ -131,21 +140,36 @@ async function postToIngest(cfg, payload, mediaPaths) {
   return { ok: false, error: lastErr?.message };
 }
 
-async function handleGroupMessage(sock, cfg, monitoredSet, msg) {
+async function handleChatMessage(sock, cfg, monitoredSet, allowSet, msg) {
   const remoteJid = msg.key?.remoteJid || "";
-  if (!isGroupJid(remoteJid)) return; // ignore DMs/status
+  const isGroup = isGroupJid(remoteJid);
 
-  // --- Onboarding mode: MONITORED_GROUPS empty => log JID, process NOTHING.
-  if (monitoredSet.size === 0) {
-    let name = "";
-    try {
-      name = await resolveGroupName(sock, remoteJid);
-    } catch { /* ignore */ }
-    log(`onboarding: group message in "${name}" <${remoteJid}> — not monitored, skipping`);
-    return;
+  // ── What chats do we ingest? ─────────────────────────────
+  if (isGroup) {
+    if (!cfg.monitorAllGroups && !monitoredSet.has(remoteJid)) {
+      // Onboarding logging only when nothing monitored at all.
+      if (monitoredSet.size === 0 && !cfg.monitorAllGroups) {
+        let name = "";
+        try {
+          name = await resolveGroupName(sock, remoteJid);
+        } catch { /* ignore */ }
+        log(`onboarding: group message in "${name}" <${remoteJid}> — not monitored, skipping`);
+      }
+      return;
+    }
+  } else {
+    // DM (skip status broadcast / newsletters)
+    if (remoteJid === "status@broadcast" || remoteJid.endsWith("@newsletter") || remoteJid.endsWith("@broadcast")) return;
+    // DM allowlist: empty => ALL direct chats are ingested (dedicated number).
+    if (allowSet.size > 0) {
+      const bare = remoteJid.split("@")[0];
+      const hit = [...allowSet].some((a) => remoteJid.startsWith(a) || bare.startsWith(a));
+      if (!hit) {
+        log(`dm skipped: sender not in ALLOWED_SENDERS <${remoteJid}>`);
+        return;
+      }
+    }
   }
-
-  if (!monitoredSet.has(remoteJid)) return;
 
   const id = msg.key?.id;
   if (id && markSeen(id)) {
@@ -156,30 +180,50 @@ async function handleGroupMessage(sock, cfg, monitoredSet, msg) {
   const text = extractText(msg);
   const senderName = msg.pushName || msg.verifiedBizName || "";
   const senderPhone = senderPhoneOf(msg);
-  const groupName = await resolveGroupName(sock, remoteJid);
+  const groupName = isGroup ? await resolveGroupName(sock, remoteJid) : "";
 
-  // Download images (contract: images ≤5MB, cap 10) to media/ temp.
+  // Download attachments: images + documents (xlsx/pdf/csv/doc/vcf…).
   const mediaPaths = [];
+  const mediaMeta = [];
+  const tryDownload = async (mime, extHint, displayName) => {
+    if (mediaPaths.length >= MAX_MEDIA_FILES) return;
+    try {
+      const { downloadMediaMessage } = await import("@whiskeysockets/baileys");
+      const buf = await downloadMediaMessage(msg, "buffer", {});
+      if (!buf) return;
+      if (buf.byteLength > MAX_MEDIA_BYTES) {
+        log(`media skip: ${buf.byteLength} bytes exceeds cap (${displayName || mime})`);
+        return;
+      }
+      const ext = extHint || "bin";
+      const filename = `${Date.now()}-${(id || "nomid").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40)}.${ext}`;
+      const fpath = path.join(MEDIA_DIR, filename);
+      await writeFile(fpath, buf);
+      mediaPaths.push({ path: fpath, filename, mime, originalName: displayName });
+      mediaMeta.push({ kind: isImageMime(mime) ? "image" : "document", mime, ext, name: displayName || filename });
+      log(`media ok: ${filename} (${buf.byteLength}B, ${mime})`);
+    } catch (err) {
+      log(`media download failed (continuing text-only): ${err?.message}`);
+    }
+  };
+
   try {
-    const img = msg.message?.imageMessage;
-    if (img && mediaPaths.length < MAX_MEDIA_FILES) {
-      try {
-        const { downloadMediaMessage } = await import("@whiskeysockets/baileys");
-        const buf = await downloadMediaMessage(msg, "buffer", {});
-        if (buf && buf.byteLength <= MAX_MEDIA_BYTES) {
-          const ext =
-            img.mimetype?.includes("png") ? "png"
-            : img.mimetype?.includes("webp") ? "webp"
-            : "jpg";
-          const filename = `${Date.now()}-${(id || "nomid").replace(/[^a-zA-Z0-9_-]/g, "")}.${ext}`;
-          const fpath = path.join(MEDIA_DIR, filename);
-          await writeFile(fpath, buf);
-          mediaPaths.push({ path: fpath, filename, mime: img.mimetype });
-        } else if (buf) {
-          log(`media skip: image ${buf.byteLength} bytes exceeds 5MB cap`);
-        }
-      } catch (err) {
-        log(`media download failed (continuing text-only): ${err?.message}`);
+    const m = msg.message || {};
+    const img = m.imageMessage;
+    const doc = m.documentMessage;
+    if (img) {
+      const mime = img.mimetype || "image/jpeg";
+      const ext = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
+      await tryDownload(mime, ext, null);
+    }
+    if (doc && mediaPaths.length < MAX_MEDIA_FILES) {
+      // A message can carry image+doc? WhatsApp: not really, but tolerate both.
+      const mime = doc.mimetype || "";
+      const ext = docExtForMime(mime, doc.fileName);
+      if (!ext) {
+        log(`document skipped: unsupported type "${mime}" file="${doc.fileName}"`);
+      } else {
+        await tryDownload(mime, ext, doc.fileName || null);
       }
     }
   } catch (err) {
@@ -192,7 +236,10 @@ async function handleGroupMessage(sock, cfg, monitoredSet, msg) {
     ...(senderName ? { senderName } : {}),
     ...(senderPhone ? { senderPhone } : {}),
     messageIds: id ? [id] : [],
+    ...(msg.key?.fromMe ? { fromMe: true } : {}),
     text: text || "",
+    ...(mediaMeta.length ? { mediaMeta } : {}),
+    source: isGroup ? "WHATSAPP_GROUP" : "WHATSAPP_DM",
   };
 
   const result = await postToIngest(cfg, payload, mediaPaths);
@@ -204,7 +251,7 @@ async function handleGroupMessage(sock, cfg, monitoredSet, msg) {
         await rm(m.path, { force: true });
       } catch { /* ignore */ }
     }
-    log(`ingested group=${remoteJid} id=${id || "?"} media=${mediaPaths.length} text=${(text || "").slice(0, 80)}`);
+    log(`ingested ${payload.source}=${remoteJid} id=${id || "?"} media=${mediaPaths.length} text=${(text || "").slice(0, 80)}`);
   } else {
     if (mediaPaths.length) {
       log(`ingest failed — KEEPING ${mediaPaths.length} temp file(s) in media/ for inspection: ${mediaPaths.map((m) => m.filename).join(", ")}`);
@@ -218,11 +265,9 @@ async function main() {
   const cfg = loadConfig();
 
   if (cfg.missing.length) {
-    console.log(
-      `[wa-bot] Missing required env: ${cfg.missing.join(", ")}.\n` +
-        `  Set API_BASE (e.g. http://localhost:3000) and WHATSAPP_INGEST_SECRET\n` +
-        `  (must match backend env), plus MONITORED_GROUPS as comma-separated\n` +
-        `  group JIDs (e.g. "120363xxx@g.us"). See README.md. Exiting.`
+    log(
+      `Missing required env: ${cfg.missing.join(", ")}. ` +
+        `Set API_BASE and WHATSAPP_INGEST_SECRET in workers/whatsapp-bot/.env. Exiting.`
     );
     process.exit(1);
   }
@@ -241,11 +286,15 @@ async function main() {
   } = baileys;
 
   const monitoredSet = new Set(cfg.monitoredGroups);
-  if (monitoredSet.size === 0) {
-    log("MONITORED_GROUPS empty — ONBOARDING MODE: will log groupName+JID of every incoming group message and process nothing.");
+  const allowSet = new Set(cfg.allowedSenders);
+  if (cfg.monitorAllGroups) {
+    log("MONITOR_ALL_GROUPS=true — every incoming GROUP is ingested (+ DMs per allowlist).");
+  } else if (monitoredSet.size === 0) {
+    log("MONITORED_GROUPS empty & MONITOR_ALL_GROUPS unset — ONBOARDING MODE: will log groupName+JID of every incoming group message and process nothing.");
   } else {
     log(`monitoring ${monitoredSet.size} group(s): ${[...monitoredSet].join(", ")}`);
   }
+  log(`DM allowlist: ${allowSet.size === 0 ? "OPEN (every DM ingested)" : [...allowSet].join(", ")}`);
   log(`ingest target: ${cfg.apiBase}${INGEST_PATH}`);
 
   let version;
@@ -277,16 +326,38 @@ async function main() {
   process.on("SIGINT", () => shutdown("SIGINT"));
   process.on("SIGTERM", () => shutdown("SIGTERM"));
 
+  let pairingRequested = false;
   sock.ev.on("connection.update", (u) => {
     const { connection, lastDisconnect, qr } = u;
     if (qr) {
-      console.log("[wa-bot] Scan this QR with WhatsApp (Linked devices):");
-      qrcode.generate(qr, { small: true });
+      if (cfg.pairPhone && !pairingRequested) {
+        // Pair with a phone-number code — no QR scanning needed.
+        pairingRequested = true;
+        (async () => {
+          try {
+            const code = await sock.requestPairingCode(cfg.pairPhone);
+            log(`PAIRING CODE for ${cfg.pairPhone}: ${code} — WhatsApp > Linked devices > Link with phone number (valid ~1 min)`);
+          } catch (err) {
+            log(`pairing code failed (${err?.message}) — falling back to QR`);
+            qrcode.generate(qr, { small: true });
+          }
+        })();
+      } else {
+        log(`QR_RAW: ${qr}`); // machine string — render/scan remotely (QR valid ~20s)
+      }
     }
     if (connection === "open") log("connected — session persisted to auth/, idling…");
     if (connection === "close") {
       const code = lastDisconnect?.error?.output?.statusCode;
-      log(`connection closed (code=${code}). ${code === DisconnectReason?.loggedOut ? "Logged out — delete auth/ and re-pair." : "Restart to reconnect."}`);
+      const errMessage = String(lastDisconnect?.error?.message || "").slice(0, 200);
+      log(`connection closed (code=${code}) ${errMessage}. ${code === DisconnectReason?.loggedOut ? "Logged out — delete auth/ and re-pair." : ""}`);
+      // Transient drops: restart quietly (pm2 ALSO restarts, but this avoids a
+      // visibly-crashed exit between drops). LoggedOut must NOT loop: exit 1.
+      if (code === DisconnectReason?.loggedOut) {
+        log("logged out — exiting so the owner can re-pair (delete auth/ first).");
+        process.exit(1);
+      }
+      setTimeout(() => process.exit(75), 3000); // pm2 restarts on exit
     }
   });
 
@@ -295,7 +366,7 @@ async function main() {
     for (const msg of messages || []) {
       try {
         if (msg.key?.fromMe) continue; // read-only posture; ignore own messages
-        await handleGroupMessage(sock, cfg, monitoredSet, msg);
+        await handleChatMessage(sock, cfg, monitoredSet, allowSet, msg);
       } catch (err) {
         // NEVER crash on bad input — log per message.
         log(`message handler error (skipping): ${err?.message}`);
@@ -310,7 +381,7 @@ async function main() {
 export { markSeen, extractText, isGroupJid, loadConfig as loadConfigReexport };
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__dirname + "/index.mjs")) {
   main().catch((err) => {
-    console.error("[wa-bot] fatal:", err?.message || err);
+    appendFile(LOG_FILE, `${new Date().toISOString()} [wa-bot] FATAL: ${err?.message || err}\n`).catch(() => {});
     process.exit(1);
   });
 }

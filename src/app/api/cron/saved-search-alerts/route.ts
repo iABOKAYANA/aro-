@@ -4,6 +4,7 @@ import { notifyUser } from '@/lib/notify'
 import { sendMailToUser, mailHtml } from '@/lib/mailer'
 import { matchesFilters, type SavedFilters, type SearchCandidate } from '@/lib/saved-searches'
 import { PUBLIC_UNIT_PROJECT_WHERE } from '@/lib/project-visibility'
+import { getFeatureFlags } from '@/lib/feature-flags'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
@@ -28,6 +29,8 @@ export async function POST(req: NextRequest) {
   if (!authorised(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const now = new Date()
+  // Feature flags gate the alert sweeps (getFeatureFlags caches 30s).
+  const flags = await getFeatureFlags()
   const lastRow = await db.systemSetting.findUnique({ where: { key: LAST_RUN_KEY } })
   let since = new Date(0)
   if (lastRow) {
@@ -129,6 +132,70 @@ export async function POST(req: NextRequest) {
     if (res?.ok) emailed++
   }
 
+  // ─── Price-drop alert sweep (flag price_alerts) ─────────────
+  // UNIT watches that registered BEFORE a price change: compare the watched
+  // price recorded in `snapshot` with the live catalog price; a REAL decrease
+  // (never an increase, never noise) notifies in-app + (consented) email.
+  let priceDropped = 0
+  const dropByUser = new Map<string, string[]>()
+  if (flags.price_alerts) {
+    const watches = await db.watch.findMany({
+      where: { targetType: 'UNIT', alertsEnabled: true },
+      take: 2000,
+      select: { id: true, userId: true, targetId: true, snapshot: true, lastNotifiedAt: true },
+    })
+    const unitIds = [...new Set(watches.map((w) => w.targetId))]
+    const units = await db.unit.findMany({
+      where: { id: { in: unitIds }, price: { gt: 0 } },
+      select: { id: true, name: true, price: true, status: true, project: { select: { id: true, name: true, slug: true, isActive: true, approvalStatus: true } } },
+    })
+    const byId = new Map(units.map((u) => [u.id, u]))
+    for (const w of watches) {
+      const u = byId.get(w.targetId)
+      if (!u) continue
+      // Only publicly visible projects are worth alerting on.
+      if (!u.project.isActive || !['APPROVED', 'PUBLISHED'].includes(u.project.approvalStatus)) continue
+      let snap: { price?: number } = {}
+      try { snap = JSON.parse(w.snapshot) } catch { snap = {} }
+      const seenPrice = typeof snap.price === 'number' ? snap.price : null
+      if (seenPrice != null && u.price < seenPrice) {
+        priceDropped++
+        const list = dropByUser.get(w.userId) ?? []
+        if (list.length < MAX_UNITS_PER_USER_EMAIL) {
+          list.push(`<li><a href="https://ghayaestate.com/units/${u.project.slug ? u.project.slug + '/' : ''}${w.targetId}">${escapeHtml(u.project.name)} — ${escapeHtml(u.name)}</a>: من <b>${seenPrice.toLocaleString('ar-EG')}</b> لـ <b>${u.price.toLocaleString('ar-EG')}</b></li>`)
+          dropByUser.set(w.userId, list)
+        }
+        await db.notification.create({
+          data: {
+            userId: w.userId,
+            type: 'PRICE_DROP',
+            title: 'نزلت سعر وحدة بتتابعها',
+            message: `${u.project.name} — ${u.name}: من ${seenPrice.toLocaleString('ar-EG')} لـ ${u.price.toLocaleString('ar-EG')}`,
+            link: `/units/${u.project.slug ? u.project.slug + '/' : ''}${w.targetId}`,
+            metadata: JSON.stringify({ unitId: u.id, watchId: w.id }),
+          },
+        })
+      }
+      // Refresh the snapshot so the next sweep compares against today's state.
+      await db.watch.update({
+        where: { id: w.id },
+        data: { snapshot: JSON.stringify({ price: u.price, status: u.status }), lastNotifiedAt: seenPrice != null && u.price < seenPrice ? now : w.lastNotifiedAt },
+      })
+    }
+    for (const [userId, rows] of dropByUser) {
+      if (!rows.length) continue
+      await sendMailToUser(userId, 'emailMarketing', {
+        subject: 'السعر نزل على وحدة بتتابعها',
+        text: 'السعر نزل على وحدة بتتابعها — شوف اللينك في الإيميل.',
+        html: mailHtml({
+          heading: 'السعر نزل 🔻',
+          body: `<p>الوحدات دي اللي بتتابعها السعر بتاعها نزل:</p><ul>${rows.join('')}</ul>`,
+          cta: { label: 'شوف الوحدة', href: 'https://ghayaestate.com/units' },
+        }),
+      })
+    }
+  }
+
   await db.systemSetting.upsert({
     where: { key: LAST_RUN_KEY },
     update: { value: JSON.stringify({ iso: now.toISOString() }) },
@@ -143,6 +210,7 @@ export async function POST(req: NextRequest) {
     searches: saved.length,
     notified,
     emailed,
+    priceDropped,
   })
 }
 

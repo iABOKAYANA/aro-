@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/lib/language-context'
 import { useAppType } from '@/lib/use-app-type'
+import { useFeatureFlag } from '@/components/flags/flags-provider'
 import { cn } from '@/lib/utils'
 
 interface CreatedViewing {
@@ -77,6 +78,7 @@ interface BookingButtonProps {
 }
 
 export function BookingButton({ projectId, unitId, propertyName, label, className, size = 'lg' }: BookingButtonProps) {
+  const flagOn = useFeatureFlag('viewing_booking')
   const { t, lang } = useLanguage()
   const ar = lang === 'ar'
   const { data: session, status } = useSession()
@@ -235,6 +237,9 @@ export function BookingButton({ projectId, unitId, propertyName, label, classNam
   const step1Done = Boolean(date && time)
   const step2Done = Boolean(name.trim() && phone.replace(/[\s\-().]/g, '').length >= 7)
   const stepsDone = step === 'success' ? 3 : (step1Done ? 1 : 0) + (step2Done ? 1 : 0)
+
+  // Flag off → no booking entry point at all (all hooks already ran above).
+  if (flagOn === false) return null
 
   return (
     <>

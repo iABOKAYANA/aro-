@@ -23,6 +23,7 @@ import {
   XCircle,
   GitMerge,
   ExternalLink,
+  FileIcon,
   ImageIcon,
   MessageSquareText,
   User,
@@ -52,8 +53,17 @@ interface StagingPayload {
   extracted?: Extracted | null
   extractionEngine?: string
   mediaUrls?: string[]
+  mediaFiles?: Array<{ url: string; originalName?: string; mime?: string; kind?: string }>
+  source?: string
   suggestedProjectId?: string | null
   matchScore?: number | null
+}
+
+/** Runtime-saved files are served through the API mount (public/ is boot-frozen). */
+function fileUrl(u: string): string {
+  if (u.startsWith('/images/whatsapp/')) return `/api/files/images/${u.slice('/images/whatsapp/'.length)}`
+  if (u.startsWith('/files/whatsapp/')) return `/api/files/whatsapp/${u.slice('/files/whatsapp/'.length)}`
+  return u
 }
 
 interface StagingItem {
@@ -421,6 +431,11 @@ export default function StagingInbox() {
           {items.map((item) => {
             const p = parsed.get(item.id) || {}
             const ex = p.extracted || null
+            const docFiles = (p.mediaFiles || []).filter((m) => (m.kind || 'image') === 'document')
+            // Legacy items predate mediaFiles/kind — treat their mediaUrls as images.
+            const imgFiles = p.mediaFiles
+              ? (p.mediaFiles).filter((m) => (m.kind || 'image') === 'image')
+              : (p.mediaUrls || []).map((u) => ({ url: u }))
             const media = p.mediaUrls || []
             const msgCount = safeParse<string[]>(item.messageIds, []).length
             const decidable = item.status === 'NEW' || item.status === 'IN_REVIEW'
@@ -551,22 +566,49 @@ export default function StagingInbox() {
                       )}
 
                       {/* Media */}
-                      {media.length > 0 && (
+                      {imgFiles.length > 0 && (
                         <div>
                           <p className="mb-1.5 flex items-center gap-1 text-[11px] uppercase tracking-wider text-gray-600">
-                            <ImageIcon size={12} /> {ar ? `الصور (${media.length})` : `Images (${media.length})`}
+                            <ImageIcon size={12} /> {ar ? `الصور (${imgFiles.length})` : `Images (${imgFiles.length})`}
                           </p>
                           <div className="flex flex-wrap gap-2">
-                            {media.map((u) => (
-                              <a key={u} href={u} target="_blank" rel="noreferrer">
-                                <Image
-                                  src={u}
+                            {imgFiles.map((m) => (
+                              <a key={m.url} href={fileUrl(m.url)} target="_blank" rel="noreferrer">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={fileUrl(m.url)}
                                   alt=""
+                                  loading="lazy"
                                   width={64}
                                   height={64}
-                                  loading="lazy"
                                   className="h-16 w-16 rounded-xl border border-border dark:border-[#262626] object-cover hover:opacity-80"
                                 />
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Document attachments (developer sheets, PDFs…) */}
+                      {docFiles.length > 0 && (
+                        <div>
+                          <p className="mb-1.5 flex items-center gap-1 text-[11px] uppercase tracking-wider text-gray-600">
+                            <FileIcon size={12} /> {ar ? `الملفات (${docFiles.length})` : `Documents (${docFiles.length})`}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {docFiles.map((m) => (
+                              <a
+                                key={m.url}
+                                href={fileUrl(m.url)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex max-w-[240px] items-center gap-1.5 rounded-xl border border-border dark:border-[#262626] px-2.5 py-1.5 text-xs hover:border-[#D4A843]/50"
+                              >
+                                <FileIcon size={13} className="shrink-0 text-[#D4A843]" />
+                                <span className="truncate">{m.originalName || fileUrl(m.url).split('/').pop()}</span>
+                                <span className="shrink-0 text-[10px] text-gray-500">
+                                  {(m.mime?.split('/').pop() || '').toUpperCase().slice(0, 5)}
+                                </span>
                               </a>
                             ))}
                           </div>

@@ -1,69 +1,47 @@
-# WhatsApp worker (isolated scaffold)
+# WhatsApp worker (owner-feed gateway)
 
-Read-only Baileys listener. Forwards new messages from monitored groups to the
-backend ingest API. Does NOT reply/send in groups. NOT part of the Next.js
-build (plain `.mjs`, own `package.json`, excluded from root `tsc`).
+Read-only Baileys listener. Forwards incoming messages (groups + direct chats)
+with TEXT, IMAGES **and DOCUMENTS** (xlsx/xls/csv/pdf/doc(x)/vcf) to the backend
+ingest API → StagingItem inbox (CEO console → /ceo/projects → WhatsApp staging).
+Does NOT reply/send. NOT part of the Next.js build (plain `.mjs`, excluded from
+root `tsc`).
 
-Mandated ingest contract (backend implements it; this worker calls it exactly):
+## Ingest contract (backend implements it; this worker calls it exactly)
 
 - `POST {API_BASE}/api/whatsapp/ingest`, header `x-ingest-secret: <secret>`
-- multipart: `payload` = JSON `{groupJid, groupName?, senderName?, senderPhone?, messageIds[], text}`
-  + files `media0..n` (images ≤5MB, cap 10). `201 {item}` on success.
+- multipart: `payload` = JSON `{groupJid, groupName?, senderName?, senderPhone?,
+  messageIds[], text, source: WHATSAPP_GROUP|WHATSAPP_DM, mediaMeta?[]}`
+  + files `media0..n` (images ≤10MB, documents ≤16MB, cap 10). `201 {item}`.
 - Retry 3× with backoff on network/5xx; log + skip otherwise (never crash).
 
-## Setup
+## Setup (VPS: /opt/ghaya/workers/whatsapp-bot)
 
-```sh
-cd workers/whatsapp-bot
-npm install          # plain npm, INSIDE this dir only — never at repo root
-cp /dev/null .env   # or: export the three vars below by hand; no root .env files
-export API_BASE="http://localhost:3000"
-export WHATSAPP_INGEST_SECRET="<same value as backend env>"
-export MONITORED_GROUPS=""   # empty => onboarding mode (see below)
-node index.mjs
+`.env` (chmod 600, loaded by the worker itself):
+```
+API_BASE=http://127.0.0.1:3001
+WHATSAPP_INGEST_SECRET=<same as /opt/ghaya/.env>
+MONITOR_ALL_GROUPS=true     # ingest EVERY group the bot is in
+MONITORED_GROUPS=           # optional explicit JID list (else empty=onboarding)
+ALLOWED_SENDERS=            # empty => ALL DMs ingested; set digits to lock down
+PAIR_PHONE=201XXXXXXXXX     # optional: pairing-code instead of QR scan
 ```
 
-Required env:
+Run: `pm2 restart wa-bot` (process file: deploy/ecosystem.config.js).
 
-| Var | Meaning |
-|---|---|
-| `API_BASE` | Backend origin, e.g. `http://localhost:3000` (no trailing slash ok) |
-| `WHATSAPP_INGEST_SECRET` | Must match backend secret; sent as `x-ingest-secret` header |
-| `MONITORED_GROUPS` | Comma-separated group JIDs, e.g. `"120363123@g.us,120363456@g.us"`. Empty => onboarding mode |
+## Pairing (dedicated number only)
 
-Without `API_BASE` / `WHATSAPP_INGEST_SECRET` the worker prints a setup hint
-and exits `1` (no QR, no connect).
+1. First run: QR prints to `/var/log/ghaya/wa-bot-out.log` (`QR_RAW:` line for
+   remote rendering) — WhatsApp → Linked devices → Link a device
+2. If `PAIR_PHONE` is set, a **pairing code** is logged instead —
+   WhatsApp → Linked devices → Link with phone number, type the code.
+3. Session persists in `auth/` (gitignored). Logged out → delete `auth/`, re-run.
 
-## Pairing (owner, dedicated number only)
+## Behavior
 
-1. `node index.mjs` with env set. A QR prints in the terminal.
-2. On the **dedicated** WhatsApp number: Linked devices → Link a device → scan.
-3. Session persists to `auth/` (gitignored, never commit). Re-run reuses it.
-4. Logged out? Delete `auth/` and re-pair.
-
-`auth/` (session) and `media/` (temp downloads) are gitignored and must never
-be committed.
-
-## Onboarding: adding monitored groups
-
-1. Start with `MONITORED_GROUPS=""`. The worker processes NOTHING but logs every
-   incoming group message: `onboarding: group message in "<name>" <jid>`.
-2. Copy the JID(s) you want, set `MONITORED_GROUPS="<jid1>,<jid2>"`, restart.
-3. Only those groups are forwarded; everything else is ignored.
-
-## Behavior notes
-
-- Dedupe by message id (in-memory `Set`, cap 1000 FIFO).
-- Images ≤5MB downloaded to `media/` temp, sent as `media0..n`. Deleted after
-  2xx; **kept** on ingest failure for retry inspection (delete manually).
-- Text-only messages forward with zero media parts.
+- `MONITOR_ALL_GROUPS=true`: any group message is ingested (add bot to a
+  developer group and it just works).
+- DMs: status@broadcast / newsletter / broadcast are skipped; allowlist optional.
+- Documents: only allowed extensions downloaded; unknown types are logged+skipped.
+- Dedupe by message id (in-memory Set, cap 1000 FIFO).
+- Media stored to `media/` temp, deleted after a 2xx ingest, KEPT on failure.
 - Per-message try/catch; worker never crashes on bad input.
-- `SIGINT`/`SIGTERM` close the socket and exit cleanly.
-
-## Commands
-
-```sh
-node --check index.mjs && node --check config.mjs   # syntax check
-node -e "import('./config.mjs').then(m=>console.log(m.loadConfig({})))"  # config smoke (no connect)
-npm start   # = node index.mjs
-```

@@ -67,6 +67,10 @@ export async function POST(req: Request) {
     return NextResponse.json({
       message: 'Inquiry submitted successfully',
       id: inquiry.id,
+      // Customer-facing tracking link (flag-gated in the UI; the token is
+      // harmless to return — it only reveals THIS inquiry's status page).
+      trackToken: inquiry.trackToken,
+      trackUrl: `/track/${inquiry.trackToken}`,
     })
   } catch (error) {
     console.error('Inquiry error:', error)

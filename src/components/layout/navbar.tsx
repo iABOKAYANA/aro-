@@ -43,6 +43,7 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
         { href: '/offers', label: 'العروض' },
         { href: '/saved', label: 'المحفوظات' },
         { href: '/ai-tools', label: 'اكتشف' },
+        { href: '/prices', label: 'أسعار المتر' },
         { href: '/about', label: 'من نحن' },
         { href: '/ai-tools/chat', label: 'مساعدك العقاري' },
       ]
@@ -51,6 +52,7 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
         { href: '/offers', label: 'Offers' },
         { href: '/saved', label: 'Saved' },
         { href: '/ai-tools', label: 'Discover' },
+        { href: '/prices', label: 'Market Prices' },
         { href: '/about', label: 'About' },
         { href: '/ai-tools/chat', label: 'Your Assistant' },
       ]

@@ -5,6 +5,7 @@ import { getUnitsByType } from '@/lib/units-by-type'
 import { isPublicProject } from '@/lib/project-visibility'
 import { projectJsonLd, projectMetadata, type AreaRange } from '@/lib/seo'
 import { ProjectDetail } from '@/components/projects/project-detail'
+import { ProjectQA } from '@/components/projects/project-qa'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,6 +59,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <ProjectDetail project={project} unitsByType={unitsByType} />
+      <ProjectQA slug={params.slug} />
     </>
   )
 }

@@ -34,6 +34,8 @@ const footerLinks = {
     { key: 'aiSearch', href: '/ai-tools/search' },
     { key: 'priceEstimator', href: '/ai-tools/price-estimator' },
     { key: 'investmentCalc', href: '/ai-tools/investment' },
+    { key: 'prices', href: '/prices' },
+    { key: 'buyingGuide', href: '/guides/buying-offplan' },
   ],
   legal: [
     { key: 'privacy', href: '/privacy' },
@@ -58,8 +60,8 @@ const legalLabels: Record<string, Record<string, string>> = {
 }
 
 const toolLabels: Record<string, Record<string, string>> = {
-  en: { aiSearch: 'AI Property Search', priceEstimator: 'Price Estimator', investmentCalc: 'Investment Calculator' },
-  ar: { aiSearch: 'بحث بالذكاء', priceEstimator: 'مقيّم الأسعار', investmentCalc: 'حاسبة الاستثمار' },
+  en: { aiSearch: 'AI Property Search', priceEstimator: 'Price Estimator', investmentCalc: 'Investment Calculator', prices: 'Price-per-sqm Explorer', buyingGuide: 'Buying Off-plan Safely' },
+  ar: { aiSearch: 'بحث بالذكاء', priceEstimator: 'مقيّم الأسعار', investmentCalc: 'حاسبة الاستثمار', prices: 'أسعار المتر بالسوق', buyingGuide: 'دليل الشراء الآمن' },
 }
 
 const locationLabels: Record<string, Record<string, string>> = {

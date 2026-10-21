@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { inquirySchema, type InquiryInput } from '@/lib/validations'
 import { visitSourceLine } from '@/lib/visit-source'
+import { TrackLink } from '@/components/inquiries/track-link'
 import { useLanguage } from '@/lib/language-context'
 import { Reveal } from '@/components/design'
 
@@ -32,6 +33,7 @@ function ContactForm() {
   const prefill = searchParams.get('message') || ''
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [trackUrl, setTrackUrl] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm<InquiryInput>({
@@ -51,6 +53,7 @@ function ContactForm() {
       const payload = await res.json().catch(() => ({}))
       if (res.ok) {
         setIsSubmitted(true)
+        setTrackUrl(payload.trackUrl || null)
         reset()
       } else {
         console.error('inquiry failed', payload.error)
@@ -156,6 +159,7 @@ function ContactForm() {
                     <p className="mt-2 text-muted-foreground">
                       {ar ? 'هنرد عليك خلال 24 ساعة.' : "We'll get back to you within 24 hours."}
                     </p>
+                    {trackUrl && <TrackLink trackUrl={trackUrl} ar={ar} />}
                     <Button onClick={() => setIsSubmitted(false)} className="mt-4 min-h-[44px] sm:min-h-0">
                       {ar ? 'ابعت رسالة تانية' : 'Send Another Message'}
                     </Button>

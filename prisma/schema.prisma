@@ -337,6 +337,7 @@ model Project {
   nearbyPlaces     NearbyPlace[]
   masterPlanImages MasterPlanImage[]
   brochures        ProjectBrochure[]
+  questions        ProjectQuestion[]
   blogs            Blog[]
   viewings         Viewing[]
   leads            Lead[]
@@ -541,6 +542,29 @@ model ProjectBrochure {
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
+// ─── PROJECT Q&A (public questions, CEO-moderated answers) ───
+// Visitors ask a question on a project page; the CEO answers and approves;
+// only APPROVED rows render on the public page. No invented data: answers
+// come from the owner/CEO, never auto-generated into the catalog.
+
+model ProjectQuestion {
+  id          String   @id @default(cuid())
+  projectId   String
+  slug        String // project slug denormalized for public lookups
+  name        String // asker display name (self-reported)
+  phone       String? // optional, for the CEO to follow up privately
+  question    String
+  answer      String?
+  status      String   @default("PENDING") // PENDING | ANSWERED | PUBLISHED | REJECTED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([slug, status])
+  @@index([projectId])
+}
+
 // ─── INQUIRIES & LEADS ──────────────────────────────────
 
 model Inquiry {
@@ -554,6 +578,7 @@ model Inquiry {
   type        String    @default("GENERAL")
   status      String    @default("NEW")
   source      String    @default("WEBSITE")
+  trackToken  String?   @unique @default(cuid()) // customer-facing tracking link (backfilled for old rows)
   priority    Int       @default(0)
   assignedTo  String?
   notes       String?

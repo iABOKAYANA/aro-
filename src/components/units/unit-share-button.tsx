@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Check, Copy, MessageCircle, Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/lib/language-context'
+import { useFeatureFlag } from '@/components/flags/flags-provider'
 
 /**
  * Share-one-unit button for the unit page.
@@ -14,6 +15,7 @@ import { useLanguage } from '@/lib/language-context'
  * browsers have no share sheet at all. The canonical URL is the page itself.
  */
 export function UnitShareButton({ name }: { name: string }) {
+  const enabled = useFeatureFlag('share_whatsapp')
   const { lang } = useLanguage()
   const ar = lang === 'ar'
   const [open, setOpen] = useState(false)
@@ -21,6 +23,8 @@ export function UnitShareButton({ name }: { name: string }) {
 
   // Egyptian-dialect text that reads well inside a WhatsApp bubble.
   const text = ar ? `بص على الوحدة دي على غاية: ${name}` : `Check out this unit on GHAYA: ${name}`
+
+  if (!enabled) return null
 
   async function onShare() {
     const url = window.location.href

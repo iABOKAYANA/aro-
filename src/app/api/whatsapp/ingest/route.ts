@@ -13,7 +13,8 @@ export const dynamic = 'force-dynamic'
 //   WHATSAPP_INGEST_SECRET=<long-random-string>
 // If the var is not configured, ingestion is refused with 500 (fail closed).
 
-const MAX_SIZE = 5 * 1024 * 1024 // 5MB — same ceiling as the upload routes
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024 // 10MB per image (bridge caps at 16MB)
+const MAX_DOC_SIZE = 16 * 1024 * 1024 // 16MB per document (xlsx/pdf)
 const MAX_FILES = 10
 
 const ALLOWED: Record<string, string> = {
@@ -22,6 +23,33 @@ const ALLOWED: Record<string, string> = {
   'image/webp': '.webp',
   'image/gif': '.gif',
   'image/avif': '.avif',
+}
+
+/** Office/document attachments the owner sends from developers' groups. */
+const DOC_EXTENSIONS: Record<string, string> = {
+  'application/pdf': '.pdf',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+  'application/vnd.ms-excel': '.xls',
+  'text/csv': '.csv',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+  'application/msword': '.doc',
+  'text/vcard': '.vcf',
+  'text/x-vcard': '.vcf',
+}
+
+/** Extension fallback when the mime is missing/generic (bridge tells us the ext). */
+function extForFile(f: File, declared: { ext?: string; name?: string }): string | null {
+  const byMime = ALLOWED[f.type] || DOC_EXTENSIONS[f.type]
+  if (byMime) return byMime
+  const name = (declared.name || f.name || '').toLowerCase()
+  const dot = name.lastIndexOf('.')
+  if (dot !== -1) {
+    const ext = `.${name.slice(dot + 1).slice(0, 10)}`
+      .replace(/[^.a-z0-9]/g, '')
+    if (/^\.(xlsx|xls|csv|pdf|docx|doc|vcf)$/.test(ext)) return ext
+  }
+  if (declared.ext && /^\.[a-z0-9]{2,5}$/.test(declared.ext)) return declared.ext
+  return null
 }
 
 /** Magic-byte check so a renamed script can't pass as an image. */
@@ -37,6 +65,19 @@ function looksLikeImage(buf: Buffer, ext: string): boolean {
     )
   if (ext === '.avif') return buf.toString('ascii', 4, 8) === 'ftyp' // ISO-BMFF
   return false
+}
+
+/** Magic bytes for documents: %PDF- (pdf), PK‥ (zip→xlsx/docx), CDF (doc). */
+function looksLikeDocument(buf: Buffer, ext: string): boolean {
+  if (ext === '.pdf') return buf.length > 5 && buf.toString('ascii', 0, 5) === '%PDF-'
+  if (ext === '.xlsx' || ext === '.docx' || ext === '.xls') {
+    // xlsx/docx are zip (PK\x03\x04); legacy xls uses the OLE CFB header.
+    return (
+      (buf.length > 4 && buf[0] === 0x50 && buf[1] === 0x4b && buf[2] === 0x03 && buf[3] === 0x04) ||
+      (buf.length > 8 && buf[0] === 0xd0 && buf[1] === 0xcf && buf[2] === 0x11 && buf[3] === 0xe0)
+    )
+  }
+  return true // csv/vcf are plain text — accept
 }
 
 function secretsEqual(a: string, b: string): boolean {
@@ -88,13 +129,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'payload must be valid JSON' }, { status: 400 })
     }
 
-    const { groupJid, groupName, senderName, senderPhone, messageIds, text } = payload as {
+    const { groupJid, groupName, senderName, senderPhone, messageIds, text, mediaMeta, source: payloadSource } = payload as {
       groupJid?: unknown
       groupName?: unknown
       senderName?: unknown
       senderPhone?: unknown
       messageIds?: unknown
       text?: unknown
+      mediaMeta?: unknown
+      source?: unknown
     }
 
     if (typeof groupJid !== 'string' || !groupJid.trim()) {
@@ -111,7 +154,16 @@ export async function POST(req: Request) {
     }
     const rawText = typeof text === 'string' ? text.slice(0, 20_000) : ''
 
-    // Collect media0..n image files (cap 10).
+    // Collect media0..n files (cap 10). Kind-aware caps: images ≤10MB,
+    // documents ≤16MB. The bridge's mediaMeta (media0 → meta) tells us the
+    // declared kind/extension when the mime is missing or generic.
+    const metaList: Array<{ kind?: string; ext?: string; name?: string; mime?: string }> =
+      Array.isArray(mediaMeta)
+        ? mediaMeta.filter(
+            (m): m is { kind?: string; ext?: string; name?: string; mime?: string } =>
+              !!m && typeof m === 'object'
+          )
+        : []
     const media: File[] = []
     for (let i = 0; ; i++) {
       const f = form.get(`media${i}`)
@@ -131,41 +183,59 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Either text or at least one media file is required' }, { status: 400 })
     }
 
-    for (const f of media) {
-      if (!ALLOWED[f.type]) {
-        return NextResponse.json(
-          { error: 'Only image files are allowed (jpg, png, webp, gif, avif)' },
-          { status: 400 }
-        )
-      }
-      if (f.size > MAX_SIZE) {
-        return NextResponse.json({ error: 'Image is too large (max 5MB)' }, { status: 400 })
-      }
-    }
-
-    const mediaUrls: string[] = []
-    if (media.length > 0) {
-      for (const f of media) {
-        const ext = ALLOWED[f.type]
+    const mediaKinds: Array<'image' | 'document'> = []
+    const mediaUrls: Array<{ url: string; originalName?: string; mime: string }> = []
+    for (let idx = 0; idx < media.length; idx++) {
+      const f = media[idx]
+        const meta = metaList[idx] || {}
+        const isImage = ALLOWED[f.type] !== undefined || (meta.kind || '').toLowerCase() === 'image'
+        const ext = extForFile(f, meta)
+        if (!ext) {
+          return NextResponse.json(
+            { error: `Unsupported media type "${f.type || 'unknown'}" for ${meta.name || f.name || 'file'}` },
+            { status: 400 }
+          )
+        }
+        const cap = isImage ? MAX_IMAGE_SIZE : MAX_DOC_SIZE
+        if (f.size > cap) {
+          return NextResponse.json(
+            { error: `${isImage ? 'Image' : 'Document'} is too large (max ${Math.round(cap / 1024 / 1024)}MB)` },
+            { status: 400 }
+          )
+        }
         const buffer = Buffer.from(await f.arrayBuffer())
         // The bridge holds the secret, but a compromised bridge must still
-        // not be able to land a script into the public image folder.
-        if (!looksLikeImage(buffer, ext)) {
+        // not be able to land a script into the public folders.
+        if (isImage) {
+          if (!looksLikeImage(buffer, ext)) {
+            return NextResponse.json(
+              { error: 'File content does not match its image type' },
+              { status: 415 }
+            )
+          }
+        } else if (!looksLikeDocument(buffer, ext)) {
           return NextResponse.json(
-            { error: 'File content does not match its image type' },
+            { error: 'File content does not match its document type' },
             { status: 415 }
           )
         }
+        // Keep a readable original name for documents so the CEO recognizes
+        // the developer sheet in the inbox; strip path traversal + control chars.
+        const originalName = isImage
+          ? undefined
+          : (meta.name || f.name || '')
+              .replace(/[/\\?%*:|"<>\x00-\x1f]/g, '')
+              .slice(0, 120) || undefined
         const name = `${Date.now()}-${randomBytes(4).toString('hex')}${ext}`
         const { url } = await saveUpload({
           buffer,
-          contentType: f.type,
+          contentType: f.type || (isImage ? 'image/jpeg' : 'application/octet-stream'),
           ext,
-          prefix: 'images/whatsapp',
+          prefix: isImage ? 'images/whatsapp' : 'files/whatsapp',
           filename: name,
         })
-        mediaUrls.push(url)
-      }
+        mediaUrls.push({ url, originalName, mime: f.type || 'application/octet-stream' })
+        mediaKinds.push(isImage ? 'image' : 'document')
     }
 
     const { extracted, engine } = await extractListingFacts(rawText)
@@ -194,7 +264,9 @@ export async function POST(req: Request) {
           raw: rawText,
           extracted,
           extractionEngine: engine,
-          mediaUrls,
+          mediaUrls: mediaUrls.map((m) => m.url),
+          mediaFiles: mediaUrls.map((m, i) => ({ ...m, kind: mediaKinds[i] })),
+          source: typeof payloadSource === 'string' ? payloadSource : 'WHATSAPP_GROUP',
           suggestedProjectId,
           matchScore,
           receivedAt: new Date().toISOString(),

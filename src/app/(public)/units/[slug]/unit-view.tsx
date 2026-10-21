@@ -10,8 +10,10 @@ import { BookingButton } from '@/components/viewings/booking-modal'
 import { UnitGallery } from '@/components/units/unit-gallery'
 import { FavoriteButton } from '@/components/units/favorite-button'
 import { UnitShareButton } from '@/components/units/unit-share-button'
+import { UnitCardPdfLink } from '@/components/units/unit-card-pdf-link'
 import { WatchButton } from '@/components/projects/project-transparency'
 import { useLanguage } from '@/lib/language-context'
+import { useFeatureFlag } from '@/components/flags/flags-provider'
 import { Reveal } from '@/components/design'
 import { formatEGP, formatSQM } from '@/lib/utils'
 
@@ -22,6 +24,7 @@ export type UnitDetail = {
   unitType: string
   status: string | null
   isSample?: boolean | null
+  slug?: string | null
   finishingType: string | null
   bedrooms: number | null
   bathrooms: number | null
@@ -131,6 +134,7 @@ function PriceTrend({ history, ar }: { history: Array<{ price: number; recordedA
 export default function UnitView({ unit, gallery, priceHistory = [] }: { unit: UnitDetail; gallery: string[]; priceHistory?: Array<{ price: number; recordedAt: Date }> }) {
   const { lang } = useLanguage()
   const ar = lang === 'ar'
+  const shareOn = useFeatureFlag('share_whatsapp')
 
   // Same WhatsApp-share pattern as the project detail sidebar.
   const shareText = ar ? `بص على الوحدة دي على غاية: ${unit.name}` : `Check out this unit on GHAYA: ${unit.name}`
@@ -274,6 +278,8 @@ export default function UnitView({ unit, gallery, priceHistory = [] }: { unit: U
 
                 <UnitShareButton name={unit.name} />
 
+                <UnitCardPdfLink slug={unit.slug || unit.id} />
+
                 <Button asChild className="mb-3 min-h-[44px] w-full bg-estate-gold hover:bg-estate-gold-dark md:min-h-0">
                   <Link href={`/projects/${unit.project.slug}`}>
                     {ar ? 'شوف المشروع' : 'View Project'} <ArrowRight className="ms-2 h-4 w-4" />
@@ -312,15 +318,17 @@ export default function UnitView({ unit, gallery, priceHistory = [] }: { unit: U
               {ar ? 'احجز معاينة مجانية للوحدة دي' : 'Book a free viewing of this unit'}
             </p>
           </div>
-          <a
-            href={waHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={ar ? 'شير على واتساب' : 'Share on WhatsApp'}
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-[#0b3d20] transition-colors hover:brightness-110"
-          >
-            <MessageCircle className="h-5 w-5" />
-          </a>
+          {shareOn && (
+            <a
+              href={waHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={ar ? 'شير على واتساب' : 'Share on WhatsApp'}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-[#0b3d20] transition-colors hover:brightness-110"
+            >
+              <MessageCircle className="h-5 w-5" />
+            </a>
+          )}
           {!unit.isSample && (
             <BookingButton
               projectId={unit.project.id}

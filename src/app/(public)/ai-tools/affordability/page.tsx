@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { formatEGP } from '@/lib/utils'
 import { useLanguage } from '@/lib/language-context'
+import { useFeatureFlag } from '@/components/flags/flags-provider'
 
 /** Mortgage defaults — same as the mortgage calculator's opening values. */
 const DEFAULT_RATE = 19
@@ -30,9 +31,22 @@ type MatchProject = {
   startPrice: number | null
 }
 
+/** Real Unit rows (flag affordability_units) — raw /api/search?type=units shape. */
+type MatchUnit = {
+  id: string
+  slug?: string | null
+  name: string
+  unitType: string
+  price: number
+  area: number
+  bedrooms?: number | null
+  project: { name: string; slug?: string | null }
+}
+
 export default function AffordabilityPage() {
   const { lang } = useLanguage()
   const ar = lang === 'ar'
+  const unitsOn = useFeatureFlag('affordability_units')
   const [income, setIncome] = useState('')
   const [commitments, setCommitments] = useState('')
   const [down, setDown] = useState('')
@@ -41,6 +55,7 @@ export default function AffordabilityPage() {
   const [matches, setMatches] = useState<MatchProject[]>([])
   const [matchesLoading, setMatchesLoading] = useState(false)
   const [matchesError, setMatchesError] = useState(false)
+  const [unitMatches, setUnitMatches] = useState<MatchUnit[]>([])
 
   const calc = useMemo(() => {
     const rawIncome = Number(income)
@@ -81,6 +96,13 @@ export default function AffordabilityPage() {
       limit: '6',
       sortBy: 'price_desc',
     })
+    const unitParams = new URLSearchParams({
+      type: 'units',
+      maxPrice: String(Math.floor(calc.maxPrice)),
+      limit: '8',
+      sortBy: 'price_desc',
+      status: 'AVAILABLE',
+    })
     fetch(`/api/search?${params.toString()}`, { signal: controller.signal })
       .then((r) => r.json())
       .then((d) => {
@@ -89,6 +111,13 @@ export default function AffordabilityPage() {
       .catch(() => {
         if (!controller.signal.aborted) setMatchesError(true)
       })
+    // Real unit rows too: concrete inventory the budget covers (render-gated).
+    fetch(`/api/search?${unitParams.toString()}`, { signal: controller.signal })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!controller.signal.aborted) setUnitMatches(d.items ?? [])
+      })
+      .catch(() => {})
       .finally(() => {
         if (!controller.signal.aborted) setMatchesLoading(false)
       })
@@ -226,6 +255,39 @@ export default function AffordabilityPage() {
                 )}
               </CardContent>
             </Card>
+
+            {unitsOn && (
+            <Card>
+              <CardHeader>
+                <CardTitle>{ar ? 'وحدات حقيقية على قد الميزانية دي' : 'Real units within this budget'}</CardTitle>
+                <CardDescription>
+                  {ar ? 'وحدات متاحة حاليًا في الكتالوج — من غير تقدير.' : 'Currently available catalog units — no estimates.'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {unitMatches.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">{ar ? 'مفيش وحدات تحت الميزانية دي لسه.' : 'No units under this budget yet.'}</p>
+                ) : (
+                  <div className="space-y-2">
+                    {unitMatches.map((u) => (
+                      <div key={u.id} className="flex items-center justify-between gap-3 text-sm">
+                        <Link
+                          href={`/units/${u.slug || u.id}`}
+                          className="min-w-0 flex-1 truncate font-semibold hover:text-estate-gold"
+                        >
+                          {u.project?.name} — {u.name}
+                        </Link>
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          {u.area ? `${u.area}م²` : ''}{u.bedrooms ? ` · ${u.bedrooms} غرف` : ''}
+                        </span>
+                        <span className="shrink-0 font-medium text-estate-gold">{formatEGP(u.price)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            )}
 
             <p className="flex items-start gap-2 rounded-2xl border border-estate-gold/20 bg-estate-gold/[0.07] px-4 py-3 text-xs leading-relaxed text-gray-300">
               <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-estate-gold" />

@@ -34,6 +34,8 @@ import {
   Send,
   Inbox,
   ScrollText,
+  ToggleRight,
+  MessageCircleQuestion,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -71,6 +73,7 @@ const groups: Group[] = [
       { label: 'Deals & Growth', labelAr: 'الصفقات والنمو', href: '/ceo/deals', icon: Handshake },
       { label: 'Inquiries', labelAr: 'الاستفسارات', href: '/ceo/inquiries', icon: HelpCircle },
       { label: 'Viewings', labelAr: 'المعاينات', href: '/ceo/viewings', icon: CalendarCheck },
+      { label: 'Q&A', labelAr: 'أسئلة الزوار', href: '/ceo/questions', icon: MessageCircleQuestion },
     ],
   },
   {
@@ -103,6 +106,7 @@ const groups: Group[] = [
     titleAr: 'السيستم',
     links: [
       { label: 'Email Outbox', labelAr: 'البريد الصادر', href: '/ceo/outbox', icon: Inbox },
+      { label: 'Feature switches', labelAr: 'مفاتيح الميزات', href: '/ceo/features', icon: ToggleRight },
       { label: 'Audit Log', labelAr: 'سجل التدقيق', href: '/ceo/audit', icon: ScrollText },
       { label: 'Settings', labelAr: 'الإعدادات', href: '/ceo/settings', icon: Settings },
     ],
