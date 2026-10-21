@@ -339,6 +339,9 @@ function nextWithAppType(request: NextRequest, appType: AppType, appMode: AppMod
   const headers = new Headers(request.headers)
   headers.set('x-app-type', appType)
   headers.set('x-app-mode', appMode)
+  // Original request path so the root layout can hard-404 pages whose feature
+  // the CEO switched off (before any stream flush → real 404 status).
+  headers.set('x-pathname', request.nextUrl.pathname)
   return NextResponse.next({ request: { headers } })
 }
 

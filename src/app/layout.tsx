@@ -9,6 +9,7 @@ import { getAppMode, getAppType, type AppMode, type AppType } from '@/lib/app-ty
 // effects, so hydration stays stable.
 import { Providers } from '@/components/providers/providers'
 import { getFeatureFlags } from '@/lib/feature-flags'
+import { notFound } from 'next/navigation'
 // Fonts live in ./fonts (next/font/google, arabic+latin subsets verified).
 // `inter` stays first in `font-sans` so Latin rendering is unchanged;
 // Arabic glyphs fall through to Plex Sans Arabic via unicode-range.
@@ -86,6 +87,15 @@ export default async function RootLayout({
       ? stampedMode
       : getAppMode()
   const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-XCMI4XQEB1'
+  // Feature switches: pages whose feature the CEO turned OFF are killed HERE,
+  // before any HTML streams — so they answer with a genuine 404, not
+  // a 200 wrapped around a not-found UI. The page-level checks stay as a
+  // second net (they still get the flag fresh per request).
+  const flags = await getFeatureFlags()
+  const pathname = requestHeaders.get('x-pathname') || ''
+  if (pathname === '/prices' && !flags.price_explorer) notFound()
+  if (pathname === '/guides/buying-offplan' && !flags.buying_guide) notFound()
+  if (pathname.startsWith('/track/') && !flags.inquiry_tracking) notFound()
   return (
     <html lang="en" dir="ltr" className={`${inter.variable} ${amiri.variable} ${plexSansArabic.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased" data-app-mode={appMode} data-app-type={appType}>
