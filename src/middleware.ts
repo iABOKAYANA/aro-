@@ -251,9 +251,9 @@ export async function middleware(request: NextRequest) {
         signal: AbortSignal.timeout(3000),
         cache: 'no-store',
       })
+      const jflags = res.ok ? ((await res.json())?.flags ?? {}) : {}
       if (res.ok) {
-        const { flags } = await res.json()
-        if (flags && flags[gated.flag] === false) {
+        if (jflags && jflags[gated.flag] === false) {
           return new NextResponse(
             "<!doctype html><html><head><meta name=\"robots\" content=\"noindex\"><title>404</title></head><body style=\"font-family:sans-serif;margin:15vw auto;max-width:480px;text-align:center\"><h1>404 — Page not found</h1><p><a href=\"/\" style=\"color:#D4A843\">GHAYA REAL ESTATE</a></p></body></html>",
             { status: 404, headers: { 'content-type': 'text/html; charset=utf-8' } }
@@ -525,6 +525,14 @@ export const config = {
     // body, so multipart uploads still pass straight through to the route.
     // (`/api/auth/:path*` was listed separately before; `/api/:path*` subsumes
     // it — the union of matched URLs is unchanged by dropping it.)
+    // Feature-switch gate: the middleware answers a REAL 404 for pages whose
+    // feature the CEO turned off — it is the only layer that runs before the
+    // response streams, so these page prefixes must enter middleware. Header
+    // stamping covers the paths passed through untouched. (`:path*` matches
+    // zero segments, so the bare `/prices` itself is included.)
+    '/prices/:path*',
+    '/guides/:path*',
+    '/track/:path*',
     '/api/:path*',
   ],
 }
