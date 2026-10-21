@@ -230,6 +230,41 @@ export async function middleware(request: NextRequest) {
   const consoleHost = getConsoleHost()
   const appType = getAppType(request.headers.get('host'), consoleHost)
   const appMode = getAppMode()
+
+  // 0.45 Feature switches → hard 404 BEFORE anything streams. Streaming
+  //     responses commit a 200 status before server components can throw
+  //     notFound() — so the only place able to answer a REAL 404 is right
+  //     here. We only pay one local fetch (to the flags endpoint) for the
+  //     three gated page paths; every other request skips this entirely.
+  //     Any fetch hiccup fails OPEN (feature stays visible) — a switch must
+  //     never take the whole site down.
+  const GATED_FLAGS: Array<{ match: RegExp; flag: string }> = [
+    { match: /^\/prices\/?$/, flag: 'price_explorer' },
+    { match: /^\/guides\/buying-offplan\/?$/, flag: 'buying_guide' },
+    { match: /^\/track\//, flag: 'inquiry_tracking' },
+  ]
+  const gated = GATED_FLAGS.find((g) => g.match.test(pathname))
+  if (gated && appType !== 'console') {
+    try {
+      const origin = new URL(request.url).origin
+      const res = await fetch(`${origin}/api/feature-flags`, {
+        signal: AbortSignal.timeout(3000),
+        cache: 'no-store',
+      })
+      if (res.ok) {
+        const { flags } = await res.json()
+        if (flags && flags[gated.flag] === false) {
+          return new NextResponse(
+            "<!doctype html><html><head><meta name=\"robots\" content=\"noindex\"><title>404</title></head><body style=\"font-family:sans-serif;margin:15vw auto;max-width:480px;text-align:center\"><h1>404 — Page not found</h1><p><a href=\"/\" style=\"color:#D4A843\">GHAYA REAL ESTATE</a></p></body></html>",
+            { status: 404, headers: { 'content-type': 'text/html; charset=utf-8' } }
+          )
+        }
+      }
+    } catch {
+      // fail open — never take the site down for a flags blip
+    }
+  }
+
   if (isHostGatedRoute(pathname) && shouldRedirectToConsole(appType, appMode)) {
     const target = new URL(request.url)
     target.protocol = 'https:'
