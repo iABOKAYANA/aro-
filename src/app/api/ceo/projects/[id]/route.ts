@@ -40,7 +40,7 @@ export async function GET(
           select: {
             id: true, name: true, unitType: true, listingType: true, status: true,
             bedrooms: true, bathrooms: true, area: true, price: true,
-            pricePerSqm: true, floorPlan: true, slug: true,
+            pricePerSqm: true, floorPlan: true, slug: true, phaseId: true,
           },
           orderBy: { createdAt: 'desc' },
         },

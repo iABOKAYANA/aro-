@@ -359,8 +359,13 @@ model ProjectPhase {
   startPrice   Float?
   endPrice     Float?
   sortOrder    Int       @default(0)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  // Owner control: a phase can be spotlighted as a "new launch" — always
+  // INSIDE its parent project (never a standalone project) — whenever the
+  // owner decides, with an optional launch date for the announcement.
+  isLaunch    Boolean   @default(false)
+  launchDate  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   units        Unit[]

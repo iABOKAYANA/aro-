@@ -1020,11 +1020,23 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                     <div className="h-full rounded-2xl border border-gray-200 bg-white p-4 dark:border-[#262626] dark:bg-[#0A0A0A]">
                       <div className="mb-1 flex items-center justify-between gap-2">
                         <h3 className="font-display min-w-0 break-words text-lg font-semibold">{ar ? (ph.nameArabic || ph.name) : ph.name}</h3>
-                        {(ph.totalUnits ?? 0) > 0 && (
-                          <Badge variant="gold" className="shrink-0">{ar ? `${ph.totalUnits} وحدة` : `${ph.totalUnits} units`}</Badge>
-                        )}
+                        <div className="flex shrink-0 items-center gap-2">
+                          {ph.isLaunch && (
+                            <Badge className="bg-red-500/15 text-red-500 border-red-500/30">
+                              🚀 {ar ? (ph.launchDate ? `لونش — ${new Date(ph.launchDate).toLocaleDateString('ar-EG')}` : 'لونش جديد') : (ph.launchDate ? `Launch — ${new Date(ph.launchDate).toLocaleDateString('en-GB')}` : 'New Launch')}
+                            </Badge>
+                          )}
+                          {(ph.totalUnits ?? 0) > 0 && (
+                            <Badge variant="gold">{ar ? `${ph.totalUnits} وحدة` : `${ph.totalUnits} units`}</Badge>
+                          )}
+                        </div>
                       </div>
                       {ph.description && <p className="mb-2 text-sm text-muted-foreground">{ph.description}</p>}
+                      {ph.deliveryDate && (
+                        <p className="mb-2 text-xs text-muted-foreground">
+                          {ar ? 'مواعيد التسليم' : 'Delivery'}: {new Date(ph.deliveryDate).toLocaleDateString(ar ? 'ar-EG' : 'en-GB', { year: 'numeric', month: 'long' })}
+                        </p>
+                      )}
                       {(ph.startPrice != null || ph.endPrice != null) && (
                         <p className="font-display break-words text-lg font-bold text-estate-gold">
                           {ph.startPrice != null ? `${ar ? 'من' : 'From'} ${formatEGP(ph.startPrice)}` : ''}

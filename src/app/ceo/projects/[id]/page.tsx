@@ -14,7 +14,7 @@ import {
   Loader2, MapPin, Building2, Users, Heart, MessageSquare, DollarSign,
   Image, FileText, Settings, Search, ChevronDown, AlertTriangle,
   Calendar, Globe, Upload, Plus, Trash2, RefreshCw, Archive, Shield,
-  Star, TrendingUp, Map, Tag, Camera, Video, Layout, Activity, Clock
+  Star, TrendingUp, Map, Tag, Camera, Video, Layout, Activity, Clock, Layers
 } from 'lucide-react'
 import { Reveal } from '@/components/design'
 
@@ -86,7 +86,7 @@ const EMPTY_UNIT_FORM = {
   status: 'AVAILABLE',
 }
 
-type Tab = 'overview' | 'units' | 'pricing' | 'content' | 'media' | 'location' | 'seo' | 'settings' | 'audit'
+type Tab = 'overview' | 'units' | 'phases' | 'pricing' | 'content' | 'media' | 'location' | 'seo' | 'settings' | 'audit'
 type ProjectData = any
 
 function Badge({ label, colors }: { label: string; colors: string }) {
@@ -175,6 +175,12 @@ export default function CEOProjectDetailPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab>('overview')
+  // Phase-launch spotlight state (phases tab): busy phase id, error surfaced
+  // on the row, and per-phase launch-date drafts before they are saved.
+  const [launchBusy, setLaunchBusy] = useState<string | null>(null)
+  const [launchBusyPhaseId, setLaunchBusyPhaseId] = useState<string | null>(null)
+  const [launchErr, setLaunchErr] = useState<string | null>(null)
+  const [launchDateDraft, setLaunchDateDraft] = useState<Record<string, string>>({})
   const [rejectModal, setRejectModal] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
@@ -222,6 +228,30 @@ export default function CEOProjectDetailPage() {
       await fetchProject()
       setEditingSection(null)
     } catch { } finally { setSaving(false) }
+  }
+
+  const togglePhaseLaunch = async (phase: any) => {
+    setLaunchBusy(phase.id)
+    setLaunchBusyPhaseId(phase.id)
+    setLaunchErr(null)
+    try {
+      const launchDate = (launchDateDraft[phase.id] ?? (phase.launchDate ? String(phase.launchDate).slice(0, 10) : '')) || null
+      const res = await fetch(`/api/ceo/projects/${id}/phases`, {
+        method: 'PATCH',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phaseId: phase.id, isLaunch: !phase.isLaunch, launchDate }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        setLaunchErr((data as any)?.error || (ar ? 'الحركة دي منفعتش، جرّب تاني.' : 'That action failed, please try again.'))
+        return
+      }
+      await fetchProject()
+    } catch {
+      setLaunchErr(ar ? 'الحركة دي منفعتش، جرّب تاني.' : 'That action failed, please try again.')
+    } finally {
+      setLaunchBusy(null)
+    }
   }
 
   const handleStatusAction = async (action: string, reason?: string) => {
@@ -367,6 +397,7 @@ export default function CEOProjectDetailPage() {
   const tabs: { id: Tab; label: string; labelAr: string; icon: any }[] = [
     { id: 'overview', label: 'Overview', labelAr: 'نظرة عامة', icon: Layout },
     { id: 'units', label: 'Units', labelAr: 'الوحدات', icon: Building2 },
+    { id: 'phases', label: 'Phases', labelAr: 'المراحل', icon: Layers },
     { id: 'pricing', label: 'Pricing', labelAr: 'الأسعار', icon: DollarSign },
     { id: 'content', label: 'Content', labelAr: 'المحتوى', icon: FileText },
     { id: 'media', label: 'Media', labelAr: 'الميديا', icon: Camera },
@@ -643,6 +674,79 @@ export default function CEOProjectDetailPage() {
         )}
 
         {/* Pricing Tab */}
+        {activeTab === 'phases' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{ar ? 'مراحل المشروع' : 'Project Phases'}</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {ar
+                  ? 'الترحلة دي كلها جوه المشروع نفسه — مفيش مرحلة بتظهر كمشروع مستقل قدام الناس. زرار 🚀 اللونش بيحوّل المرحلة لسطر مميز جوه صفحة المشروع، تعمله براحتك وقت ما تحب.'
+                  : 'All phases live INSIDE this project — none of them ever shows as a standalone project. The 🚀 launch toggle spotlights a phase within this project\'s page, whenever you decide.'}
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(project.phases?.length ?? 0) === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  {ar ? 'مفيش مراحل مسجلة للمشروع ده.' : 'No phases recorded for this project.'}
+                </p>
+              ) : (
+                project.phases.map((ph: any) => {
+                  const unitCount = project.units?.filter((u: any) => u.phaseId === ph.id).length || 0
+                  const busy = launchBusy === ph.id
+                  const draft = launchDateDraft[ph.id] ?? (ph.launchDate ? String(ph.launchDate).slice(0, 10) : '')
+                  return (
+                    <div key={ph.id} className={cn('rounded-xl border p-4', ph.isLaunch ? 'border-[#D4A843]/50 bg-[#D4A843]/5' : '')}>
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-semibold break-words">{ph.nameArabic || ph.name}</span>
+                            {ph.nameArabic && ph.name !== ph.nameArabic && <span className="text-xs text-muted-foreground">{ph.name}</span>}
+                            <span className={cn('rounded-full px-2 py-0.5 text-xs', CONSTRUCTION_COLORS[ph.status] || 'bg-gray-500/20 text-gray-400')}>
+                              {CONSTRUCTION_AR[ph.status] || ph.status}
+                            </span>
+                            {ph.isLaunch && <span className="rounded-full bg-[#D4A843]/20 px-2 py-0.5 text-xs text-[#D4A843]">🚀 {ar ? 'لونش' : 'Launch'}</span>}
+                          </div>
+                          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                            <span>{ar ? `الوحدات: ${unitCount}` : `Units: ${unitCount}`}</span>
+                            {ph.startPrice != null && <span>{ar ? 'يبدأ من' : 'From'} {formatEGP(ph.startPrice)}</span>}
+                            {ph.endPrice != null && <span>{ar ? 'حتى' : 'To'} {formatEGP(ph.endPrice)}</span>}
+                            {ph.deliveryDate && (
+                              <span>{ar ? 'التسليم' : 'Delivery'}: {new Date(ph.deliveryDate).toLocaleDateString(ar ? 'ar-EG' : 'en-GB', { year: 'numeric', month: 'long' })}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 flex-wrap items-center gap-2">
+                          <input
+                            type="date"
+                            value={draft}
+                            onChange={(e) => setLaunchDateDraft((m) => ({ ...m, [ph.id]: e.target.value }))}
+                            disabled={busy}
+                            className="rounded-lg border border-gray-300 bg-transparent px-2 py-1.5 text-xs dark:border-[#262626]"
+                            aria-label={ar ? 'تاريخ اللونش' : 'Launch date'}
+                          />
+                          <Button
+                            size="sm"
+                            variant={ph.isLaunch ? 'outline' : 'default'}
+                            disabled={busy}
+                            onClick={() => togglePhaseLaunch(ph)}
+                            className="min-h-[32px] whitespace-nowrap"
+                          >
+                            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : ph.isLaunch ? <X className="h-4 w-4" /> : null}
+                            <span className="ml-1">{ph.isLaunch ? (ar ? 'إلغاء اللونش' : 'Remove launch') : (ar ? '🚀 اعمل لونش' : '🚀 New launch')}</span>
+                          </Button>
+                        </div>
+                      </div>
+                      {launchErr && launchBusyPhaseId === ph.id && (
+                        <p className="mt-2 text-xs text-red-400">{launchErr}</p>
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {activeTab === 'pricing' && (
           <SectionCard
             title={ar ? 'الأسعار والدفع' : 'Pricing & Payment'} section="pricing" editingSection={editingSection}
