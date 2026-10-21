@@ -135,20 +135,53 @@ export async function maybeCapImage(
 
 export async function saveUpload(input: SaveUploadInput): Promise<{ url: string }> {
   const { buffer, contentType, ext, prefix } = input
-  const filename = input.filename ?? `${Date.now()}-${randomBytes(4).toString('hex')}${ext}`
   const cleanPrefix = prefix.replace(/^\/+|\/+$/g, '')
+
+  // WebP conversion: photographic JPEGs and alpha-free PNGs re-encode to WebP
+  // q82 — 40-60% smaller on the wire. Cap (1920px) still applies first.
   const capped = await maybeCapImage(buffer, contentType, ext)
+  const converted = await maybeConvertWebp(capped, contentType, ext)
+  const finalBuffer = converted?.buffer ?? capped
+  const finalExt = converted?.ext ?? ext
+  const finalType = converted?.contentType ?? contentType
+  const filename = (input.filename ?? `${Date.now()}-${randomBytes(4).toString('hex')}`)
+    .replace(/\.[a-z0-9]+$/i, '') + finalExt
 
   if (blobConfigured()) {
-    const blob = await put(`${cleanPrefix}/${filename}`, capped, {
+    const blob = await put(`${cleanPrefix}/${filename}`, finalBuffer, {
       access: 'public',
-      contentType,
+      contentType: finalType,
     })
     return { url: blob.url }
   }
 
   const dir = path.join(process.cwd(), 'public', cleanPrefix)
   await mkdir(dir, { recursive: true })
-  await writeFile(path.join(dir, filename), capped)
+  await writeFile(path.join(dir, filename), finalBuffer)
   return { url: `/${cleanPrefix}/${filename}` }
+}
+
+/** Photographic formats → WebP. Skips: alpha PNGs, GIF/SVG, names from callers. */
+async function maybeConvertWebp(
+  buffer: Buffer,
+  contentType: string,
+  ext: string
+): Promise<{ buffer: Buffer; contentType: string; ext: string } | null> {
+  if (!contentType.toLowerCase().startsWith('image/')) return null
+  const lowerExt = ext.toLowerCase()
+  if (lowerExt !== '.jpg' && lowerExt !== '.jpeg' && lowerExt !== '.png') return null
+  const sharp = await loadSharp()
+  if (!sharp) return null
+  try {
+    const meta = await sharp(buffer).metadata()
+    if ((meta.pages ?? 1) > 1) return null // animated — never flatten
+    const format = (meta.format || '').toLowerCase()
+    if (format === 'webp' || format === 'avif' || format === 'gif' || format === 'svg') return null
+    if (format === 'png' && meta.hasAlpha) return null // graphics with transparency stay PNG
+    const out = await sharp(buffer).rotate().webp({ quality: 82 }).toBuffer()
+    if (!out.length || out.length >= buffer.length) return null // never enlarge
+    return { buffer: Buffer.from(out), contentType: 'image/webp', ext: '.webp' }
+  } catch {
+    return null
+  }
 }

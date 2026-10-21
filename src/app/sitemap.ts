@@ -41,6 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, lastModified: now, changeFrequency: 'daily', priority: 1 },
     { url: `${SITE_URL}/projects`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${SITE_URL}/projects/map`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
     { url: `${SITE_URL}/ai-tools`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${SITE_URL}/ai-tools/search`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${SITE_URL}/ai-tools/chat`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
@@ -62,9 +63,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
     { url: `${SITE_URL}/cookies`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
     { url: `${SITE_URL}/saved`, lastModified: now, changeFrequency: 'daily', priority: 0.4 },
+    { url: `${SITE_URL}/developers`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
   ]
 
-  const [projects, blogs, press, jobs, units] = await Promise.all([
+  const [projects, blogs, press, jobs, units, developers] = await Promise.all([
     rows(
       () =>
         db.project.findMany({
@@ -113,7 +115,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       0.8,
       'weekly'
     ),
+    rows(
+      () =>
+        db.developerProfile.findMany({
+          where: { slug: { not: null }, projects: { some: { isActive: true } } },
+          select: { slug: true },
+          take: 500,
+        }),
+      (d) => (d.slug ? `/developers/${d.slug}` : null),
+      0.6,
+      'weekly'
+    ),
   ])
 
-  return [...staticRoutes, ...projects, ...blogs, ...press, ...jobs, ...units]
+  return [...staticRoutes, ...projects, ...blogs, ...press, ...jobs, ...units, ...developers]
 }

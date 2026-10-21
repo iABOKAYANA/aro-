@@ -9,6 +9,7 @@ import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
 import { PageWidgets } from '@/components/layout/page-widgets'
 import { WhatsAppBubble } from '@/components/layout/whatsapp-bubble'
+import { VisitSourceTracker } from '@/components/analytics/visit-source-tracker'
 import type { ReactNode } from 'react'
 import type { AppType } from '@/lib/app-type'
 
@@ -25,6 +26,7 @@ export function Providers({ children, appType = 'all' }: { children: ReactNode; 
         <CurrencyProvider>
           <CompareProvider>
             <SessionProvider>
+              <VisitSourceTracker />
               <Navbar appType={appType} />
               <main className="flex-1">{children}</main>
               <Footer appType={appType} />

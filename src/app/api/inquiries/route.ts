@@ -40,6 +40,12 @@ export async function POST(req: Request) {
     }
     const { name, email, phone, message, type, unitId } = parsed.data
 
+    // Attribution: explicit source from the caller wins (contact form sends a
+    // composed first-touch line; the AI tool passes AI_CHATBOT). Sanitised to
+    // a bounded printable string — never trust raw client data.
+    const callerSource =
+      typeof body?.source === 'string' ? body.source.replace(/[^\x20-\x7E\u0600-\u06FF|_:/-]/g, '').slice(0, 300) : ''
+
     if (unitId) {
       const unit = await db.unit.findUnique({ where: { id: unitId }, select: { id: true } })
       if (!unit) return NextResponse.json({ error: 'Unit not found' }, { status: 404 })
@@ -54,6 +60,7 @@ export async function POST(req: Request) {
         type: type || 'GENERAL',
         unitId: unitId || undefined,
         userId: (session?.user as any)?.id || undefined,
+        ...(callerSource ? { source: callerSource } : {}),
       },
     })
 

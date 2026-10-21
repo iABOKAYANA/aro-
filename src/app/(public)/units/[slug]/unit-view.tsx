@@ -89,7 +89,46 @@ const FINISHING_AR: Record<string, string> = {
   'core & shell': 'طوب أحمر',
 }
 
-export default function UnitView({ unit, gallery }: { unit: UnitDetail; gallery: string[] }) {
+/** Inline SVG trend of recorded price changes — pure markup, zero deps. */
+function PriceTrend({ history, ar }: { history: Array<{ price: number; recordedAt: Date }>; ar: boolean }) {
+  if (history.length < 2) return null
+  const prices = history.map((h) => h.price)
+  const min = Math.min(...prices)
+  const max = Math.max(...prices)
+  if (max === min) return null
+  const W = 260
+  const H = 64
+  const pts = history.map((h, i) => {
+    const x = (i / (history.length - 1)) * (W - 4) + 2
+    const y = H - 6 - ((h.price - min) / (max - min)) * (H - 14)
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  })
+  const first = history[0].price
+  const last = history[history.length - 1].price
+  const down = last < first
+  return (
+    <div className="mt-3">
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-16 w-full" aria-hidden>
+        <polyline
+          points={pts.join(' ')}
+          fill="none"
+          stroke={down ? '#16a34a' : '#d97706'}
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+      </svg>
+      <p className={`text-xs ${down ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'}`}>
+        {down ? '▼' : '▲'}{' '}
+        {ar
+          ? (down ? 'السعر نزل' : 'السعر زاد') + ` بمقدار ${Math.abs(Math.round(((last - first) / first) * 100))}% عبر ${history.length} تسجيلات`
+          : (down ? 'Price dropped' : 'Price increased') + ` by ${Math.abs(Math.round(((last - first) / first) * 100))}% across ${history.length} records`}
+      </p>
+    </div>
+  )
+}
+
+export default function UnitView({ unit, gallery, priceHistory = [] }: { unit: UnitDetail; gallery: string[]; priceHistory?: Array<{ price: number; recordedAt: Date }> }) {
   const { lang } = useLanguage()
   const ar = lang === 'ar'
 
@@ -205,6 +244,9 @@ export default function UnitView({ unit, gallery }: { unit: UnitDetail; gallery:
                 {unit.pricePerSqm && (
                   <p className="mb-4 text-sm text-muted-foreground">{formatEGP(unit.pricePerSqm)}{ar ? '/للمتر' : '/sqm'}</p>
                 )}
+
+                {/* Recorded price history trend (F-watch companion) */}
+                <PriceTrend history={priceHistory} ar={ar} />
 
                 {unit.downPayment != null && (
                   <div className="mb-3 flex justify-between gap-3 text-sm">

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { inquirySchema, type InquiryInput } from '@/lib/validations'
+import { visitSourceLine } from '@/lib/visit-source'
 import { useLanguage } from '@/lib/language-context'
 import { Reveal } from '@/components/design'
 
@@ -45,7 +46,7 @@ function ContactForm() {
       const res = await fetch('/api/inquiries', {
         method: 'POST',
         headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, source: visitSourceLine('WEBSITE') }),
       })
       const payload = await res.json().catch(() => ({}))
       if (res.ok) {

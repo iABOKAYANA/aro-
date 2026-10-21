@@ -178,6 +178,7 @@ model DeveloperProfile {
   userId            String  @unique
   companyName       String
   companyNameArabic String?
+  slug              String? @unique // public /developers/<slug> pages
   logo              String?
   coverImage        String?
   crNumber          String?

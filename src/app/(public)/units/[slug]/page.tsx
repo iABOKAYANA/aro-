@@ -67,6 +67,14 @@ export default async function UnitPage({ params }: UnitPageProps) {
   })
   if (!unit) notFound()
 
+  // Price history for the trend chart (oldest→newest; may be empty).
+  const priceHistory = await db.priceHistory.findMany({
+    where: { unitId: unit.id },
+    select: { price: true, recordedAt: true },
+    orderBy: { recordedAt: 'asc' },
+    take: 40,
+  })
+
   // Canonicalize: an id URL for a slug-bearing unit 301s to the slug URL so
   // links, sitemaps and og:url stay canonical (no duplicate-indexable pages).
   if (unit.slug && unit.slug !== params.slug) redirect(`/units/${unit.slug}`)
@@ -79,11 +87,44 @@ export default async function UnitPage({ params }: UnitPageProps) {
     gallery = []
   }
 
+  // RealEstateListing + BreadcrumbList structured data (rich results).
+  const canonical = unit.slug || unit.id
+  const ld = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'RealEstateListing',
+        name: `${unit.project.name} - ${unit.name}`,
+        url: `${SITE_URL}/units/${canonical}`,
+        image: absoluteImage(unit.project.coverImage) ?? undefined,
+        offers: {
+          '@type': 'Offer',
+          price: unit.price,
+          priceCurrency: 'EGP',
+          availability: 'https://schema.org/InStock',
+        },
+        ...(unit.area > 0
+          ? { floorSize: { '@type': 'QuantitativeValue', value: unit.area, unitCode: 'MTK' } }
+          : {}),
+        ...(unit.bedrooms ? { numberOfRooms: unit.bedrooms } : {}),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'المشاريع', item: `${SITE_URL}/projects` },
+          { '@type': 'ListItem', position: 2, name: unit.project.name, item: `${SITE_URL}/projects/${unit.project.slug}` },
+          { '@type': 'ListItem', position: 3, name: unit.name },
+        ],
+      },
+    ],
+  }
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
       {/* F6: journey view tracking (fire-and-forget) */}
       <JourneyViewTracker type="UNIT_VIEW" entityId={unit.id} />
-      <UnitView unit={unit} gallery={gallery} />
+      <UnitView unit={unit} gallery={gallery} priceHistory={priceHistory} />
     </>
   )
 }
