@@ -15,7 +15,14 @@ import {
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
+// Flag OFF → real 404 (generateMetadata runs before the stream starts).
+export async function generateMetadata(): Promise<Metadata> {
+  const flags = await getFeatureFlags()
+  if (!flags.buying_guide) notFound()
+  return metadata_
+}
+
+const metadata_: Metadata = {
   title: 'أمان شراء الوحدات على الخريطة في مصر | دليل غاية',
   description:
     'دليل عملية لشراء وحدة على الخريطة (off-plan) في مصر: إزاي تتأكد من المطور، اللي بيتحقق من العقد، المقدم والترميز، وما تتجاهله. Guide to buying off-plan safely in Egypt.',

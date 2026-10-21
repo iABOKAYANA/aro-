@@ -8,7 +8,14 @@ import { Badge } from '@/components/ui/badge'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
+// Flag OFF → real 404 (generateMetadata runs before the stream starts).
+export async function generateMetadata(): Promise<Metadata> {
+  const flags = await getFeatureFlags()
+  if (!flags.inquiry_tracking) notFound()
+  return metadata_
+}
+
+const metadata_: Metadata = {
   title: { absolute: 'تتبع استفسارك | GHAYA REAL ESTATE' },
   robots: { index: false },
 }

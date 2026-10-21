@@ -11,7 +11,15 @@ import { Badge } from '@/components/ui/badge'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
+// Flag OFF → real 404. Checked in generateMetadata because it runs before the
+// page stream starts (notFound() inside render alone still flushes a 200).
+export async function generateMetadata(): Promise<Metadata> {
+  const flags = await getFeatureFlags()
+  if (!flags.price_explorer) notFound()
+  return pricesMetadata
+}
+
+const pricesMetadata: Metadata = {
   title: 'أسعار المتر في مصر | اكتشف السوق ببيانات حقيقية',
   description:
     'متوسط وأقل سعر متر حسب المنطقة ونوع الوحدة — محسوبة من مخزون غاية الحقيقي (مش تقديرات). Price-per-sqm explorer computed from our real catalog.',
