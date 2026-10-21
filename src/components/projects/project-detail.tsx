@@ -511,8 +511,10 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
   const soldOut = project.status === 'SOLD_OUT' || (listedCount > 0 && availableCount === 0)
   const planCount = Array.isArray(project.paymentPlans) ? project.paymentPlans.length : 0
   const masterCount = Array.isArray(project.masterPlanImages) ? project.masterPlanImages.length : 0
-  // Phases section: only phases actually carrying units (never empty stubs)
-  const phaseRows = (Array.isArray(project.phases) ? project.phases : []).filter((ph: any) => (typeof ph === 'object' && (ph.totalUnits ?? 0) > 0))
+  // Phases section: EVERY phase of the project lives here (owner rule: a
+  // phase is always inside its parent project) — even pre-launch ones with
+  // no units yet; the units badge only appears when there is inventory.
+  const phaseRows = (Array.isArray(project.phases) ? project.phases : []).filter((ph: any) => typeof ph === 'object' && ph.name)
   const favCount = Number(project.favoriteCount) || 0
   const { average: revAvg, count: revCount, loaded: revLoaded, failed: revFailed } = useReviewsSummary(project.id)
   const searchParams = useSearchParams()
@@ -1010,8 +1012,8 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                   kicker={ar ? 'المراحل' : 'Phases'}
                   title={ar ? 'مراحل المشروع' : 'Project phases'}
                   description={ar
-                    ? 'كل مرحلة بعدد وحداتها المتاحة وسعر بدايتها — كل القيم محسوبة من المخزون الحقيقي.'
-                    : 'Each phase with its available units and starting price — every value derives from real inventory.'}
+                    ? 'مراحل المشروع كلها جوا المشروع نفسه — كل القيم (الوحدات والأسعار) من الملف المعتمد للمالك.'
+                    : 'Every phase lives inside its parent project — inventories and prices come straight from the owner\u2019s feed.'}
                 />
               </Reveal>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
