@@ -8,6 +8,7 @@ import { getAppMode, getAppType, type AppMode, type AppType } from '@/lib/app-ty
 // content. Every provider inside only touches localStorage/window inside
 // effects, so hydration stays stable.
 import { Providers } from '@/components/providers/providers'
+import { getFeatureFlags } from '@/lib/feature-flags'
 // Fonts live in ./fonts (next/font/google, arabic+latin subsets verified).
 // `inter` stays first in `font-sans` so Latin rendering is unchanged;
 // Arabic glyphs fall through to Plex Sans Arabic via unicode-range.
@@ -60,7 +61,7 @@ export const metadata: Metadata = {
   category: 'real estate',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
@@ -98,7 +99,7 @@ function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', '${gaId}');`}
         </Script>
-        <Providers appType={appType}>
+        <Providers appType={appType} initialFlags={await getFeatureFlags()}>
           {children}
         </Providers>
       </body>

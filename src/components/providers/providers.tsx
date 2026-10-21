@@ -22,7 +22,7 @@ function PwaBannerGate() {
 import type { ReactNode } from 'react'
 import type { AppType } from '@/lib/app-type'
 
-export function Providers({ children, appType = 'all' }: { children: ReactNode; appType?: AppType }) {
+export function Providers({ children, appType = 'all', initialFlags }: { children: ReactNode; appType?: AppType; initialFlags?: Record<string, boolean> }) {
   return (
     <ThemeProvider
       attribute="class"
@@ -32,7 +32,7 @@ export function Providers({ children, appType = 'all' }: { children: ReactNode; 
       storageKey="estateai-theme"
     >
       <LanguageProvider>
-        <FlagsProvider>
+        <FlagsProvider initial={initialFlags}>
           <CurrencyProvider>
           <CompareProvider>
             <SessionProvider>

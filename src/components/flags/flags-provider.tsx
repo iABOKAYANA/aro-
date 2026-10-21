@@ -24,8 +24,8 @@ async function loadFlags(): Promise<Record<string, boolean> | null> {
   }
 }
 
-export function FlagsProvider({ children }: { children: ReactNode }) {
-  const [flags, setFlags] = useState<Record<string, boolean> | null>(null)
+export function FlagsProvider({ children, initial }: { children: ReactNode; initial?: Record<string, boolean> }) {
+  const [flags, setFlags] = useState<Record<string, boolean> | null>(initial || null)
 
   useEffect(() => {
     let alive = true
