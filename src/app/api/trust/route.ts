@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { isPublicProject } from '@/lib/project-visibility'
+import { isPublicProject, PUBLIC_CHILD_PROJECT_WHERE } from '@/lib/project-visibility'
 import { readTrust, summarizeTrust, trustLabel, freshnessDays, type TrustStatus } from '@/lib/trust'
 
 export const dynamic = 'force-dynamic'
@@ -33,7 +33,23 @@ export async function GET(req: Request) {
     if (projectId) {
       const p = await db.project.findUnique({
         where: { id: projectId },
-        select: { dataTrust: true, approvalStatus: true, isActive: true, startPrice: true, units: { where: { price: { gt: 0 } }, take: 1, select: { id: true, price: true } } },
+        select: {
+          dataTrust: true,
+          approvalStatus: true,
+          isActive: true,
+          parentProjectId: true,
+          startPrice: true,
+          units: { where: { price: { gt: 0 } }, take: 1, select: { id: true, price: true } },
+          childProjects: {
+            where: PUBLIC_CHILD_PROJECT_WHERE,
+            select: {
+              isActive: true,
+              approvalStatus: true,
+              startPrice: true,
+              units: { where: { price: { gt: 0 } }, take: 1, select: { price: true } },
+            },
+          },
+        },
       })
       if (!p || !isPublicProject(p)) return NextResponse.json({ error: 'Project not found' }, { status: 404 })
       raw = p.dataTrust

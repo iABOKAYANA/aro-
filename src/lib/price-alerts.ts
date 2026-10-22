@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { notifyUser } from '@/lib/notify'
 import { readBoolSetting } from '@/lib/system-settings'
-import { isPublicProject } from '@/lib/project-visibility'
+import { isPublicProject, PUBLIC_CHILD_PROJECT_WHERE } from '@/lib/project-visibility'
 
 // ─── PRICE-DROP ALERTS (watched homes) ─────────────────────
 // One dedicated notification per watcher when a watched unit's price — or a
@@ -100,8 +100,18 @@ export async function notifyCityWatchersForProject(projectId: string): Promise<n
           slug: true,
           isActive: true,
           approvalStatus: true,
+          parentProjectId: true,
           startPrice: true,
           units: { where: { price: { gt: 0 } }, take: 1, select: { id: true, price: true } },
+          childProjects: {
+            where: PUBLIC_CHILD_PROJECT_WHERE,
+            select: {
+              isActive: true,
+              approvalStatus: true,
+              startPrice: true,
+              units: { where: { price: { gt: 0 } }, take: 1, select: { price: true } },
+            },
+          },
           city: { select: { name: true, nameArabic: true, nameSlug: true } },
         },
       })

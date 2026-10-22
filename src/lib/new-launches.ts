@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { newLaunchesConfigSchema } from '@/lib/validations'
-import { PUBLIC_PROJECT_WHERE } from '@/lib/project-visibility'
+import { PUBLIC_CHILD_PROJECT_WHERE, PUBLIC_PROJECT_WHERE } from '@/lib/project-visibility'
 
 // ─── "New Launches" section configuration ──────────────────
 // The homepage "New Launches" band used to be purely automatic
@@ -99,6 +99,18 @@ export const LAUNCH_PROJECT_SELECT = {
   governorate: { select: { name: true, nameArabic: true } },
   city: { select: { name: true, nameArabic: true, nameSlug: true } },
   district: { select: { name: true, nameArabic: true } },
+  childProjects: {
+    where: PUBLIC_CHILD_PROJECT_WHERE,
+    select: {
+      startPrice: true,
+      units: {
+        where: { status: 'AVAILABLE', isSample: false },
+        orderBy: { price: 'asc' },
+        take: 1,
+        select: { price: true },
+      },
+    },
+  },
 } as const
 
 /**

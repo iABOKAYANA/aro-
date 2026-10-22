@@ -34,6 +34,7 @@ interface ProjectCardProps {
     district?: { name: string; nameArabic?: string | null } | null
     developer?: { companyName: string; logo?: string | null; isVerified: boolean } | null
     units?: { price: number; area: number; bedrooms?: number | null }[]
+    childProjects?: { startPrice?: number | null; units?: { price: number }[] }[]
     amenities?: { amenity: { name: string; icon?: string | null } }[]
     masterPlanImages?: { id?: string; url: string; caption?: string | null }[]
   }
@@ -66,9 +67,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
     project.city?.name,
   ].filter(Boolean).join(', ')
 
-  const lowestPrice = project.units?.length
-    ? Math.min(...project.units.map(u => u.price))
-    : project.startPrice
+  const cardPrices = [
+    ...(project.units?.length ? project.units.map((u) => u.price) : [project.startPrice]),
+    ...(project.childProjects || []).flatMap((child) => [child.startPrice, ...(child.units || []).map((u) => u.price)]),
+  ].filter((price): price is number => typeof price === 'number' && Number.isFinite(price) && price > 0)
+  const lowestPrice = cardPrices.length ? Math.min(...cardPrices) : null
 
   const status = STATUS_MAP[project.status] || STATUS_MAP.AVAILABLE
   const projectName = lang === 'ar' && project.nameArabic ? project.nameArabic : project.name

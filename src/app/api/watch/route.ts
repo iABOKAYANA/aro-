@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { logAudit } from '@/lib/permissions'
 import { readTargetSnapshot, type WatchTargetType } from '@/lib/watch'
-import { isPublicProject } from '@/lib/project-visibility'
+import { isPublicProject, PUBLIC_CHILD_PROJECT_WHERE } from '@/lib/project-visibility'
 import { parseJsonSafe } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -47,7 +47,27 @@ async function targetExists(targetType: AnyWatchTarget, targetId: string): Promi
     const unit = await db.unit.findUnique({ where: { id: targetId }, select: { id: true, name: true, projectId: true } })
     return unit ? { ok: true, name: unit.name, projectId: unit.projectId } : { ok: false }
   }
-  const project = await db.project.findUnique({ where: { id: targetId }, select: { id: true, name: true, approvalStatus: true, isActive: true, startPrice: true, units: { where: { price: { gt: 0 } }, take: 1, select: { id: true, price: true } } } })
+  const project = await db.project.findUnique({
+    where: { id: targetId },
+    select: {
+      id: true,
+      name: true,
+      approvalStatus: true,
+      isActive: true,
+      parentProjectId: true,
+      startPrice: true,
+      units: { where: { price: { gt: 0 } }, take: 1, select: { id: true, price: true } },
+      childProjects: {
+        where: PUBLIC_CHILD_PROJECT_WHERE,
+        select: {
+          isActive: true,
+          approvalStatus: true,
+          startPrice: true,
+          units: { where: { price: { gt: 0 } }, take: 1, select: { price: true } },
+        },
+      },
+    },
+  })
   if (!project) return { ok: false }
   const visible = isPublicProject(project)
   return visible ? { ok: true, name: project.name } : { ok: false }

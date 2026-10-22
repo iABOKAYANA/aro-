@@ -515,6 +515,8 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
   // phase is always inside its parent project) — even pre-launch ones with
   // no units yet; the units badge only appears when there is inventory.
   const phaseRows = (Array.isArray(project.phases) ? project.phases : []).filter((ph: any) => typeof ph === 'object' && ph.name)
+  const childProjectRows = (Array.isArray(project.childProjects) ? project.childProjects : []).filter((child: any) => typeof child === 'object' && child.name)
+  const nestedCount = phaseRows.length + childProjectRows.length
   const favCount = Number(project.favoriteCount) || 0
   const { average: revAvg, count: revCount, loaded: revLoaded, failed: revFailed } = useReviewsSummary(project.id)
   const searchParams = useSearchParams()
@@ -632,8 +634,10 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
               {project.masterPlanImages?.length > 0 && (
                 <TabsTrigger value="masterplan" className="max-w-full whitespace-normal text-center min-h-[44px] md:min-h-0 md:whitespace-nowrap">{ar ? `المستر بلان (${masterCount})` : `Master Plan (${masterCount})`}</TabsTrigger>
               )}
-              {phaseRows.length > 0 && (
-                <TabsTrigger value="phases" className="max-w-full whitespace-normal text-center min-h-[44px] md:min-h-0 md:whitespace-nowrap">{ar ? `المراحل (${phaseRows.length})` : `Phases (${phaseRows.length})`}</TabsTrigger>
+              {nestedCount > 0 && (
+                <TabsTrigger value="phases" className="max-w-full whitespace-normal text-center min-h-[44px] md:min-h-0 md:whitespace-nowrap">
+                  {ar ? `المراحل والمشاريع التابعة (${nestedCount})` : `Phases & sub-projects (${nestedCount})`}
+                </TabsTrigger>
               )}
               <TabsTrigger value="amenities" className="max-w-full whitespace-normal text-center min-h-[44px] md:min-h-0 md:whitespace-nowrap">{ar ? 'المرافق' : 'Amenities'}</TabsTrigger>
               <TabsTrigger value="location" className="max-w-full whitespace-normal text-center min-h-[44px] md:min-h-0 md:whitespace-nowrap">{ar ? 'الموقع' : 'Location'}</TabsTrigger>
@@ -1009,14 +1013,14 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
             <TabsContent value="phases" className="space-y-4">
               <Reveal>
                 <SectionHeader
-                  kicker={ar ? 'المراحل' : 'Phases'}
-                  title={ar ? 'مراحل المشروع' : 'Project phases'}
+                  kicker={ar ? 'المراحل والمشاريع التابعة' : 'Project structure'}
+                  title={ar ? 'تفاصيل المشروع من جوّه' : 'Inside this project'}
                   description={ar
-                    ? 'مراحل المشروع كلها جوا المشروع نفسه — كل القيم (الوحدات والأسعار) من الملف المعتمد للمالك.'
-                    : 'Every phase lives inside its parent project — inventories and prices come straight from the owner\u2019s feed.'}
+                    ? 'المراحل والمشاريع التابعة بتظهر هنا جوه المشروع الأم، مش كصفحات مشاريع مستقلة.'
+                    : 'Phases and nested projects live here inside the parent, never as standalone project pages.'}
                 />
               </Reveal>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {phaseRows.length > 0 && <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {phaseRows.map((ph: any, idx: number) => (
                   <Reveal key={ph.id} variant="wipe" delay={(idx % 2) * 100}>
                     <div className="h-full rounded-2xl border border-gray-200 bg-white p-4 dark:border-[#262626] dark:bg-[#0A0A0A]">
@@ -1048,7 +1052,72 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                     </div>
                   </Reveal>
                 ))}
-              </div>
+              </div>}
+
+              {childProjectRows.length > 0 && (
+                <section className="space-y-3" aria-label={ar ? 'المشاريع التابعة' : 'Nested projects'}>
+                  <h3 className="font-display text-xl font-semibold">{ar ? 'مشاريع جوه المشروع الأم' : 'Projects inside the parent'}</h3>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {childProjectRows.map((child: any, idx: number) => {
+                      const childUnits = Array.isArray(child.units) ? child.units : []
+                      const unitPrices = childUnits.map((u: any) => Number(u.price)).filter((n: number) => Number.isFinite(n) && n > 0)
+                      const childStart = unitPrices.length ? Math.min(...unitPrices) : child.startPrice
+                      let childTypes: string[] = []
+                      try {
+                        const parsed = typeof child.propertyTypes === 'string' ? JSON.parse(child.propertyTypes) : child.propertyTypes
+                        if (Array.isArray(parsed)) childTypes = parsed.filter((type: unknown): type is string => typeof type === 'string' && type !== 'UNKNOWN').slice(0, 4)
+                      } catch { childTypes = [] }
+                      const childName = ar ? (child.nameArabic || child.name) : child.name
+                      const childDescription = ar
+                        ? (child.taglineArabic || child.descriptionArabic || child.tagline || child.description)
+                        : (child.tagline || child.description)
+
+                      return (
+                        <Reveal key={child.id} variant="wipe" delay={(idx % 2) * 100}>
+                          <article className="h-full overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-[#262626] dark:bg-[#0A0A0A]">
+                            {child.coverImage && (
+                              <div className="relative h-40 w-full bg-muted">
+                                <Image src={child.coverImage} alt={childName} fill sizes="(max-width: 640px) 100vw, 50vw" className="object-cover" />
+                              </div>
+                            )}
+                            <div className="p-4">
+                              <div className="flex flex-wrap items-start justify-between gap-2">
+                                <h4 className="font-display min-w-0 break-words text-lg font-semibold">{childName}</h4>
+                                <Badge variant="secondary">{ar ? 'داخل المشروع الأم' : 'Part of this parent'}</Badge>
+                              </div>
+                              {(child.city?.nameArabic || child.city?.name || child.address) && (
+                                <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                                  <MapPin className="h-3 w-3" />{ar ? (child.city?.nameArabic || child.city?.name || child.address) : (child.city?.name || child.address)}
+                                </p>
+                              )}
+                              {childDescription && childDescription !== '.' && <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{childDescription}</p>}
+                              {childTypes.length > 0 && (
+                                <div className="mt-3 flex flex-wrap gap-1.5">
+                                  {childTypes.map((type) => <Badge key={type} variant="outline">{type.replace(/_/g, ' ')}</Badge>)}
+                                </div>
+                              )}
+                              {childStart != null && childStart > 0 && (
+                                <p className="mt-3 font-display text-lg font-bold text-estate-gold">{ar ? 'يبدأ من ' : 'From '}{formatEGP(childStart)}</p>
+                              )}
+                              {childUnits.length > 0 && (
+                                <div className="mt-3 space-y-2 border-t border-border pt-3">
+                                  <p className="text-xs font-semibold text-muted-foreground">{ar ? 'نماذج وحدات متاحة' : 'Available unit examples'}</p>
+                                  {childUnits.map((unit: any) => (
+                                    <div key={unit.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs">
+                                      <span className="text-foreground">{unit.unitType?.replace(/_/g, ' ')}{unit.area ? ` · ${formatSQM(unit.area)}` : ''}</span>
+                                      <span className="font-semibold text-estate-gold">{formatEGP(unit.price)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </article>
+                        </Reveal>
+                      )
+                    })}
+                  </div>
+                </section>
+              )}
             </TabsContent>
 
             <TabsContent value="amenities">

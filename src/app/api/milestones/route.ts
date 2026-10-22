@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { logAudit } from '@/lib/permissions'
-import { isPublicProject } from '@/lib/project-visibility'
+import { isPublicProject, PUBLIC_CHILD_PROJECT_WHERE } from '@/lib/project-visibility'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,7 +51,27 @@ export async function GET(req: Request) {
     const role = (user?.role as string) || null
     const isCEO = role === 'CEO' || role === 'ADMIN'
 
-    const project = await db.project.findUnique({ where: { id: projectId }, select: { id: true, developerId: true, approvalStatus: true, isActive: true, startPrice: true, units: { where: { price: { gt: 0 } }, take: 1, select: { id: true, price: true } } } })
+    const project = await db.project.findUnique({
+      where: { id: projectId },
+      select: {
+        id: true,
+        developerId: true,
+        approvalStatus: true,
+        isActive: true,
+        parentProjectId: true,
+        startPrice: true,
+        units: { where: { price: { gt: 0 } }, take: 1, select: { id: true, price: true } },
+        childProjects: {
+          where: PUBLIC_CHILD_PROJECT_WHERE,
+          select: {
+            isActive: true,
+            approvalStatus: true,
+            startPrice: true,
+            units: { where: { price: { gt: 0 } }, take: 1, select: { price: true } },
+          },
+        },
+      },
+    })
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 })
 
     // Scope: public/regular users → APPROVED only (and project must be visible)

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getNewLaunchesConfig, computeIsNewLaunch } from '@/lib/new-launches'
-import { PUBLIC_PROJECT_WHERE } from '@/lib/project-visibility'
+import { PUBLIC_CHILD_PROJECT_WHERE, PUBLIC_PROJECT_WHERE } from '@/lib/project-visibility'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,6 +23,18 @@ export async function GET(request: NextRequest) {
         city: { select: { name: true, nameArabic: true, nameSlug: true } },
         district: { select: { name: true, nameArabic: true } },
         masterPlanImages: { orderBy: { sortOrder: 'asc' } },
+        childProjects: {
+          where: PUBLIC_CHILD_PROJECT_WHERE,
+          select: {
+            startPrice: true,
+            units: {
+              where: { status: 'AVAILABLE', isSample: false },
+              orderBy: { price: 'asc' },
+              take: 1,
+              select: { price: true },
+            },
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
       take: limit,

@@ -294,6 +294,8 @@ model Project {
   listingTypes          String    @default("[]") // JSON array
   status                String    @default("COMING_SOON")
   approvalStatus        String    @default("DRAFT") // DRAFT | PENDING | APPROVED | REJECTED | PUBLISHED | HIDDEN | ARCHIVED
+  isParent              Boolean   @default(false)
+  parentProjectId       String?
   rejectionReason       String?
   totalUnits            Int?
   totalArea             Float?
@@ -326,6 +328,8 @@ model Project {
   updatedAt   DateTime  @updatedAt
 
   developer        DeveloperProfile      @relation(fields: [developerId], references: [id], onDelete: Cascade)
+  parentProject    Project?              @relation("ProjectHierarchy", fields: [parentProjectId], references: [id], onDelete: Restrict)
+  childProjects    Project[]             @relation("ProjectHierarchy")
   governorate      Governorate?          @relation(fields: [governorateId], references: [id])
   city             City?                 @relation(fields: [cityId], references: [id])
   district         District?             @relation(fields: [districtId], references: [id])
@@ -345,6 +349,8 @@ model Project {
   commissionRules  CommissionRule[]
   brokerAccess     BrokerProjectAccess[]
   reviews          Review[]
+
+  @@index([parentProjectId])
 }
 
 model ProjectPhase {
@@ -362,10 +368,10 @@ model ProjectPhase {
   // Owner control: a phase can be spotlighted as a "new launch" — always
   // INSIDE its parent project (never a standalone project) — whenever the
   // owner decides, with an optional launch date for the announcement.
-  isLaunch    Boolean   @default(false)
-  launchDate  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  isLaunch     Boolean   @default(false)
+  launchDate   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   units        Unit[]
@@ -553,16 +559,16 @@ model ProjectBrochure {
 // come from the owner/CEO, never auto-generated into the catalog.
 
 model ProjectQuestion {
-  id          String   @id @default(cuid())
-  projectId   String
-  slug        String // project slug denormalized for public lookups
-  name        String // asker display name (self-reported)
-  phone       String? // optional, for the CEO to follow up privately
-  question    String
-  answer      String?
-  status      String   @default("PENDING") // PENDING | ANSWERED | PUBLISHED | REJECTED
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  projectId String
+  slug      String // project slug denormalized for public lookups
+  name      String // asker display name (self-reported)
+  phone     String? // optional, for the CEO to follow up privately
+  question  String
+  answer    String?
+  status    String   @default("PENDING") // PENDING | ANSWERED | PUBLISHED | REJECTED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 

@@ -39,6 +39,7 @@ export async function GET(
             status: true,
             approvalStatus: true,
             isActive: true,
+            parentProjectId: true,
             startPrice: true,
             completionPercent: true,
             deliveryDate: true,

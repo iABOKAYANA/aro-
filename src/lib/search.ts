@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import type { PropertyFilterInput } from '@/lib/validations'
 import type { SearchResult } from '@/types'
-import { PUBLIC_PROJECT_WHERE, PUBLIC_UNIT_PROJECT_WHERE } from '@/lib/project-visibility'
+import { PUBLIC_CHILD_PROJECT_WHERE, PUBLIC_PROJECT_WHERE, PUBLIC_UNIT_PROJECT_WHERE } from '@/lib/project-visibility'
 
 export async function searchProjects(filters: PropertyFilterInput & { developer?: string; amenities?: string | string[] }) {
   const {
@@ -44,6 +44,19 @@ export async function searchProjects(filters: PropertyFilterInput & { developer?
         { description: { contains: q } },
         { tagline: { contains: q } },
         { developer: { companyName: { contains: q } } },
+        {
+          childProjects: {
+            some: {
+              ...PUBLIC_CHILD_PROJECT_WHERE,
+              OR: [
+                { name: { contains: q } },
+                { nameArabic: { contains: q } },
+                { description: { contains: q } },
+                { tagline: { contains: q } },
+              ],
+            },
+          },
+        },
       ],
     })
   }
@@ -58,10 +71,20 @@ export async function searchProjects(filters: PropertyFilterInput & { developer?
     where.district = { nameSlug: district }
   }
   if (propertyType) {
-    where.propertyTypes = { contains: propertyType }
+    and.push({
+      OR: [
+        { propertyTypes: { contains: propertyType } },
+        { childProjects: { some: { ...PUBLIC_CHILD_PROJECT_WHERE, propertyTypes: { contains: propertyType } } } },
+      ],
+    })
   }
   if (listingType) {
-    where.listingTypes = { contains: listingType }
+    and.push({
+      OR: [
+        { listingTypes: { contains: listingType } },
+        { childProjects: { some: { ...PUBLIC_CHILD_PROJECT_WHERE, listingTypes: { contains: listingType } } } },
+      ],
+    })
   }
   if (status) {
     where.status = status
@@ -94,6 +117,17 @@ export async function searchProjects(filters: PropertyFilterInput & { developer?
       OR: [
         { startPrice: priceFilter },
         { units: { some: { price: priceFilter, isSample: false } } },
+        {
+          childProjects: {
+            some: {
+              ...PUBLIC_CHILD_PROJECT_WHERE,
+              OR: [
+                { startPrice: priceFilter },
+                { units: { some: { price: priceFilter, isSample: false } } },
+              ],
+            },
+          },
+        },
       ],
     })
   }
@@ -110,7 +144,12 @@ export async function searchProjects(filters: PropertyFilterInput & { developer?
   if (maxArea) areaFilter.lte = maxArea
   if (Object.keys(areaFilter).length > 0) unitMatch.area = areaFilter
   if (Object.keys(unitMatch).length > 0) {
-    and.push({ units: { some: { ...unitMatch, isSample: false } } })
+    and.push({
+      OR: [
+        { units: { some: { ...unitMatch, isSample: false } } },
+        { childProjects: { some: { ...PUBLIC_CHILD_PROJECT_WHERE, units: { some: { ...unitMatch, isSample: false } } } } },
+      ],
+    })
   }
 
   if (and.length > 0) {
@@ -147,6 +186,19 @@ export async function searchProjects(filters: PropertyFilterInput & { developer?
           take: 6,
         },
         masterPlanImages: { orderBy: { sortOrder: 'asc' } },
+        childProjects: {
+          where: PUBLIC_CHILD_PROJECT_WHERE,
+          select: {
+            id: true,
+            startPrice: true,
+            units: {
+              where: { status: 'AVAILABLE', isSample: false },
+              orderBy: { price: 'asc' },
+              take: 1,
+              select: { price: true },
+            },
+          },
+        },
       },
       orderBy,
       skip: (page - 1) * limit,
@@ -208,6 +260,35 @@ export async function getProjectBySlug(slug: string, options: { representativeUn
       }),
       phases: {
         orderBy: { sortOrder: 'asc' },
+      },
+      childProjects: {
+        where: PUBLIC_CHILD_PROJECT_WHERE,
+        orderBy: { name: 'asc' },
+        select: {
+          id: true,
+          name: true,
+          nameArabic: true,
+          isActive: true,
+          approvalStatus: true,
+          tagline: true,
+          taglineArabic: true,
+          description: true,
+          descriptionArabic: true,
+          coverImage: true,
+          address: true,
+          propertyTypes: true,
+          startPrice: true,
+          endPrice: true,
+          status: true,
+          totalArea: true,
+          city: { select: { name: true, nameArabic: true } },
+          units: {
+            where: { status: 'AVAILABLE', isSample: false },
+            orderBy: { price: 'asc' },
+            take: 3,
+            select: { id: true, slug: true, name: true, unitType: true, price: true, area: true },
+          },
+        },
       },
       paymentPlans: {
         include: { milestones: { orderBy: { sortOrder: 'asc' } } },

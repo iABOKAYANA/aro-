@@ -144,6 +144,24 @@ export async function PATCH(
       }
     }
 
+    // Preserve the one-developer, one-level hierarchy if a CEO changes a
+    // linked project's developer. Reparent/detach first when it would break
+    // the family invariant.
+    if (typeof updateData.developerId === 'string' && updateData.developerId !== existing.developerId) {
+      if (existing.parentProjectId) {
+        const parent = await db.project.findUnique({ where: { id: existing.parentProjectId }, select: { developerId: true } })
+        if (parent && parent.developerId !== updateData.developerId) {
+          return NextResponse.json({ error: 'افصل المشروع من أبيه قبل تغيير المطور.' }, { status: 409 })
+        }
+      }
+      const mismatchedChildren = await db.project.count({
+        where: { parentProjectId: existing.id, developerId: { not: updateData.developerId } },
+      })
+      if (mismatchedChildren > 0) {
+        return NextResponse.json({ error: 'افصل المشاريع التابعة الأول قبل تغيير المطور.' }, { status: 409 })
+      }
+    }
+
     if (updateFields.propertyTypes !== undefined) {
       updateData.propertyTypes = JSON.stringify(updateFields.propertyTypes)
     }
@@ -294,6 +312,10 @@ export async function DELETE(
     const hard = searchParams.get('hard') === 'true'
 
     if (hard) {
+      const childrenCount = await db.project.count({ where: { parentProjectId: params.id } })
+      if (childrenCount > 0) {
+        return NextResponse.json({ error: 'افصل المشاريع التابعة الأول قبل حذف المشروع الأم نهائيًا.' }, { status: 409 })
+      }
       await db.project.delete({ where: { id: params.id } })
     } else {
       await db.project.update({

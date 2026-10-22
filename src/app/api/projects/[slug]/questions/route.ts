@@ -47,7 +47,7 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
     }
 
     const project = await db.project.findFirst({
-      where: { slug: params.slug, isActive: true, approvalStatus: { in: ['APPROVED', 'PUBLISHED'] } },
+      where: { slug: params.slug, parentProjectId: null, isActive: true, approvalStatus: { in: ['APPROVED', 'PUBLISHED'] } },
       select: { id: true, slug: true },
     })
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 })

@@ -14,7 +14,7 @@ import {
   Loader2, MapPin, Building2, Users, Heart, MessageSquare, DollarSign,
   Image, FileText, Settings, Search, ChevronDown, AlertTriangle,
   Calendar, Globe, Upload, Plus, Trash2, RefreshCw, Archive, Shield,
-  Star, TrendingUp, Map, Tag, Camera, Video, Layout, Activity, Clock, Layers
+  Star, TrendingUp, Map, Tag, Camera, Video, Layout, Activity, Clock, Layers, GitBranch
 } from 'lucide-react'
 import { Reveal } from '@/components/design'
 
@@ -86,7 +86,7 @@ const EMPTY_UNIT_FORM = {
   status: 'AVAILABLE',
 }
 
-type Tab = 'overview' | 'units' | 'phases' | 'pricing' | 'content' | 'media' | 'location' | 'seo' | 'settings' | 'audit'
+type Tab = 'overview' | 'units' | 'phases' | 'hierarchy' | 'pricing' | 'content' | 'media' | 'location' | 'seo' | 'settings' | 'audit'
 type ProjectData = any
 
 function Badge({ label, colors }: { label: string; colors: string }) {
@@ -181,6 +181,11 @@ export default function CEOProjectDetailPage() {
   const [launchBusyPhaseId, setLaunchBusyPhaseId] = useState<string | null>(null)
   const [launchErr, setLaunchErr] = useState<string | null>(null)
   const [launchDateDraft, setLaunchDateDraft] = useState<Record<string, string>>({})
+  const [hierarchy, setHierarchy] = useState<any>(null)
+  const [hierarchyLoading, setHierarchyLoading] = useState(false)
+  const [hierarchyBusy, setHierarchyBusy] = useState(false)
+  const [hierarchyError, setHierarchyError] = useState<string | null>(null)
+  const [selectedChildId, setSelectedChildId] = useState('')
   const [rejectModal, setRejectModal] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
@@ -210,8 +215,24 @@ export default function CEOProjectDetailPage() {
     } catch { } finally { setAuditLoading(false) }
   }, [id])
 
+  const fetchHierarchy = useCallback(async () => {
+    setHierarchyLoading(true)
+    setHierarchyError(null)
+    try {
+      const res = await fetch(`/api/ceo/projects/${id}/hierarchy`)
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || (ar ? 'معرفناش نحمّل هيكل المشروع.' : 'Could not load project structure.'))
+      setHierarchy(data)
+    } catch (error: any) {
+      setHierarchyError(error?.message || (ar ? 'معرفناش نحمّل هيكل المشروع.' : 'Could not load project structure.'))
+    } finally {
+      setHierarchyLoading(false)
+    }
+  }, [id, ar])
+
   useEffect(() => { fetchProject() }, [fetchProject])
   useEffect(() => { if (activeTab === 'audit') fetchAuditLogs() }, [activeTab, fetchAuditLogs])
+  useEffect(() => { if (activeTab === 'hierarchy') fetchHierarchy() }, [activeTab, fetchHierarchy])
 
   const handleSave = async (section: string) => {
     setSaving(true)
@@ -252,6 +273,38 @@ export default function CEOProjectDetailPage() {
     } finally {
       setLaunchBusy(null)
     }
+  }
+
+  const saveHierarchy = async (payload: Record<string, unknown>) => {
+    setHierarchyBusy(true)
+    setHierarchyError(null)
+    try {
+      const res = await fetch(`/api/ceo/projects/${id}/hierarchy`, {
+        method: 'PATCH',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        setHierarchyError(data?.error || (ar ? 'الحركة دي منفعتش، جرّب تاني.' : 'That action failed, please try again.'))
+        return false
+      }
+      await Promise.all([fetchHierarchy(), fetchProject()])
+      return true
+    } catch {
+      setHierarchyError(ar ? 'الحركة دي منفعتش، جرّب تاني.' : 'That action failed, please try again.')
+      return false
+    } finally {
+      setHierarchyBusy(false)
+    }
+  }
+
+  const removeChildProject = async (child: any) => {
+    const message = ar
+      ? `هتفصل «${child.nameArabic || child.name}» من المشروع الأم، وهيظهر تاني كمشروع مستقل لو حالته تسمح. متأكد؟`
+      : `Remove “${child.name}” from this parent? It may become a standalone listing again if published. Continue?`
+    if (typeof window !== 'undefined' && !window.confirm(message)) return
+    await saveHierarchy({ action: 'remove', childProjectId: child.id })
   }
 
   const handleStatusAction = async (action: string, reason?: string) => {
@@ -398,6 +451,7 @@ export default function CEOProjectDetailPage() {
     { id: 'overview', label: 'Overview', labelAr: 'نظرة عامة', icon: Layout },
     { id: 'units', label: 'Units', labelAr: 'الوحدات', icon: Building2 },
     { id: 'phases', label: 'Phases', labelAr: 'المراحل', icon: Layers },
+    { id: 'hierarchy', label: 'Project Structure', labelAr: 'هيكل المشروع', icon: GitBranch },
     { id: 'pricing', label: 'Pricing', labelAr: 'الأسعار', icon: DollarSign },
     { id: 'content', label: 'Content', labelAr: 'المحتوى', icon: FileText },
     { id: 'media', label: 'Media', labelAr: 'الميديا', icon: Camera },
@@ -745,6 +799,146 @@ export default function CEOProjectDetailPage() {
               )}
             </CardContent>
           </Card>
+        )}
+
+        {activeTab === 'hierarchy' && (
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>{ar ? 'المشروع الأم والمشاريع التابعة' : 'Parent and nested projects'}</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {ar
+                    ? 'علّم المشروع كمشروع أم، وبعدها اختار مشاريع من نفس المطوّر عشان تظهر جواه بدل ما تظهر لوحدها للزوار.'
+                    : 'Mark this as a parent, then add projects from the same developer. Nested projects appear inside this project, not as standalone public listings.'}
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                {hierarchyError && (
+                  <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300" role="alert">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    <span>{hierarchyError}</span>
+                  </div>
+                )}
+
+                {hierarchyLoading ? (
+                  <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-[#D4A843]" /></div>
+                ) : hierarchy ? (
+                  <>
+                    <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border p-4 dark:border-[#262626]">
+                      <input
+                        type="checkbox"
+                        checked={!!hierarchy.project.isParent}
+                        disabled={hierarchyBusy || (!!hierarchy.project.parentProjectId && !hierarchy.project.isParent) || (!!hierarchy.project.isParent && hierarchy.project.childProjects.length > 0)}
+                        onChange={(e) => saveHierarchy({ isParent: e.target.checked })}
+                        className="mt-1 h-4 w-4 accent-[#D4A843]"
+                      />
+                      <span className="min-w-0">
+                        <span className="block font-semibold">{ar ? 'خلّي المشروع ده مشروع أم' : 'Make this a parent project'}</span>
+                        <span className="mt-1 block text-xs text-muted-foreground">
+                          {hierarchy.project.parentProjectId
+                            ? (ar ? 'افصل المشروع من أبيه الأول قبل ما تخليه مشروع أم.' : 'Detach this project from its parent before making it a parent.')
+                            : hierarchy.project.isParent && hierarchy.project.childProjects.length > 0
+                              ? (ar ? 'افصل المشاريع التابعة الأول قبل إلغاء صفة المشروع الأم.' : 'Detach the nested projects before turning off parent status.')
+                              : (ar ? 'تقدر تفعّله حتى لو مفيش مشاريع تابعة لسه.' : 'You can enable this even before adding any nested projects.')}
+                        </span>
+                      </span>
+                      {hierarchyBusy && <Loader2 className="ms-auto h-4 w-4 animate-spin text-[#D4A843]" />}
+                    </label>
+
+                    {hierarchy.project.parentProject && (
+                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D4A843]/30 bg-[#D4A843]/5 p-4">
+                        <div>
+                          <p className="text-xs text-muted-foreground">{ar ? 'المشروع الأم الحالي' : 'Current parent'}</p>
+                          <p className="font-semibold">{ar ? hierarchy.project.parentProject.nameArabic || hierarchy.project.parentProject.name : hierarchy.project.parentProject.name}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button variant="outline" size="sm" onClick={() => router.push(`/ceo/projects/${hierarchy.project.parentProject.id}`)}>
+                            {ar ? 'افتح المشروع الأم' : 'Open parent'}
+                          </Button>
+                          <Button variant="outline" size="sm" disabled={hierarchyBusy} onClick={() => removeChildProject({ ...hierarchy.project, name: hierarchy.project.nameArabic || hierarchy.project.name })}>
+                            {ar ? 'افصل من الأب' : 'Detach from parent'}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {hierarchy.project.isParent && !hierarchy.project.parentProjectId && (
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="font-semibold">{ar ? `المشاريع جوه المشروع الأم (${hierarchy.project.childProjects.length})` : `Projects inside this parent (${hierarchy.project.childProjects.length})`}</h3>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {ar ? 'المشاريع التابعة هتفضل محفوظة، لكنها مش هتظهر كصفحات مستقلة للزوار.' : 'Nested projects remain in the catalog, but won’t appear as standalone public pages.'}
+                          </p>
+                        </div>
+
+                        {hierarchy.project.childProjects.length > 0 ? (
+                          <div className="space-y-2">
+                            {hierarchy.project.childProjects.map((child: any) => (
+                              <div key={child.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3 dark:border-[#262626]">
+                                <div className="min-w-0">
+                                  <p className="truncate font-medium">{ar ? child.nameArabic || child.name : child.name}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {child.approvalStatus} · {child._count?.units ?? 0} {ar ? 'وحدة' : 'units'}
+                                    {child.startPrice != null ? ` · ${formatEGP(child.startPrice)}` : ''}
+                                  </p>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button variant="outline" size="sm" onClick={() => router.push(`/ceo/projects/${child.id}`)}>
+                                    {ar ? 'افتح' : 'Open'}
+                                  </Button>
+                                  <Button variant="ghost" size="sm" disabled={hierarchyBusy} onClick={() => removeChildProject(child)} className="text-red-400 hover:bg-red-500/10 hover:text-red-300">
+                                    <X className="me-1 h-4 w-4" />{ar ? 'افصل' : 'Detach'}
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="rounded-xl border border-dashed border-border py-5 text-center text-sm text-muted-foreground dark:border-[#262626]">
+                            {ar ? 'لسه مفيش مشاريع متضافة جوه المشروع الأم.' : 'No projects have been added to this parent yet.'}
+                          </p>
+                        )}
+
+                        <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                          <select
+                            value={selectedChildId}
+                            onChange={(e) => setSelectedChildId(e.target.value)}
+                            disabled={hierarchyBusy}
+                            className="min-h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground dark:border-[#262626]"
+                          >
+                            <option value="">{ar ? 'اختار مشروع تضيفه هنا…' : 'Choose a project to nest…'}</option>
+                            {(hierarchy.candidates || [])
+                              .filter((candidate: any) => candidate.id !== id && candidate.parentProjectId !== hierarchy.project.id)
+                              .map((candidate: any) => (
+                                <option key={candidate.id} value={candidate.id}>
+                                  {ar ? candidate.nameArabic || candidate.name : candidate.name}
+                                  {candidate.parentProject ? ` — ${ar ? 'حاليًا جوه' : 'currently in'} ${candidate.parentProject.name}` : ''}
+                                  {` · ${candidate.approvalStatus}`}
+                                </option>
+                              ))}
+                          </select>
+                          <Button
+                            disabled={hierarchyBusy || !selectedChildId}
+                            onClick={async () => {
+                              const ok = await saveHierarchy({ action: 'assign', childProjectId: selectedChildId })
+                              if (ok) setSelectedChildId('')
+                            }}
+                            className="bg-[#D4A843] text-black hover:bg-[#D4A843]/90"
+                          >
+                            {hierarchyBusy ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Plus className="me-2 h-4 w-4" />}
+                            {ar ? 'ضيف للمشروع الأم' : 'Add to parent'}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {ar ? 'الاختيار مقصور على مشاريع نفس المطوّر، ومفيش تداخل أكتر من مستوى واحد.' : 'Only projects from the same developer are eligible; nesting is limited to one level.'}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                ) : null}
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {activeTab === 'pricing' && (
