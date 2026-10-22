@@ -8,6 +8,9 @@ const { PrismaClient } = require('@prisma/client')
 
 const RUN = process.argv.includes('--run') || process.env.RUN === '1'
 const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9\u0621-\u064a]+/g, '')
+// This archived parent already owns Cluster 23. Keep the alias explicit so
+// it is not accidentally attached to the broader live "Hyde Park" project.
+const PARENT_OVERRIDES = { 'hyde-park-greens-cluster-23': 'hyde-park-greens' }
 
 function parseNumericStep(text) {
   const m = /(\d+)/.exec(text)
@@ -23,9 +26,9 @@ async function main() {
     orderBy: { name: 'asc' },
   })
   const shellSeeds = zeroUnit.filter((r) => r.approvalStatus === 'ARCHIVED')
-  // All projects (incl. live) as parent pool; shells excluded by live filter.
-  const all = await p.project.findMany({ select: { id: true, name: true, nameArabic: true, approvalStatus: true, developerId: true } })
-  const liveById = new Map(all.filter((x) => x.approvalStatus !== 'ARCHIVED').map((x) => [x.id, x]))
+  const all = await p.project.findMany({
+    select: { id: true, name: true, nameArabic: true, slug: true, approvalStatus: true, developerId: true },
+  })
 
   const report = []
   for (const shell of shellSeeds) {
@@ -40,8 +43,12 @@ async function main() {
       if (pr.developerId !== shell.developerId && shell.developerId !== pr.developerId) return false
       return true
     })
-    if (!cands.length) continue
-    const best = cands.sort((a, b) => norm(b.name).length - norm(a.name).length)[0]
+    const overrideSlug = PARENT_OVERRIDES[shell.slug]
+    const overrideParent = overrideSlug
+      ? all.find((pr) => pr.slug === overrideSlug && pr.developerId === shell.developerId)
+      : null
+    if (!cands.length && !overrideParent) continue
+    const best = overrideParent || cands.sort((a, b) => norm(b.name).length - norm(a.name).length)[0]
     const idx = shell.name.toLowerCase().indexOf(best.name.toLowerCase())
     const rawSuffix = idx === 0 ? shell.name.slice(best.name.length).trim() : shell.name
     const label = (rawSuffix || '').replace(/^[-_,\s]+/, '').replace(/[\s\-_,]+$/, '').trim() || 'Extra'

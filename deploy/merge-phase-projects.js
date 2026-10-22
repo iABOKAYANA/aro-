@@ -18,6 +18,13 @@ const norm = (s) =>
     .toLowerCase()
     .replace(/[^a-z0-9\u0621-\u064a]+/g, '')
 
+// Explicit aliases for a parent whose catalog title includes a geographic
+// qualifier while the standalone phase titles use the shorter brand name.
+// Keep this list narrow: fuzzy cross-developer merges are never acceptable.
+const PARENT_ALIASES = {
+  midtownwest: ['midtownnewzayedwest'],
+}
+
 // Arabic ordinal step for a sensible phase ordering inside the parent.
 const AR_ORDINAL = { 'الاولي': 1, 'الاولى': 1, 'الأولى': 1, 'الثانيه': 2, 'الثانية': 2, 'الثانبة': 2, 'الثالثه': 3, 'الثالثة': 3, 'الرابعة': 4, 'الرابعه': 4, 'الخامسة': 5, 'الخامسه': 5 }
 
@@ -62,16 +69,20 @@ function parseShell(name, nameArabic) {
   return { base, label, candidates, step: step || 0, arLabel }
 }
 
-function findParent(candidates, projects) {
+function findParent(candidates, projects, developerId) {
   const seen = []
+  // Never join phases across developers, even when project names overlap.
+  const sameDeveloper = projects.filter((p) => p.developerId === developerId)
   for (const cand of candidates) {
     const cn = norm(cand)
     if (!cn) continue
-    const exact = projects.find((p) => norm(p.name) === cn || norm(p.nameArabic) === cn)
-    const partial = projects.filter(
+    const exact = sameDeveloper.find((p) => norm(p.name) === cn || norm(p.nameArabic) === cn)
+    const partial = sameDeveloper.filter(
       (p) => (norm(p.name).includes(cn) || cn.includes(norm(p.name))) && norm(p.name).length >= 3
     )
-    const pool = exact ? [exact] : partial
+    const aliases = PARENT_ALIASES[cn] || []
+    const aliasMatches = sameDeveloper.filter((p) => aliases.includes(norm(p.name)) || aliases.includes(norm(p.nameArabic)))
+    const pool = exact ? [exact] : [...partial, ...aliasMatches]
     for (const p of pool) if (!seen.find((s) => s.id === p.id)) seen.push(p)
   }
   if (seen.length === 1) return { parent: seen[0], ambiguity: null, pool: seen }
@@ -88,12 +99,12 @@ async function main() {
   const shellIds = new Set(shells.map((s) => s.id))
   // Parent candidates NEVER include the phase shells themselves — a shell
   // must not become another shell's parent.
-  const projects = await p.project.findMany({ select: { id: true, name: true, nameArabic: true, approvalStatus: true } }).then((ps) => ps.filter((p2) => !shellIds.has(p2.id)))
+  const projects = await p.project.findMany({ select: { id: true, name: true, nameArabic: true, approvalStatus: true, developerId: true } }).then((ps) => ps.filter((p2) => !shellIds.has(p2.id)))
 
   const report = []
   for (const shell of shells) {
     const parsed = parseShell(shell.name, shell.nameArabic)
-    const { parent, ambiguity, pool } = findParent(parsed.candidates, projects)
+    const { parent, ambiguity, pool } = findParent(parsed.candidates, projects, shell.developerId)
 
     let phaseLabel = parsed.label || shell.name
     const arLabel = parsed.arLabel || shell.nameArabic
@@ -115,7 +126,9 @@ async function main() {
             nameArabic: arLabel || null,
             status: shell.status,
             deliveryDate: shell.deliveryDate || null,
-            totalUnits: shell.totalUnits || null,
+            // Unit totals on standalone catalog shells are not proof of the
+            // actual phase inventory; live counts are derived from Unit rows.
+            totalUnits: null,
             startPrice: shell.startPrice || null,
             endPrice: shell.endPrice || null,
             sortOrder: parsed.step,
