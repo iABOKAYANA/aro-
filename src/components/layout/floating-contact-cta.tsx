@@ -7,12 +7,16 @@ import { toTelHref, toWhatsAppHref } from '@/lib/contact-cta'
 import { cn } from '@/lib/utils'
 
 /**
- * Floating contact CTAs — the WhatsApp bubble + the phone-call button.
+ * Floating contact pills — the WhatsApp bubble + the phone-call button.
  * Mounted inside PageWidgets, so it shows on all public pages and stays
  * hidden on /ceo, /dashboard and /auth. Hidden-until-set: renders nothing
  * unless GET /api/public-config returns a non-empty cta number.
- * Stacked vertically above the "Ask Ain" bubble on the same side, so the
- * buttons never overlap each other, Ain, or back-to-top. RTL-safe.
+ * Single-stack rule: both pills live on the SAME side as the green
+ * WhatsAppBubble + "Ain" shortcut (see page-widgets), so exactly ONE edge
+ * of the page carries the contact stack and the other edge stays clean for
+ * back-to-top. The green WhatsAppBubble is the one WhatsApp entry point —
+ * when it is enabled this component drops its own duplicate WhatsApp pill
+ * and only expands to the call button.
  * Hover/focus expands each pill (CSS-only max-width transition, fixed
  * positioning so page content never shifts) to reveal its number, always
  * LTR. Touch: tap follows the link as before.
@@ -22,6 +26,7 @@ export function FloatingContactCta() {
   const isRtl = lang === 'ar'
   const [phone, setPhone] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
+  const [bubbleEnabled, setBubbleEnabled] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -33,6 +38,7 @@ export function FloatingContactCta() {
         if (cta && typeof cta === 'object') {
           if (typeof cta.phone === 'string') setPhone(cta.phone.trim())
           if (typeof cta.whatsapp === 'string') setWhatsapp(cta.whatsapp.trim())
+          if (typeof cta.enabled === 'boolean') setBubbleEnabled(cta.enabled)
         }
       })
       .catch(() => {
@@ -42,6 +48,10 @@ export function FloatingContactCta() {
       alive = false
     }
   }, [])
+
+  // WhatsAppBubble (providers level) renders the green bubble when enabled
+  // with a valid number — in that state our own WhatsApp pill is noise.
+  const bubbleVisible = bubbleEnabled && whatsapp.replace(/\D/g, '').length >= 7
 
   const items = (
     [
@@ -62,7 +72,9 @@ export function FloatingContactCta() {
         external: false,
       },
     ] as const
-  ).filter((b) => b.href !== null)
+  )
+    .filter((b) => b.href !== null)
+    .filter((b) => b.key !== 'whatsapp' || !bubbleVisible)
 
   if (items.length === 0) return null
 
@@ -76,8 +88,15 @@ export function FloatingContactCta() {
           aria-label={b.label}
           className={cn(
             'group fixed z-[60] flex h-12 max-w-[3rem] items-center overflow-hidden whitespace-nowrap rounded-full bg-estate-navy text-estate-gold shadow-xl ring-1 ring-estate-gold/40 transition-all duration-300 hover:max-w-[260px] hover:bg-estate-gold hover:text-estate-navy focus-visible:max-w-[260px] focus-visible:bg-estate-gold focus-visible:text-estate-navy focus-within:max-w-[260px] focus-within:bg-estate-gold focus-within:text-estate-navy dark:bg-black dark:hover:bg-estate-gold dark:hover:text-black dark:focus-visible:bg-estate-gold dark:focus-visible:text-black dark:focus-within:bg-estate-gold dark:focus-within:text-black',
-            isRtl ? 'right-6' : 'left-6',
-            i === 0 ? 'bottom-[max(6rem,calc(env(safe-area-inset-bottom)+4.5rem))]' : 'bottom-[max(10rem,calc(env(safe-area-inset-bottom)+8.5rem))]'
+            isRtl ? 'left-6' : 'right-6',
+            // Slot 1 of the stack (same side as Ain + green bubble):
+            // bubble visible → land the first pill ABOVE it (bottom-[10rem]);
+            // bubble hidden/dropped → this pill takes its slot (bottom-[6rem]).
+            i === 0
+              ? bubbleVisible
+                ? 'bottom-[max(10rem,calc(env(safe-area-inset-bottom)+8.5rem))]'
+                : 'bottom-[max(6rem,calc(env(safe-area-inset-bottom)+4.5rem))]'
+              : 'bottom-[max(10rem,calc(env(safe-area-inset-bottom)+8.5rem))]'
           )}
         >
           <span className="flex h-12 w-12 shrink-0 items-center justify-center">

@@ -282,16 +282,30 @@ export function ExploreLocations() {
           />
 
           <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2">
-            <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-              {lang === 'ar' ? '3 مناطق الأكثر بحثاً — ' : 'Top 3 most-searched areas — '}
-              <Link
-                href="/locations"
-                className="inline-flex items-center gap-2 font-medium transition-colors hover:text-foreground"
-              >
-                {lang === 'ar' ? 'كل المناطق' : 'All areas'}
-                <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-              </Link>
-            </span>
+            {/* Real chips — the top 3 cities by project count, once loaded
+                (no empty "top 3" claim before data arrives). */}
+            {cards.length > 0 && (
+              <span className="inline-flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                <span className="shrink-0">{lang === 'ar' ? 'المناطق الأكثر عرضًا —' : 'Areas with most projects —'}</span>
+                {cards.map((c) => (
+                  <Link
+                    key={c.slug}
+                    href={`/projects?city=${c.slug}`}
+                    className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-foreground transition-colors hover:bg-estate-gold/15 hover:text-estate-gold dark:bg-black"
+                  >
+                    {lang === 'ar' && c.nameArabic ? c.nameArabic : c.name}
+                    <span className="ms-1.5 text-[10px] font-normal text-muted-foreground">{c.count}</span>
+                  </Link>
+                ))}
+              </span>
+            )}
+            <Link
+              href="/locations"
+              className="inline-flex shrink-0 items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {lang === 'ar' ? 'كل المناطق' : 'All areas'}
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+            </Link>
             <Link
               href="/areas"
               className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"

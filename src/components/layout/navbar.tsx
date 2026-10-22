@@ -5,7 +5,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import { Menu, X, Globe, User, LogOut, LayoutDashboard, Heart, Sun, Moon, Monitor, BellRing } from 'lucide-react'
-import { getInitials } from '@/lib/utils'
+import { cn, getInitials } from '@/lib/utils'
 import { useLanguage } from '@/lib/language-context'
 import { useFeatureFlag } from '@/components/flags/flags-provider'
 import { BrandLogo } from '@/components/layout/brand-logo'
@@ -40,7 +40,9 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
   // effectively can't exist there, so no user-menu ever renders on public.
   const showAuth = appType !== 'public'
 
-  const allNavLinks = isRtl
+  // `wideOnly` marks labels long enough to crowd the bar on md/lg screens —
+  // they only appear from xl up so the nav never wraps mid-label.
+  const allNavLinks: Array<{ href: string; label: string; wideOnly?: boolean }> = isRtl
     ? [
         { href: '/projects', label: 'المشاريع' },
         { href: '/offers', label: 'العروض' },
@@ -57,7 +59,7 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
         { href: '/ai-tools', label: 'Discover' },
         { href: '/prices', label: 'Market Prices' },
         { href: '/about', label: 'About' },
-        { href: '/ai-tools/chat', label: 'Your Assistant' },
+        { href: '/ai-tools/chat', label: 'Your Assistant', wideOnly: true },
       ]
   // Public host: the saved/favorites entry is an account surface — hidden
   // with the rest of the auth chrome (`/saved` itself stays anonymous-first).
@@ -72,12 +74,15 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
           <BrandLogo hideWordmarkOnMobile />
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-6 whitespace-nowrap lg:flex xl:gap-8">
           {navLinks.map((link) => (
             <Link
               key={link.href + link.label}
               href={link.href}
-              className="text-sm font-medium text-gray-600 underline-offset-4 transition-colors hover:text-estate-gold hover:underline hover:decoration-estate-gold/60 dark:text-gray-300 dark:hover:text-[#E8C56D]"
+              className={cn(
+                'text-sm font-medium text-gray-600 underline-offset-4 transition-colors hover:text-estate-gold hover:underline hover:decoration-estate-gold/60 dark:text-gray-300 dark:hover:text-[#E8C56D]',
+                link.wideOnly && 'hidden xl:inline-block'
+              )}
             >
               {link.label}
             </Link>
@@ -264,7 +269,7 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
           ))}
 
           <button
-            className="flex items-center justify-center rounded-full p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-[#1a1a1a] md:hidden"
+            className="flex items-center justify-center rounded-full p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-[#1a1a1a] lg:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={lang === 'ar' ? 'فتح القائمة' : 'Open menu'}
           >
@@ -274,7 +279,7 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
       </div>
 
       {mobileOpen && (
-        <div className="max-h-[calc(100vh-4rem)] max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-gray-200 bg-white px-4 py-4 dark:border-[#262626] dark:bg-black md:hidden">
+        <div className="max-h-[calc(100vh-4rem)] max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-gray-200 bg-white px-4 py-4 dark:border-[#262626] dark:bg-black lg:hidden">
           <nav className="flex flex-col gap-1">
             {navLinks.map((link) => (
               <Link

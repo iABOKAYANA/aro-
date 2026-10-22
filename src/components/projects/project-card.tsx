@@ -205,14 +205,18 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </div>
           <div className="flex items-center gap-2.5 text-gray-400">
             <CompareToggle project={{ id: project.id, slug: project.slug, name: projectName }} />
-            <span className="flex items-center gap-1 text-[11px]">
-              <Eye className="h-3 w-3" />
-              {project.viewCount.toLocaleString('en-US')}
-            </span>
-            <span className="flex items-center gap-1 text-[11px]">
-              <Heart className="h-3 w-3" />
-              {project.favoriteCount.toLocaleString('en-US')}
-            </span>
+            {project.viewCount > 0 && (
+              <span className="flex items-center gap-1 text-[11px]">
+                <Eye className="h-3 w-3" />
+                {project.viewCount.toLocaleString('en-US')}
+              </span>
+            )}
+            {project.favoriteCount > 0 && (
+              <span className="flex items-center gap-1 text-[11px]">
+                <Heart className="h-3 w-3" />
+                {project.favoriteCount.toLocaleString('en-US')}
+              </span>
+            )}
           </div>
         </div>
       </div>
