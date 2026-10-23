@@ -507,6 +507,91 @@ async function projectCatalogFactsTurn(projectMatch: KnownCatalogProject, messag
     lines.push(lang === 'ar' ? `• خطط السداد المسجلة: ${plans.join('؛ ')}.` : `• Recorded payment plans: ${plans.join('; ')}.`)
   }
 
+  // Per-type unit detail — VERIFIED aggregates only (AVAILABLE, non-sample).
+  // Fires when the client names a unit type (شقق/فلل/شاليهات…) or asks about
+  // a detail only unit-level data holds (تشطيب/أوض/إطلالة). Same honest
+  // grounding as the lines above — the groupBy here mirrors the AI-knowledge
+  // unit-inventory chunks so the deterministic path and retrieval never disagree.
+  if (count > 0 && /(شق|apartment|فل|فيلا|villa|شال|chalet|تاون|townhouse|دوبل|duplex|بنت|penthouse|ستوديو|studio|تجاري|محل|commercial|إداري|اداري|administrative|طبي|عياد|medical|تشطيب|إطلالة|فيو|أوض|وظة|غرف|غرفة|bedroom|finishing|view)/i.test(message)) {
+    const arTypeLabel: Record<string, string> = {
+      APARTMENT: 'شقق', VILLA: 'فلل', CHALET: 'شاليهات', TOWNHOUSE: 'تاون هاوس',
+      DUPLEX: 'دوبلكس', PENTHOUSE: 'بنتهاوس', STUDIO: 'ستوديوهات',
+      ADMINISTRATIVE: 'مكاتب إدارية', COMMERCIAL: 'وحدات تجارية', MEDICAL: 'وحدات طبية', OFFICE: 'مكاتب',
+    }
+    const typeMatch = [
+      [/شق|apartment/i, 'APARTMENT'], [/فل|فيلا|villa/i, 'VILLA'], [/شال|chalet/i, 'CHALET'],
+      [/تاون|townhouse/i, 'TOWNHOUSE'], [/دوبل|duplex/i, 'DUPLEX'], [/بنت|penthouse/i, 'PENTHOUSE'],
+      [/ستوديو|studio/i, 'STUDIO'], [/تجاري|محل|commercial/i, 'COMMERCIAL'], [/إداري|اداري|administrative/i, 'ADMINISTRATIVE'],
+      [/طبي|عياد|medical/i, 'MEDICAL'],
+    ].filter(([re]) => (re as RegExp).test(message)).map(([, t]) => t as string)
+    const typeWhere = typeMatch.length ? { unitType: { in: typeMatch } } : { unitType: { not: 'UNKNOWN' } }
+    const perType = await db.unit.groupBy({
+      by: ['unitType'],
+      where: { ...unitWhere, ...typeWhere },
+      _count: { _all: true },
+      _min: { price: true, area: true },
+      _max: { price: true, area: true },
+      orderBy: { _count: { unitType: 'desc' } },
+      take: 4,
+    })
+    const wantsBedrooms = /(أوض|وظة|غرف|غرفة|bedroom)/i.test(message) || typeMatch.length > 0
+    const wantsFinishing = /(تشطيب|finishing)/i.test(message)
+    const wantsView = /(إطلالة|فيو|view)/i.test(message)
+    for (const r of perType) {
+      const label = lang === 'ar' ? (arTypeLabel[r.unitType] || r.unitType.replace(/_/g, ' ')) : r.unitType.replace(/_/g, ' ')
+      const bits: string[] = [`${label} (${r._count._all} ${lang === 'ar' ? 'متاح' : 'available'})`]
+      if (r._min.price != null) {
+        bits.push(lang === 'ar' ? `من ${formatCatalogMoney(r._min.price, lang)}${r._max.price != null && r._max.price > r._min.price ? ` – ${formatCatalogMoney(r._max.price, lang)}` : ''}` : `from ${formatCatalogMoney(r._min.price, lang)}${r._max.price != null && r._max.price > r._min.price ? ` – ${formatCatalogMoney(r._max.price, lang)}` : ''}`)
+      }
+      if (wantsBedrooms || wantsFinishing || wantsView) {
+        const detailWhere = { ...unitWhere, ...typeWhere, unitType: r.unitType }
+        if (wantsBedrooms) {
+          const beds = await db.unit.groupBy({
+            by: ['bedrooms'],
+            where: { ...detailWhere, bedrooms: { gt: 0 } },
+            _count: { _all: true },
+            orderBy: { bedrooms: 'asc' },
+            take: 4,
+          })
+          if (beds.length > 0) {
+            bits.push(lang === 'ar'
+              ? `أوض: ${beds.map((b) => `${b.bedrooms}×${b._count._all}`).join('، ')}`
+              : `bedrooms: ${beds.map((b) => `${b.bedrooms}BR×${b._count._all}`).join(', ')}`)
+          }
+        }
+        if (wantsFinishing) {
+          const fin = await db.unit.groupBy({
+            by: ['finishingType'],
+            where: { ...detailWhere, finishingType: { not: null } },
+            _count: { _all: true },
+            orderBy: { _count: { finishingType: 'desc' } },
+            take: 3,
+          })
+          if (fin.length > 0) {
+            bits.push(lang === 'ar'
+              ? `تشطيب: ${fin.map((f) => `${(f.finishingType || '').replace(/_/g, ' ')}×${f._count._all}`).join('، ')}`
+              : `finishing: ${fin.map((f) => `${(f.finishingType || '').replace(/_/g, ' ')}×${f._count._all}`).join(', ')}`)
+          }
+        }
+        if (wantsView) {
+          const vw = await db.unit.groupBy({
+            by: ['view'],
+            where: { ...detailWhere, view: { not: null, notIn: [''] } },
+            _count: { _all: true },
+            orderBy: { _count: { view: 'desc' } },
+            take: 3,
+          })
+          if (vw.length > 0) {
+            bits.push(lang === 'ar'
+              ? `إطلالات: ${vw.map((v) => `${v.view}×${v._count._all}`).join('، ')}`
+              : `views: ${vw.map((v) => `${v.view}×${v._count._all}`).join(', ')}`)
+          }
+        }
+      }
+      lines.push(lang === 'ar' ? `• ${bits.join(' · ')} (مسجل في الكتالوج، متاح حاليًا).` : `• ${bits.join(' · ')} (catalog-recorded, currently available).`)
+    }
+  }
+
   const content = lines.join('\n')
   return {
     content,

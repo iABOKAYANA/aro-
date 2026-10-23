@@ -11,7 +11,11 @@
 //      and one market OVERVIEW chunk, answering "أرخص؟ / كام مشروع؟ /
 //      مشاريع فلان؟ / أنهي منطقة؟" questions. URLs point at the real public
 //      pages they summarize (/projects?city=, /developers/<slug>).
-//   3) archive register (source 'ghaya-catalog-archive') — EVERY archived
+//   3) unit inventory  (source 'ghaya-catalog-units') — per PUBLIC project
+//      with verified stock: price + area ranges, bedrooms, finishing, views
+//      and verbatim delivery terms per unit type (AVAILABLE && isSample:false
+//      only). Answers "المساحات؟ / أوض شوية كام؟ / تشطيب؟ / إطلالة؟".
+//   4) archive register (source 'ghaya-catalog-archive') — EVERY archived
 //      project in the DB (name · developer · city · verified stock).
 //      Internal chunks with no public page: content explicitly says the
 //      project is not listed on the site and no link may be cited, so عين
@@ -143,6 +147,23 @@ async function main() {
   })
   tally.staleArchivedRemoved = stale.count
 
+  // Verified availability table for the aggregate chunks below: per public
+  // project — count of AVAILABLE non-sample units + their cheapest price.
+  const stockAgg = await p.unit.groupBy({
+    by: ['projectId'],
+    where: { status: 'AVAILABLE', isSample: false, project: { isActive: true } },
+    _count: { _all: true },
+    _min: { price: true },
+  })
+  const stockByProject = new Map(stockAgg.map((r) => [r.projectId, { count: r._count._all, min: r._min.price }]))
+  const catalogTypeStock = await p.unit.groupBy({
+    by: ['unitType'],
+    where: { status: 'AVAILABLE', isSample: false, project: { isActive: true }, unitType: { not: 'UNKNOWN' } },
+    _count: { _all: true },
+    _min: { price: true },
+    orderBy: [{ _count: { unitType: 'desc' } }],
+  })
+
   // ── 2) aggregate chunks: per-city, per-developer, market overview ─────────
   const cities = new Map() // nameSlug → {key,name,ar,items,devs}
   const devs = new Map()   // companyName → {name,ar,slug,items}
@@ -160,14 +181,26 @@ async function main() {
 
   for (const c of cities.values()) {
     const ps = priced(c.items)
+    // verified availability facts for this area (catalog-derived only)
+    const avail = c.items
+      .map((x) => ({ pr: x, s: stockByProject.get(x.id) }))
+      .filter((r) => r.s && r.s.count > 0 && r.s.min != null)
+      .sort((a, b) => a.s.min - b.s.min)
+    const availLine = avail.length
+      ? `AVAILABLE right now (verified): ${avail.reduce((n, r) => n + r.s.count, 0)} units — cheapest ${avail[0].pr.name} from EGP ${fmt(avail[0].s.min)}.`
+      : `AVAILABLE right now: 0 verified units in this area's catalog.`
     const lines = [
       `GHAYA catalog facts for area ${c.name} (${c.ar}) — verified ${today}.`,
       `Public projects in ${c.name}: ${c.items.length}, from ${c.devs.size} developer(s).`,
       ps.length ? `Cheapest in ${c.name}: ${ps[0].name} from EGP ${fmt(ps[0].startPrice)} (${ps[0].developer?.companyName || '—'}).` : null,
       ps.length > 1 ? `Highest start price: ${ps[ps.length - 1].name} at EGP ${fmt(ps[ps.length - 1].startPrice)}.` : null,
+      availLine,
       ps.length ? 'Projects (cheapest first):' : 'Projects:',
-      ...c.items.map((x) => `- ${x.name}${x.nameArabic ? ` / ${x.nameArabic}` : ''} · ${x.developer?.companyName || '—'}${x.startPrice > 0 ? ` · from EGP ${fmt(x.startPrice)}` : ' · price on request'}`),
-      `Keywords: أسعار ${c.ar}، أرخص مشروع في ${c.ar}، مشاريع ${c.ar}، كمبوندات ${c.ar}، ${c.name}`,
+      ...c.items.map((x) => {
+        const s = stockByProject.get(x.id)
+        return `- ${x.name}${x.nameArabic ? ` / ${x.nameArabic}` : ''} · ${x.developer?.companyName || '—'}${x.startPrice > 0 ? ` · from EGP ${fmt(x.startPrice)}` : ' · price on request'}${s && s.count > 0 ? ` · ${s.count} available` : ''}`
+      }),
+      `Keywords: أسعار ${c.ar}، أرخص مشروع في ${c.ar}، مشاريع ${c.ar}، كمبوندات ${c.ar}، متاح في ${c.ar}، وحدات متاحة ${c.ar}، ${c.name}`,
     ].filter(Boolean).join('\n')
     const url = `https://ghayaestate.com/projects?city=${c.key}`
     seenUrls.add(url)
@@ -176,10 +209,18 @@ async function main() {
 
   for (const d of devs.values()) {
     const ps = priced(d.items)
+    const avail = d.items
+      .map((x) => ({ pr: x, s: stockByProject.get(x.id) }))
+      .filter((r) => r.s && r.s.count > 0 && r.s.min != null)
+      .sort((a, b) => a.s.min - b.s.min)
+    const availLine = avail.length
+      ? `AVAILABLE right now (verified): ${avail.reduce((n, r) => n + r.s.count, 0)} units in the catalog — cheapest ${avail[0].pr.name} from EGP ${fmt(avail[0].s.min)}.`
+      : `AVAILABLE right now: 0 verified units in the catalog for this developer's projects.`
     const lines = [
       `GHAYA catalog facts for developer ${d.name}${d.ar ? ` (${d.ar})` : ''} — verified ${today}.`,
       `Public projects by ${d.name}: ${d.items.length} across ${new Set(d.items.map((x) => x.city?.name).filter(Boolean)).size} area(s).`,
       ps.length ? `Starting prices range EGP ${fmt(ps[0].startPrice)} – ${fmt(ps[ps.length - 1].startPrice)}.` : null,
+      availLine,
       'Projects:',
       ...d.items.map((x) => `- ${x.name}${x.nameArabic ? ` / ${x.nameArabic}` : ''} · ${x.city?.name || '—'} · ${x.startPrice > 0 ? `from EGP ${fmt(x.startPrice)}` : 'price on request'}`),
       `Keywords: مشاريع ${d.ar || d.name}، أسعار ${d.ar || d.name}، ${d.name} projects`,
@@ -199,6 +240,9 @@ async function main() {
       `GHAYA catalog overview — verified ${today}.`,
       `Public projects: ${projects.length}, from ${devs.size} developers, across ${[...cities.values()].filter((c) => priced(c.items).length).length} areas.`,
       ps.length ? `Cheapest projects overall (top 10): ${ps.slice(0, 10).map((x) => `${x.name} from EGP ${fmt(x.startPrice)}`).join('; ')}.` : null,
+      catalogTypeStock.length
+        ? `AVAILABLE stock catalog-wide (verified): ${catalogTypeStock.reduce((n, t) => n + t._count._all, 0)} units — ${catalogTypeStock.slice(0, 8).map((t) => `${t.unitType.replace(/_/g, ' ').toLowerCase()} (${t._count._all}, from EGP ${fmt(t._min.price)})`).join(', ')}.`
+        : 'AVAILABLE stock catalog-wide: 0 verified units.',
       'Start-price entry point per area (cheapest first):',
       ...cityLines,
       'Keywords: أرخص منطقة، أرخص مشروع في مصر، أسعار السوق، كم مشروع عندكم، كل المشاريع',
@@ -206,6 +250,111 @@ async function main() {
     const url = 'https://ghayaestate.com/projects'
     seenUrls.add(url)
     bump(await upsertChunk(url, 'GHAYA catalog overview', 'ghaya-catalog-agg', trimWords(lines, MAX_CONTENT)))
+  }
+
+  // ── 2b) unit inventory: per PUBLIC project with verified stock — the deep
+  // per-type facts (price/area ranges, bedrooms, finishing, views, verbatim
+  // delivery terms). Source of "المساحات كام؟ / فيه 3 أوض؟ / التشطيب؟ /
+  // فيو بحر؟ / شروط السداد؟" answers. NO invented data: catalog only.
+  {
+    // per (project, type) aggregate over verified AVAILABLE units
+    const typesAgg = await p.unit.groupBy({
+      by: ['projectId', 'unitType'],
+      where: { status: 'AVAILABLE', isSample: false, project: { isActive: true, approvalStatus: { in: PUBLIC } } },
+      _count: { _all: true },
+      _min: { price: true, area: true, bedrooms: true },
+      _max: { price: true, area: true, bedrooms: true },
+    })
+    // per (project, type, bedrooms) counts to state bedroom mix precisely
+    const bedsAgg = await p.unit.groupBy({
+      by: ['projectId', 'unitType', 'bedrooms'],
+      where: { status: 'AVAILABLE', isSample: false, project: { isActive: true, approvalStatus: { in: PUBLIC } }, bedrooms: { gt: 0 } },
+      _count: { _all: true },
+    })
+    // per (project, type, finishing) counts (non-null only)
+    const finishAgg = await p.unit.groupBy({
+      by: ['projectId', 'unitType', 'finishingType'],
+      where: { status: 'AVAILABLE', isSample: false, project: { isActive: true, approvalStatus: { in: PUBLIC } }, finishingType: { not: null } },
+      _count: { _all: true },
+    })
+    // per (project, type, view) counts (non-null, non-empty only)
+    const viewAgg = await p.unit.groupBy({
+      by: ['projectId', 'unitType', 'view'],
+      where: { status: 'AVAILABLE', isSample: false, project: { isActive: true, approvalStatus: { in: PUBLIC } }, view: { not: null, notIn: [''] } },
+      _count: { _all: true },
+    })
+    // verbatim unit-level delivery terms (top 2 per project)
+    const termsAgg = await p.unit.groupBy({
+      by: ['projectId', 'deliveryTerms'],
+      where: { status: 'AVAILABLE', isSample: false, project: { isActive: true, approvalStatus: { in: PUBLIC } }, deliveryTerms: { not: null, notIn: [''] } },
+      _count: { _all: true },
+    })
+    const bedsKey = (id, t) => `${id}:${t}`
+    const bedsMap = new Map()
+    for (const r of bedsAgg) {
+      const k = bedsKey(r.projectId, r.unitType)
+      if (!bedsMap.has(k)) bedsMap.set(k, [])
+      bedsMap.get(k).push(`${r.bedrooms}BR×${r._count._all}`)
+    }
+    const topMap = (agg, field) => {
+      const m = new Map()
+      for (const r of agg) {
+        const k = bedsKey(r.projectId, r.unitType)
+        if (!m.has(k)) m.set(k, [])
+        m.get(k).push(`${(r[field] || '').toString().replace(/_/g, ' ')}×${r._count._all}`)
+      }
+      // keep the 3 most common variants per (project, type)
+      for (const v of m.values()) v.sort((a, b) => parseInt(b.match(/×(\d+)$/)[1], 10) - parseInt(a.match(/×(\d+)$/)[1], 10))
+      return m
+    }
+    const finishMap = topMap(finishAgg, 'finishingType')
+    const viewMap = topMap(viewAgg, 'view')
+    const termsMap = new Map()
+    for (const r of termsAgg) {
+      const k = bedsKey(r.projectId, r.unitType)
+      if (!termsMap.has(k)) termsMap.set(k, [])
+      termsMap.get(k).push(r.deliveryTerms)
+    }
+
+    const projectById = new Map(projects.map((x) => [x.id, x]))
+    // group type-rows per project, keep projects that actually have stock
+    const rowsPerProject = new Map()
+    for (const r of typesAgg) {
+      if (!rowsPerProject.has(r.projectId)) rowsPerProject.set(r.projectId, [])
+      rowsPerProject.get(r.projectId).push(r)
+    }
+    const typeAr = { APARTMENT: 'شقق', VILLA: 'فلل', CHALET: 'شاليهات', TOWNHOUSE: 'تاون هاوس', DUPLEX: 'دوبلكس', PENTHOUSE: 'بنتهاوس', STUDIO: 'ستوديوهات', ADMINISTRATIVE: 'إداري', COMMERCIAL: 'تجاري/محلات', MEDICAL: 'عيادات/طبي', CABIN: 'أكواخ', FACTORY: 'مصانع', LAND: 'أراضي', OFFICE: 'مكاتب' }
+
+    for (const [projectId, rows] of rowsPerProject) {
+      const pr = projectById.get(projectId)
+      if (!pr) continue
+      const total = rows.reduce((n, r) => n + r._count._all, 0)
+      const lines = [
+        `Unit inventory for ${pr.name}${pr.nameArabic ? ` (${pr.nameArabic})` : ''} — verified ${today} (AVAILABLE units only, ${total} total).`,
+        pr.city?.name ? `Area: ${pr.city.name}.` : null,
+      ]
+      for (const r of rows.sort((a, b) => b._count._all - a._count._all)) {
+        const t = r.unitType || 'UNSPECIFIED'
+        const k = bedsKey(projectId, t)
+        const bits = [`${t.replace(/_/g, ' ').toLowerCase()}: ${r._count._all} available`]
+        if (r._min.price != null) bits.push(`EGP ${fmt(r._min.price)}${r._max.price > r._min.price ? `–${fmt(r._max.price)}` : ''}`)
+        if (r._min.area != null) bits.push(`areas ${fmt(r._min.area)}${r._max.area > r._min.area ? `–${fmt(r._max.area)}` : ''} sqm`)
+        const beds = bedsMap.get(k)
+        if (beds) bits.push(`bedrooms: ${beds.slice(0, 5).join(', ')}`)
+        const fin = finishMap.get(k)
+        if (fin) bits.push(`finishing: ${fin.slice(0, 3).join(', ')}`)
+        const vw = viewMap.get(k)
+        if (vw) bits.push(`views: ${vw.slice(0, 3).join(', ')}`)
+        const terms = termsMap.get(k)
+        if (terms) bits.push(`delivery terms (verbatim): ${trimWords(terms[0], 110)}`)
+        lines.push(`- ${bits.join(' · ')}`)
+      }
+      const arWords = rows.map((r) => typeAr[r.unitType]).filter(Boolean)
+      lines.push(`Keywords: وحدات متاحة في ${pr.name}${pr.nameArabic ? ` (${pr.nameArabic})` : ''}${arWords.length ? ' — ' + arWords.join('، ') : ''}، المساحات، أوض، تشطيب، إطلالة، ${pr.name} units`)
+      const url = `internal://ghaya-units/${pr.slug}`
+      seenUrls.add(url)
+      bump(await upsertChunk(url, `${pr.name} — unit inventory`, 'ghaya-catalog-units', trimWords(lines.filter(Boolean).join('\n'), MAX_CONTENT)))
+    }
   }
 
   // ── 3) archive register: EVERY archived project in the catalog ────────────
@@ -273,6 +422,9 @@ async function main() {
   const staleAgg = await p.aIKnowledge.deleteMany({
     where: { source: 'ghaya-catalog-agg', url: { notIn: [...seenUrls] } },
   })
+  const staleUnits = await p.aIKnowledge.deleteMany({
+    where: { source: 'ghaya-catalog-units', url: { notIn: [...seenUrls] } },
+  })
   const staleArch = await p.aIKnowledge.deleteMany({
     where: { source: 'ghaya-catalog-archive', url: { notIn: [...seenUrls] } },
   })
@@ -284,6 +436,7 @@ async function main() {
     archivedProjectsRegistered: archived.length,
     ...tally,
     staleAggRemoved: staleAgg.count,
+    staleUnitChunksRemoved: staleUnits.count,
     staleArchiveRemoved: staleArch.count,
     totalActiveChunks: total,
     bySource: bySource.map((b) => ({ source: b.source, chunks: b._count._all })),
