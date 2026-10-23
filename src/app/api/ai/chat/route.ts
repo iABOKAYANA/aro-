@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { auth } from '@/lib/auth'
 import { callLLM, callLLMStream, TOOL_LOOP_BUDGET_MS, type ResponseBlock } from '@/lib/ai-llm'
+import { findKnownProjectMentions, type KnownCatalogProject } from '@/lib/ai-llm'
 import { AI_CONFIG } from '@/lib/ai/config'
 import { checkOllamaStatus } from '@/lib/ai/ollama'
 import { checkLlamacppStatus } from '@/lib/ai/llamacpp'
@@ -20,6 +21,7 @@ import {
   type LeadState,
 } from '@/lib/ai-lead-capture'
 import { toolCreateInquiry, toolCompareProjects, type ComparisonData } from '@/lib/ai-tools'
+import { PUBLIC_PROJECT_WHERE } from '@/lib/project-visibility'
 
 export const dynamic = 'force-dynamic'
 
@@ -289,6 +291,159 @@ interface DeterministicTurn {
   leadMeta?: { stage: string; name?: string; phone?: string; retries: number }
 }
 
+function formatCatalogMoney(value: number, lang: ChatLang): string {
+  const formatted = Math.round(value).toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-US')
+  return lang === 'ar' ? `${formatted} جنيه` : `EGP ${formatted}`
+}
+
+function formatCatalogArea(value: number, lang: ChatLang): string {
+  const formatted = Math.round(value).toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-US')
+  return lang === 'ar' ? `${formatted} م²` : `${formatted} sqm`
+}
+
+function ambiguousProjectReply(matches: KnownCatalogProject[], lang: ChatLang): DeterministicTurn {
+  const options = matches.map((project) => {
+    const label = lang === 'ar' ? project.nameArabic || project.name : project.name
+    const developer = project.developerName ? ` — ${project.developerName}` : ''
+    return `• [${label}](/projects/${project.slug})${developer}`
+  })
+  const content = lang === 'ar'
+    ? `اسم المشروع ممكن يقصد أكتر من مشروع. تقصد أنهي واحد؟\n${options.join('\n')}`
+    : `That name matches more than one project. Which one do you mean?\n${options.join('\n')}`
+  return { content, blocks: [{ type: 'text', content }], toolCallsMade: [], provider: 'grounded' }
+}
+
+function isProjectCatalogFactQuestion(message: string): boolean {
+  const ar = /(سعر|اسعار|أسعار|بكام|كام|وحده|وحدة|وحدات|متاح|متوفر|مساح|متر|تسليم|استلام|مرحلة|مراحل|تقسيط|قسط|مقدم|خطة|خطط|مطور|الموقع|فين|أين)/i
+  const en = /\b(price|prices|cost|available|availability|unit|units|area|areas|sqm|square meter|delivery|handover|phase|phases|installment|payment|down payment|developer|location|where|how many)\b/i
+  return ar.test(message) || en.test(message)
+}
+
+async function projectCatalogFactsTurn(projectMatch: KnownCatalogProject, message: string, lang: ChatLang): Promise<DeterministicTurn | null> {
+  const project = await db.project.findFirst({
+    where: { id: projectMatch.id, ...PUBLIC_PROJECT_WHERE },
+    select: {
+      id: true,
+      name: true,
+      nameArabic: true,
+      slug: true,
+      coverImage: true,
+      status: true,
+      startPrice: true,
+      endPrice: true,
+      pricePerSqm: true,
+      propertyTypes: true,
+      deliveryTerms: true,
+      deliveryDate: true,
+      completionPercent: true,
+      viewCount: true,
+      favoriteCount: true,
+      downPaymentMin: true,
+      installmentYears: true,
+      description: true,
+      city: { select: { name: true, nameArabic: true } },
+      governorate: { select: { name: true, nameArabic: true } },
+      developer: { select: { companyName: true, companyNameArabic: true } },
+      phases: {
+        orderBy: { sortOrder: 'asc' },
+        select: { name: true, nameArabic: true, startPrice: true, endPrice: true, status: true, deliveryDate: true },
+      },
+      paymentPlans: {
+        where: { isActive: true },
+        orderBy: { sortOrder: 'asc' },
+        take: 5,
+        select: { name: true, nameArabic: true, downPaymentPct: true, installmentYears: true, cashDiscount: true },
+      },
+    },
+  })
+  if (!project) return null
+
+  const unitWhere = {
+    projectId: project.id,
+    status: { in: ['AVAILABLE', 'Vacant'] },
+    isSample: false,
+    price: { gt: 0 },
+  }
+  const inventory = await db.unit.aggregate({
+    where: unitWhere,
+    _count: { _all: true },
+    _min: { price: true, area: true },
+    _max: { price: true, area: true },
+  })
+
+  let types: string[] = []
+  try {
+    const parsed = typeof project.propertyTypes === 'string' ? JSON.parse(project.propertyTypes) : project.propertyTypes
+    if (Array.isArray(parsed)) types = parsed.filter((type): type is string => typeof type === 'string' && type !== 'UNKNOWN')
+  } catch { types = [] }
+
+  const count = inventory._count._all
+  const minimumPrice = count > 0 ? inventory._min.price : project.startPrice
+  const maximumPrice = count > 0 ? inventory._max.price : project.endPrice
+  const projectName = lang === 'ar' ? project.nameArabic || project.name : project.name
+  const projectLink = `[${projectName}](/projects/${project.slug})`
+  const lines: string[] = [
+    lang === 'ar'
+      ? `حسب كتالوج غاية الحالي، **${projectLink}**:`
+      : `From GHAYA’s current catalog, **${projectLink}**:`,
+  ]
+
+  if (count > 0) {
+    lines.push(lang === 'ar' ? `• الوحدات المتاحة غير التجريبية: ${count}.` : `• Available non-sample units: ${count}.`)
+    if (minimumPrice != null) {
+      const priceText = maximumPrice != null && maximumPrice > minimumPrice
+        ? `${formatCatalogMoney(minimumPrice, lang)} – ${formatCatalogMoney(maximumPrice, lang)}`
+        : formatCatalogMoney(minimumPrice, lang)
+      lines.push(lang === 'ar' ? `• أسعار الوحدات المتاحة: ${priceText}.` : `• Available unit prices: ${priceText}.`)
+    }
+    if (inventory._min.area != null && inventory._max.area != null) {
+      const areaText = inventory._min.area === inventory._max.area
+        ? formatCatalogArea(inventory._min.area, lang)
+        : `${formatCatalogArea(inventory._min.area, lang)} – ${formatCatalogArea(inventory._max.area, lang)}`
+      lines.push(lang === 'ar' ? `• المساحات المتاحة: ${areaText}.` : `• Available areas: ${areaText}.`)
+    }
+  } else {
+    lines.push(lang === 'ar' ? '• لا توجد وحدات متاحة مسجلة حاليًا في المخزون.' : '• No currently available units are recorded in the inventory.')
+    if (project.startPrice != null && project.startPrice > 0) {
+      lines.push(lang === 'ar'
+        ? `• سعر البداية المسجل للمشروع: ${formatCatalogMoney(project.startPrice, lang)} (مش تأكيد لتوفر وحدة).`
+        : `• Catalog starting price: ${formatCatalogMoney(project.startPrice, lang)} (not confirmation of an available unit).`)
+    }
+  }
+
+  if (types.length > 0) {
+    lines.push(lang === 'ar' ? `• الأنواع المسجلة: ${types.map((type) => type.replace(/_/g, ' ')).join('، ')}.` : `• Listed types: ${types.map((type) => type.replace(/_/g, ' ')).join(', ')}.`)
+  }
+  if (project.deliveryTerms) {
+    lines.push(lang === 'ar' ? `• شروط التسليم المسجلة: ${project.deliveryTerms}` : `• Recorded delivery terms: ${project.deliveryTerms}`)
+  }
+  if (project.phases.length > 0) {
+    const names = project.phases.slice(0, 5).map((phase) => lang === 'ar' ? phase.nameArabic || phase.name : phase.name)
+    lines.push(lang === 'ar' ? `• المراحل المسجلة: ${names.join('، ')}.` : `• Recorded phases: ${names.join(', ')}.`)
+  }
+  if (project.deliveryDate && /(تسليم|استلام|delivery|handover)/i.test(message)) {
+    const delivery = new Date(project.deliveryDate).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-GB', { year: 'numeric', month: 'long' })
+    lines.push(lang === 'ar' ? `• موعد التسليم المسجل: ${delivery}.` : `• Recorded delivery date: ${delivery}.`)
+  }
+  if (project.paymentPlans.length > 0 && /(تقسيط|قسط|مقدم|خطة|خطط|installment|payment|down payment)/i.test(message)) {
+    const plans = project.paymentPlans.slice(0, 3).map((plan) => {
+      const name = lang === 'ar' ? plan.nameArabic || plan.name : plan.name
+      const down = `${plan.downPaymentPct}% ${lang === 'ar' ? 'مقدم' : 'down'}`
+      const years = `${plan.installmentYears} ${lang === 'ar' ? 'سنة' : 'years'}`
+      return `${name}: ${down}, ${years}`
+    })
+    lines.push(lang === 'ar' ? `• خطط السداد المسجلة: ${plans.join('؛ ')}.` : `• Recorded payment plans: ${plans.join('; ')}.`)
+  }
+
+  const content = lines.join('\n')
+  return {
+    content,
+    blocks: [{ type: 'text', content }],
+    toolCallsMade: ['get_project_details', 'search_units'],
+    provider: 'grounded',
+  }
+}
+
 async function whatsAppHref(): Promise<string | null> {
   try {
     const { readContactCtas, toWhatsAppHref } = await import('@/lib/contact-cta')
@@ -426,6 +581,16 @@ async function tryDeterministicTurn(
   }
   // An idle cancel with no capture running is not ours — normal flow.
   if (isCancelMessage(message)) return null
+
+  // Catalog facts for a specifically named project must never depend on the
+  // LLM deciding to call a tool. Read current inventory from SQLite and answer
+  // deterministically (this was the failure mode behind fabricated prices and
+  // the repeated budget question).
+  if (isProjectCatalogFactQuestion(message)) {
+    const matches = await findKnownProjectMentions(message)
+    if (matches.length > 1) return ambiguousProjectReply(matches, lang)
+    if (matches.length === 1) return projectCatalogFactsTurn(matches[0], message, lang)
+  }
 
   // ── A: short compare affirmation resolves against the shown pair ──
   if (isCompareAffirm(message, turns[0]?.content)) {

@@ -3,6 +3,8 @@ import { chatOnce, streamOnce, type ServedProvider } from '@/lib/ai/provider-rou
 import { AI_TOOLS } from '@/lib/ai/tools'
 import { SYSTEM_PROMPT } from '@/lib/ai-system-prompt'
 import { AI_CONFIG } from '@/lib/ai/config'
+import { db } from '@/lib/db'
+import { PUBLIC_PROJECT_WHERE } from '@/lib/project-visibility'
 import { hasListingIntent, parseNaturalLanguageQuery } from '@/lib/ai-search-parser'
 import {
   areaTakeOffered,
@@ -530,6 +532,89 @@ function isListingTurn(
   return priorUser.some((t) => hasListingIntent(t))
 }
 
+// Names a SPECIFIC catalog project? Then the turn is a direct question about
+// that project (units/prices/phases) — the consultation-discovery gate
+// (budget interrogation) must NOT intercept it: the client named the
+// project, so they get a tool-grounded answer right away. Cheapest safe
+// detection: substring match against the public project-name corpus,
+// cached once per process.
+export interface KnownCatalogProject {
+  id: string
+  slug: string
+  name: string
+  nameArabic: string | null
+  developerName: string | null
+  cityName: string | null
+}
+
+let projectNameCorpus: { loadedAt: number; projects: KnownCatalogProject[] } | null = null
+
+function normalizeProjectMention(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFKC')
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/[^a-z0-9\u0600-\u06FF]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/** Match an explicit, unambiguous public project name in the user's message. */
+export async function findKnownProjectMentions(message: string): Promise<KnownCatalogProject[]> {
+  try {
+    if (!projectNameCorpus || Date.now() - projectNameCorpus.loadedAt > 60_000) {
+      const rows = await db.project.findMany({
+        where: PUBLIC_PROJECT_WHERE,
+        select: {
+          id: true,
+          name: true,
+          nameArabic: true,
+          slug: true,
+          developer: { select: { companyName: true } },
+          city: { select: { name: true } },
+        },
+      })
+      projectNameCorpus = {
+        loadedAt: Date.now(),
+        projects: rows.map((row) => ({
+          id: row.id,
+          slug: row.slug,
+          name: row.name,
+          nameArabic: row.nameArabic,
+          developerName: row.developer?.companyName ?? null,
+          cityName: row.city?.name ?? null,
+        })),
+      }
+    }
+    const text = ` ${normalizeProjectMention(message)} `
+    const bestById = new Map<string, { project: KnownCatalogProject; score: number }>()
+    for (const project of projectNameCorpus.projects) {
+      const variants = [project.name, project.nameArabic || '']
+        .map(normalizeProjectMention)
+        .filter((name) => name.length >= 4)
+      for (const name of variants) {
+        if (text.includes(` ${name} `)) {
+          const previous = bestById.get(project.id)
+          if (!previous || previous.score < name.length) bestById.set(project.id, { project, score: name.length })
+        }
+      }
+    }
+    const sorted = [...bestById.values()].sort((a, b) => b.score - a.score)
+    if (!sorted.length) return []
+    const maxScore = sorted[0].score
+    return sorted.filter((item) => item.score === maxScore).map((item) => item.project)
+  } catch {
+    return [] // knowledge match is best-effort; never fail chat
+  }
+}
+
+async function mentionsKnownProject(message: string): Promise<boolean> {
+  return (await findKnownProjectMentions(message)).length > 0
+}
+
 // Best-effort server-side search used when the model returns zero tool calls
 // on a listing turn. Same params the parser extracts; relaxation order keeps
 // the hardest user constraints (city, budget) longest — bedroom counts are
@@ -1046,7 +1131,10 @@ async function prepareLLMRequest(
   // proceeds to search with whatever is known — never a repeat question.
   // "وريني اللي عندك" impatience skips discovery entirely.
   let stateBlock = stateBlockRaw
-  if (listingTurn && !wantsImmediateListings(currentMessage)) {
+  const namesProject = await mentionsKnownProject(currentMessage)
+  // Bypass: the client named a catalog project — answer it (tool-grounded),
+  // never interrogate budget first.
+  if (listingTurn && !wantsImmediateListings(currentMessage) && !namesProject) {
     const needs = needsFromHistory(conversationHistory, currentMessage)
     const assistantTexts = conversationHistory
       .filter((m) => m.role === 'assistant')
