@@ -72,6 +72,23 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Gold selection + consistent keyboard focus ring (brand-true, both themes) */
+::selection {
+  background: rgba(212, 168, 67, 0.35);
+}
+.dark ::selection {
+  background: rgba(212, 168, 67, 0.45);
+  color: #fff;
+}
+:focus-visible {
+  outline: 2px solid rgba(212, 168, 67, 0.75);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.dark :focus-visible {
+  outline-color: rgba(232, 197, 109, 0.9);
+}
+
 /* ─── Gradient Utilities ───────────────────── */
 .card-hover {
   @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;

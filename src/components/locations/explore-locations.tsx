@@ -281,9 +281,12 @@ export function ExploreLocations() {
             title={t('home.exploreHeading')}
           />
 
-          <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="flex flex-wrap items-end gap-x-4 gap-y-2 min-w-0">
             {/* Real chips — the top 3 cities by project count, once loaded
-                (no empty "top 3" claim before data arrives). */}
+                (no empty "top 3" claim before data arrives).
+                min-w-0 (not shrink-0): the chips strip must wrap inside the
+                container — with shrink-0 it overflowed wide and the section's
+                overflow-hidden CLIPPED the chips on smaller screens. */}
             {cards.length > 0 && (
               <span className="inline-flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 <span className="shrink-0">{lang === 'ar' ? 'المناطق الأكثر عرضًا —' : 'Areas with most projects —'}</span>

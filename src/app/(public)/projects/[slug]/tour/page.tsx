@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { getProjectBySlug } from '@/lib/search';
 import { isPublicProject } from '@/lib/project-visibility';
 import { languageAlternates } from '@/lib/site';
+import { stripBrandSuffix } from '@/lib/seo';
 
 import { TourViewer } from './tour-viewer';
 
@@ -36,8 +37,10 @@ export async function generateMetadata({ params }: TourPageProps): Promise<Metad
   // Suffix once, exactly: metaTitle may or may not end with the brand, and the
   // root layout template would otherwise stack "| GHAYA REAL ESTATE" on top of
   // an already-suffixed string (the doubled title seen on /tour pages).
-  const rawTitle = project.metaTitle || `360° Tour — ${project.name}`
-  const suffixed = rawTitle.includes('| GHAYA REAL ESTATE') ? rawTitle : `${rawTitle} | GHAYA REAL ESTATE`
+  // The Nawy mirror-brand suffix inherited from catalog imports is stripped —
+  // ghayaestate.com SERPs never show a foreign brand.
+  const cleaned = stripBrandSuffix(project.metaTitle || `360° Tour — ${project.name}`)
+  const suffixed = cleaned.includes('| GHAYA REAL ESTATE') ? cleaned : `${cleaned} | GHAYA REAL ESTATE`
   return {
     title: { absolute: suffixed },
     description: project.metaDescription || `Take an interactive 360° virtual tour of ${project.name}.`,

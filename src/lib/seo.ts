@@ -105,8 +105,14 @@ function truncate(s: string, max: number): string {
   return `${s.slice(0, max - 1).trimEnd()}…`
 }
 
-function stripBrandSuffix(title: string): string {
-  return title.replace(/\s*(?:\||—|-)\s*GHAYA(?:\s+REAL\s+ESTATE)?\s*$/i, '').trim()
+export function stripBrandSuffix(title: string): string {
+  // GHAYA suffix from previous pipeline runs, and the leftover "… - Nawy"
+  // mirror-brand suffix inherited from the Nawy catalog imports (114 public
+  // metaTitles carried it — NO ghayaestate SERP may show a foreign brand).
+  return title
+    .replace(/\s*(?:\||—|–|-)\s*Nawy\s*$/i, '')
+    .replace(/\s*(?:\||—|-)\s*GHAYA(?:\s+REAL\s+ESTATE)?\s*$/i, '')
+    .trim()
 }
 
 /**
