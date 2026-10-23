@@ -324,21 +324,21 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
                 <button
                   onClick={() => setTheme('light')}
                   aria-label="Light theme"
-                  className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${theme === 'light' ? 'bg-estate-gold/15 text-estate-gold' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-[#0A0A0A]'}`}
+                  className={`flex min-h-[40px] items-center gap-1 rounded-full px-3 text-xs font-medium transition-colors ${theme === 'light' ? 'bg-estate-gold/15 text-estate-gold' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-[#0A0A0A]'}`}
                 >
                   <Sun className="h-3.5 w-3.5" /> {lang === 'ar' ? 'فاتح' : 'Light'}
                 </button>
                 <button
                   onClick={() => setTheme('dark')}
                   aria-label="Dark theme"
-                  className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${theme === 'dark' ? 'bg-estate-gold/15 text-estate-gold' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-[#0A0A0A]'}`}
+                  className={`flex min-h-[40px] items-center gap-1 rounded-full px-3 text-xs font-medium transition-colors ${theme === 'dark' ? 'bg-estate-gold/15 text-estate-gold' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-[#0A0A0A]'}`}
                 >
                   <Moon className="h-3.5 w-3.5" /> {lang === 'ar' ? 'غامق' : 'Dark'}
                 </button>
                 <button
                   onClick={() => setTheme('system')}
                   aria-label="System theme"
-                  className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${theme === 'system' ? 'bg-estate-gold/15 text-estate-gold' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-[#0A0A0A]'}`}
+                  className={`flex min-h-[40px] items-center gap-1 rounded-full px-3 text-xs font-medium transition-colors ${theme === 'system' ? 'bg-estate-gold/15 text-estate-gold' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-[#0A0A0A]'}`}
                 >
                   <Monitor className="h-3.5 w-3.5" /> {lang === 'ar' ? 'النظام' : 'System'}
                 </button>

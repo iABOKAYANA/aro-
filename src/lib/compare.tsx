@@ -175,9 +175,9 @@ function CompareTray() {
                   type="button"
                   onClick={() => remove(item.id)}
                   aria-label={`Remove ${item.name}`}
-                  className="rounded-full p-0.5 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
+                  className="-mx-1.5 -my-1 flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </span>
             ))}
@@ -187,13 +187,13 @@ function CompareTray() {
             <button
               type="button"
               onClick={clear}
-              className="rounded-lg px-3 py-1.5 text-xs text-gray-400 transition-colors hover:text-white"
+              className="-my-1 flex min-h-[36px] items-center rounded-lg px-3 text-xs text-gray-400 transition-colors hover:text-white"
             >
               Clear
             </button>
             <Link
               href={`/compare?ids=${items.map((i) => i.slug).join(',')}`}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-estate-gold px-4 py-1.5 text-xs font-semibold text-[#0F1A2C] transition-colors hover:brightness-110"
+              className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-estate-gold px-4 text-xs font-semibold text-[#0F1A2C] transition-colors hover:brightness-110"
             >
               Compare now
               <ArrowRight className="h-3.5 w-3.5" />

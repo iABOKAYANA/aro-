@@ -248,7 +248,7 @@ export function HomePage() {
         </div>
 
         <div className="mt-8 text-center">
-          <Link href="/projects" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+          <Link href="/projects" className="inline-flex min-h-[44px] items-center gap-2 px-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
             {t('home.viewAll')}
             <ArrowRight className="h-4 w-4 rtl:rotate-180" />
           </Link>
