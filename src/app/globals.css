@@ -67,6 +67,12 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Sticky navbar (~64-72px) — hash anchors land below it, not underneath. */
+:target,
+[id] {
+  scroll-margin-top: 5.5rem;
+}
+
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -293,6 +299,21 @@ body {
 }
 .arch-card .arch {
   border-radius: 3rem 3rem 0 0;
+}
+/* Hover lift: cards rise 4px and their gold frame glints brighter —
+   interaction feedback consistent with the gold hover shadows the markup
+   already adds via Tailwind. Transform/opacity only (no layout shift). */
+.arch-card {
+  transition-property: transform, border-color, box-shadow;
+  transition-duration: 0.3s;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+.arch-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212, 168, 67, 0.6);
+}
+.dark .arch-card:hover {
+  border-color: rgba(232, 197, 109, 0.55);
 }
 
 /* ─── Whisper dot texture ────────────────────────────────────── */
@@ -595,6 +616,10 @@ body {
   .animate-kenburns,
   .gold-shimmer::after {
     animation: none !important;
+  }
+  /* Hover lift is motion too — cards stay flat under reduced motion. */
+  .arch-card:hover {
+    transform: none;
   }
   [data-parallax] {
     transform: none;

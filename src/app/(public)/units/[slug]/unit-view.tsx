@@ -244,7 +244,7 @@ export default function UnitView({ unit, gallery, priceHistory = [] }: { unit: U
             <Card className="lg:sticky lg:top-24 border-estate-gold/20 dark:border-[#D4A843]/20 dark:bg-[#0A0A0A]">
               <CardContent className="p-6">
                 <p className="section-kicker mb-1">{ar ? 'السعر' : 'Price'}</p>
-                <p className="font-display mb-4 break-words text-3xl text-estate-gold">{formatEGP(unit.price)}</p>
+                <p className="font-display mb-4 break-words text-3xl tabular-nums text-estate-gold">{formatEGP(unit.price)}</p>
                 {unit.pricePerSqm && (
                   <p className="mb-4 text-sm text-muted-foreground">{formatEGP(unit.pricePerSqm)}{ar ? '/للمتر' : '/sqm'}</p>
                 )}
