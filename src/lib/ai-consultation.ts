@@ -1,10 +1,10 @@
 // ─── Consultation gate — عين studies & consults, never dumps listings ───
 //
-// Before recommending, Ayn needs a minimal CLIENT PROFILE: budget + a place
-// OR a property type/purpose. Until then a listing turn resolves to ONE
-// short question (deterministic — instant, free, consistent), max 3, then
-// the search proceeds with whatever is known. Clients who explicitly ask
-// to see options ("وريني اللي عندك") skip discovery entirely.
+// Before recommending, Ayn needs a usable CLIENT PROFILE: budget + place +
+// property type or purpose. Until then a listing turn resolves to ONE short
+// question (deterministic — instant, free, consistent), max 3, then the
+// search proceeds with whatever is known. Clients who explicitly ask to see
+// options ("وريني اللي عندك") can skip discovery entirely.
 
 import { parseNaturalLanguageQuery } from '@/lib/ai-search-parser'
 
@@ -27,6 +27,8 @@ export const CONSULT_MARKER_EN = 'to recommend the right fit'
 
 const INVEST_RE = /استثمار|استثمر|عائد|ربح|invest/i
 const LIVE_RE = /أسكن|اسكن|عايش|ساكن|للسكن|عشان اسكن|عشان أسكن|تسكن|سكن\b|to live|living in|our home|بيت لنا/i
+const RECOMMENDATION_REQUEST_RE = /رشح(?:لي|لى|لنا)?|رشّح(?:لي|لى|لنا)?|ترشح(?:لي|لى|لنا)?|أنسب(?:لي|لنا)?|انسب(?:لي|لنا)?|أفضل\s*(?:مشروع|كمبوند|اختيار|عقار|وحدة)?|افضل\s*(?:مشروع|كمبوند|اختيار|عقار|وحدة)?|أحسن\s*(?:مشروع|كمبوند|اختيار|عقار|وحدة)?|احسن\s*(?:مشروع|كمبوند|اختيار|عقار|وحدة)?|اختارلي|best\s*(?:project|compound|property|option)?|recommend(?:\s+me|ation)?|what\s+should\s+i\s+(?:buy|choose)|which\s+(?:project|compound|property|unit)\s+should/i
+const EXPLICIT_POPULARITY_RE = /most\s+(?:popular|viewed|engaged)|highest\s+engagement|الأكثر\s+(?:شعبية|مشاهدة)|اكتر\s+مشاريع?\s+(?:عليها\s+)?تفاعل|أكتر\s+مشاريع?\s+(?:عليها\s+)?تفاعل|أكثر\s+مشاريع?\s+(?:عليها\s+)?تفاعل/i
 
 // "Just show me" impatience — skip discovery, search with what we have.
 const IMMEDIATE_PHRASES = [
@@ -40,7 +42,32 @@ const IMMEDIATE_PHRASES = [
   'show me what you have',
   'just show me',
   'show me everything',
+  'show me the list',
+  'show me the options',
+  'هات الاختيارات',
+  'هات القائمة',
+  'اعرض الاختيارات',
+  'اعرض المشاريع',
+  'جيبلي اختيارات',
+  'ابعتلي الاختيارات',
+  'give me the list',
+  'give me the options',
+  'pull up the options',
 ]
+
+const SHORTLIST_PHRASES = [
+  'وريني', 'ورينى', 'هات الاختيارات', 'هاتلى الاختيارات', 'هاتلي الاختيارات',
+  'هات القائمة', 'هاتلى القائمة', 'هاتلي القائمة', 'اعرض الاختيارات',
+  'اعرض القائمة', 'اعرضلي المشاريع', 'ابعتلي الاختيارات', 'جيبلي اختيارات',
+  'فصّل بالقائمة', 'فصل بالقائمة', 'القائمة', 'الاختيارات', 'الترشيحات',
+  'رشحلي', 'رشّحلي', 'رشح لي', 'أفضل مشروع', 'افضل مشروع', 'أحسن مشروع',
+  'احسن مشروع', 'أنسب مشروع', 'انسب مشروع', 'أحسن اختيار', 'احسن اختيار',
+  'best project', 'best option', 'recommend me', 'what do you recommend', 'show me', 'show the list', 'show options',
+  'give me the list', 'give me options', 'shortlist', 'top 3', 'pull up',
+  'send me options', 'list them',
+]
+
+const SHORTLIST_AFFIRMATION_RE = /^(?:اه|آه|ايوه|أيوه|أيوة|تمام|ماشي|موافق|يلا|yes|yeah|sure|okay|ok|sounds good|go ahead|do it)(?:\s|[!.،]|$)/i
 
 const ASKED_BUDGET_RE = /الميزانية|budget/i
 const ASKED_PLACE_RE = /تكون فين|would you like to be/i
@@ -81,11 +108,11 @@ export function needsFromHistory(history: Array<{ role: string; content: string 
   return mergeNeeds(needs, extractNeeds(currentMessage))
 }
 
-/** Minimum profile to reason about a fit: a budget + (place OR type/purpose). */
+/** Minimum profile for a tailored shortlist: budget + place + type or purpose. */
 export function isReady(n: ConsultNeeds): boolean {
   const hasBudget = n.budgetMin !== undefined || n.budgetMax !== undefined
-  const hasDirection = !!n.place || !!n.propertyType || !!n.purpose
-  return hasBudget && hasDirection
+  const hasWhat = !!n.propertyType || !!n.purpose
+  return hasBudget && !!n.place && hasWhat
 }
 
 /**
@@ -136,9 +163,44 @@ export function areaTakeOffered(assistantTexts: string[]): boolean {
   return assistantTexts.some((t) => t.includes(AREA_TAKE_SEGUE_AR) || t.includes(AREA_TAKE_SEGUE_EN))
 }
 
+export function isRecommendationRequest(text: string): boolean {
+  return RECOMMENDATION_REQUEST_RE.test(text) || /تنصح(?:ني)?|استثمر|أشتري|اشتري|should\s+i\s+(?:buy|invest)/i.test(text)
+}
+
+/** Only explicit popularity/ranking questions should bypass personal discovery. */
+export function isExplicitPopularityRequest(text: string): boolean {
+  return EXPLICIT_POPULARITY_RE.test(text)
+}
+
+/** The user explicitly asks to see a shortlist/cards now (not just advice). */
+export function wantsShortlistNow(text: string): boolean {
+  const t = text.trim().toLowerCase()
+  return SHORTLIST_PHRASES.some((phrase) => t.includes(phrase))
+}
+
+/**
+ * If Ayn already offered a shortlist-vs-discussion choice, don't show cards
+ * until the client chooses the shortlist. A bare yes accepts the first option;
+ * direct project questions/comparisons are handled normally.
+ */
+export function shouldHoldShortlist(
+  assistantTexts: string[],
+  currentMessage: string,
+  directCatalogTask = false,
+): boolean {
+  if (directCatalogTask || hasRecommended(assistantTexts) || !areaTakeOffered(assistantTexts)) return false
+  if (wantsShortlistNow(currentMessage)) return false
+  const lastAssistant = assistantTexts[assistantTexts.length - 1] || ''
+  const justOfferedChoice = lastAssistant.includes(AREA_TAKE_SEGUE_AR) || lastAssistant.includes(AREA_TAKE_SEGUE_EN)
+  return !(justOfferedChoice && SHORTLIST_AFFIRMATION_RE.test(currentMessage.trim()))
+}
+
 export function wantsImmediateListings(text: string): boolean {
   const t = text.trim().toLowerCase()
-  return IMMEDIATE_PHRASES.some((p) => t.includes(p))
+  return IMMEDIATE_PHRASES.some((p) => t.includes(p)) ||
+    /(?:ورين[ىي]|هات(?:لي|لى)?|اعرض(?:لي|لى)?|جيب(?:لي|لى)?|ابعت(?:لي|لى)?)\s*(?:ال)?(?:اختيارات|قائمة|مشاريع|عقارات|شقق|فيلا|وحدات|اللي عندك)/i.test(t) ||
+    /(?:ورين[ىي]|هات(?:لي|لى)?|اعرض(?:لي|لى)?|جيب(?:لي|لى)?|ابعت(?:لي|لى)?)\s*.{0,12}(?:أفضل|افضل|أحسن|احسن|أنسب|انسب|ترشيح|اختيار)/i.test(t) ||
+    /\b(?:show me|pull up|give me|send me)\b.{0,24}\b(?:projects?|properties|apartments?|options?|listings?)\b/i.test(t)
 }
 
 /** Slots the assistant has already asked about (from plain assistant texts). */

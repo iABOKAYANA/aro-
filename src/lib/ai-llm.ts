@@ -14,10 +14,13 @@ import {
   AREA_TAKE_SEGUE_AR,
   AREA_TAKE_SEGUE_EN,
   discoveryExhausted,
+  isExplicitPopularityRequest,
+  isRecommendationRequest,
   hasRecommended,
   isReady,
   needsFromHistory,
   nextConsultQuestion,
+  shouldHoldShortlist,
   slotsRevealedBy,
   type ConsultNeeds,
   wantsImmediateListings,
@@ -131,6 +134,23 @@ function toolsFor(ctx?: AICtx): OllamaTool[] {
   if (role === 'BROKER' || role === 'DEVELOPER' || role === 'CEO' || role === 'ADMIN') return ACTIVE_TOOLS
   // web_search (when wired) stays available to everyone; growth tools gated.
   return ACTIVE_TOOLS.filter((t) => t.function.name === 'web_search' || BUYER_TOOL_NAMES.has(t.function.name))
+}
+
+// Search/project-detail tools create visible property cards as a side effect.
+// During a consultation turn that has not earned a shortlist yet, remove them
+// from the model schema AND reject any hallucinated calls server-side.
+const PRE_SHORTLIST_BLOCKED_TOOLS = new Set([
+  'search_projects',
+  'search_units',
+  'get_project_details',
+  'compare_projects',
+])
+
+function toolsForTurn(ctx: AICtx | undefined, shortlistAllowed: boolean): OllamaTool[] {
+  const tools = toolsFor(ctx)
+  return shortlistAllowed
+    ? tools
+    : tools.filter((tool) => !PRE_SHORTLIST_BLOCKED_TOOLS.has(tool.function.name))
 }
 
 async function toolWebSearch(args: { query?: unknown }): Promise<unknown> {
@@ -510,7 +530,7 @@ function buildConversationState(
   const stateBlock = [
     '[CONVERSATION STATE — slots already known from earlier turns. NEVER ask for these again, not even rephrased:]',
     ...lines,
-    'RULE: slots above are settled — never re-ask them. On a listing question, merge STATE with the new message, call the search tool yourself, then recommend the best 2-3 with a one-line reason each.',
+    'RULE: slots above are settled — never re-ask them. Use STATE to understand the client and reason about fit; wait for shortlist approval before calling search tools.',
   ].join('\n')
   return { stateBlock, mergedQuery }
 }
@@ -522,14 +542,14 @@ function isListingTurn(
   currentMessage: string,
   history: Array<{ role: 'user' | 'assistant'; content: string }>,
 ): boolean {
-  if (hasListingIntent(currentMessage)) return true
-  const { summary } = parseNaturalLanguageQuery(currentMessage)
-  if (summary.length === 0) return false
+  if (hasListingIntent(currentMessage) || isRecommendationRequest(currentMessage)) return true
   const priorUser = history
     .filter((m) => m.role === 'user')
     .map((m) => m.content)
     .slice(-5)
-  return priorUser.some((t) => hasListingIntent(t))
+  // Keep terse replies ("تمام", "في التجمع", "نكمل كلام") inside the same
+  // consultation. A blank parser summary must not drop the server-side gate.
+  return priorUser.some((t) => hasListingIntent(t) || isRecommendationRequest(t))
 }
 
 // Names a SPECIFIC catalog project? Then the turn is a direct question about
@@ -1089,6 +1109,8 @@ interface PreparedLLMRequest {
   messages: OllamaMessage[]
   mergedQuery: string
   listingTurn: boolean
+  /** False until the client has completed discovery and accepted a shortlist. */
+  shortlistAllowed: boolean
   deadline: number
   toolCallsMade: string[]
   allBlocks: ResponseBlock[]
@@ -1105,6 +1127,16 @@ async function prepareLLMRequest(
   const lang = langOverride || detectLang(currentMessage)
   const toolCallsMade: string[] = []
   const allBlocks: ResponseBlock[] = []
+  const { stateBlock: stateBlockRaw, mergedQuery } = buildConversationState(conversationHistory, currentMessage)
+  const siteKind = classifySiteIntent(currentMessage)
+  const needs = needsFromHistory(conversationHistory, currentMessage)
+  const hasPersonalizedCriteria =
+    needs.place !== undefined || needs.budgetMin !== undefined || needs.budgetMax !== undefined ||
+    needs.propertyType !== undefined || needs.purpose !== undefined || needs.bedrooms !== undefined
+  const listingTurn =
+    isListingTurn(currentMessage, conversationHistory) ||
+    siteKind === 'BEST' ||
+    (siteKind === 'CHEAPEST' && hasPersonalizedCriteria)
 
   // ── Site-knowledge grounding ──────────────────────────────────
   // Fact-listing intents (areas / cheapest / booking / calculators / a
@@ -1123,13 +1155,12 @@ async function prepareLLMRequest(
   const inConsultation = conversationHistory
     .slice(-6)
     .some((m) => m.role === 'assistant' && m.content.includes('/projects/'))
-  const siteKind = classifySiteIntent(currentMessage)
   if (
     siteKind === 'GREETING' ||
     siteKind === 'WHERE_AREAS' ||
     siteKind === 'DEVELOPERS' ||
-    (siteKind === 'CHEAPEST' && !inConsultation) ||
-    (siteKind === 'BEST' && !inConsultation) ||
+    (siteKind === 'CHEAPEST' && !inConsultation && !hasPersonalizedCriteria) ||
+    (siteKind === 'BEST' && !inConsultation && isExplicitPopularityRequest(currentMessage)) ||
     siteKind === 'HOW_TO_BOOK' ||
     siteKind === 'CALCULATOR' ||
     siteKind === 'ABOUT_SITE' ||
@@ -1148,33 +1179,36 @@ async function prepareLLMRequest(
       return {
         lang,
         grounded: { content: grounded.content, blocks: allBlocks, toolCallsMade, provider: 'grounded' },
-        messages: [], mergedQuery: '', listingTurn: false, deadline: 0,
+        messages: [], mergedQuery: '', listingTurn: false, shortlistAllowed: false, deadline: 0,
         toolCallsMade, allBlocks,
       }
     }
   }
 
-  const { stateBlock: stateBlockRaw, mergedQuery } = buildConversationState(conversationHistory, currentMessage)
-  const listingTurn = isListingTurn(currentMessage, conversationHistory)
-
   // ── Consultation gate ────────────────────────────────────────
-  // A listing turn with an incomplete client profile (no budget, no
-  // place/type) resolves to ONE deterministic discovery question —
+  // A listing turn with an incomplete client profile (budget + area +
+  // type/purpose) resolves to ONE deterministic discovery question —
   // instant, free, consistent — instead of a project dump. Max
   // CONSULT_MAX_QUESTIONS. Every question is asked AT MOST once: when the
   // client dodges (vague/no answer), discovery is exhausted and the flow
   // proceeds to search with whatever is known — never a repeat question.
   // "وريني اللي عندك" impatience skips discovery entirely.
   let stateBlock = stateBlockRaw
+  let shortlistAllowed = true
   const namesProject = await mentionsKnownProject(currentMessage)
   // Bypass: the client named a catalog project — answer it (tool-grounded),
   // never interrogate budget first.
   if (listingTurn && !wantsImmediateListings(currentMessage) && !namesProject) {
-    const needs = needsFromHistory(conversationHistory, currentMessage)
     const assistantTexts = conversationHistory
       .filter((m) => m.role === 'assistant')
       .map((m) => m.content)
       .slice(-6)
+    const directCatalogTask = namesProject || siteKind === 'COMPARISON'
+    if (shouldHoldShortlist(assistantTexts, currentMessage, directCatalogTask)) {
+      shortlistAllowed = false
+      stateBlock +=
+        '\n[DISCUSSION BEFORE SHORTLIST — Ayn already offered a shortlist or more discussion, and the client has NOT chosen the shortlist. Do not call search_projects, search_units, get_project_details, or compare_projects. Do not output project names, project links, or cards. Respond to the client\'s latest point, show that you understood their actual priorities, give a brief honest opinion grounded in the supplied market facts, then ask ONE useful next question only if it advances the decision. This is a conversation, not a form.]'
+    }
     if (!isReady(needs)) {
       const asked = askedConsultSlots(assistantTexts)
       if (discoveryExhausted(needs, asked)) {
@@ -1201,6 +1235,7 @@ async function prepareLLMRequest(
             messages: [],
             mergedQuery,
             listingTurn: false,
+            shortlistAllowed: false,
             deadline: 0,
             toolCallsMade: [],
             allBlocks: [],
@@ -1208,7 +1243,6 @@ async function prepareLLMRequest(
         }
       }
     } else if (
-      needs.place &&
       slotsRevealedBy(conversationHistory, currentMessage).length > 0 &&
       !hasRecommended(assistantTexts) &&
       !areaTakeOffered(assistantTexts)
@@ -1231,6 +1265,7 @@ async function prepareLLMRequest(
         messages: [],
         mergedQuery,
         listingTurn: false,
+        shortlistAllowed: false,
         deadline: 0,
         toolCallsMade: [],
         allBlocks: [],
@@ -1303,7 +1338,7 @@ async function prepareLLMRequest(
   messages.push({ role: 'user', content: currentMessage })
 
   return {
-    lang, grounded: null, messages, mergedQuery, listingTurn, deadline,
+    lang, grounded: null, messages, mergedQuery, listingTurn, shortlistAllowed, deadline,
     toolCallsMade, allBlocks,
   }
 }
@@ -1316,8 +1351,8 @@ export async function callLLM(
 ): Promise<LLMResult> {
   const prep = await prepareLLMRequest(conversationHistory, currentMessage, ctx, langOverride)
   if (prep.grounded) return prep.grounded
-  const { lang, messages, mergedQuery, listingTurn, deadline, toolCallsMade, allBlocks } = prep
-  const requestTools = toolsFor(ctx)
+  const { lang, messages, mergedQuery, listingTurn, shortlistAllowed, deadline, toolCallsMade, allBlocks } = prep
+  const requestTools = toolsForTurn(ctx, shortlistAllowed)
   const track: FallbackTrack = { fellBack: false }
 
   // Tool loop
@@ -1331,7 +1366,7 @@ export async function callLLM(
     // If no tool calls, return the text response (or forced search).
     if (!assistantMsg.tool_calls || assistantMsg.tool_calls.length === 0) {
       let content = assistantMsg.content || ''
-      if (toolCallsMade.length === 0 && listingTurn) {
+      if (toolCallsMade.length === 0 && listingTurn && shortlistAllowed) {
         // The model refused to retrieve: run the default search server-side
         // and attach real results instead of a bare clarifying question.
         const forced = await runForcedSearch(mergedQuery, lang)
@@ -1372,6 +1407,15 @@ export async function callLLM(
         args = JSON.parse(func.arguments)
       } catch {
         args = {}
+      }
+
+      if (!shortlistAllowed && PRE_SHORTLIST_BLOCKED_TOOLS.has(functionName)) {
+        messages.push({
+          role: 'tool',
+          content: JSON.stringify({ success: false, error: 'The client has not requested a shortlist yet. Continue the consultation in text only.' }),
+          tool_call_id: `call_${functionName}_${round}`,
+        })
+        continue
       }
 
       toolCallsMade.push(functionName)
@@ -1459,8 +1503,8 @@ export async function callLLMStream(
     cb.onToken?.(prep.grounded.content)
     return prep.grounded
   }
-  const { lang, messages, mergedQuery, listingTurn, deadline, toolCallsMade, allBlocks } = prep
-  const requestTools = toolsFor(ctx)
+  const { lang, messages, mergedQuery, listingTurn, shortlistAllowed, deadline, toolCallsMade, allBlocks } = prep
+  const requestTools = toolsForTurn(ctx, shortlistAllowed)
   const track: FallbackTrack = { fellBack: false }
 
   // Tool loop (non-streamed rounds — only the final answer streams)
@@ -1475,7 +1519,7 @@ export async function callLLMStream(
 
     // If no tool calls, stream the text response (or forced search).
     if (!assistantMsg.tool_calls || assistantMsg.tool_calls.length === 0) {
-      if (toolCallsMade.length === 0 && listingTurn) {
+      if (toolCallsMade.length === 0 && listingTurn && shortlistAllowed) {
         // The model refused to retrieve: run the default search server-side
         // and attach real results instead of a bare clarifying question.
         const forced = await runForcedSearch(mergedQuery, lang)
@@ -1537,6 +1581,15 @@ export async function callLLMStream(
         args = JSON.parse(func.arguments)
       } catch {
         args = {}
+      }
+
+      if (!shortlistAllowed && PRE_SHORTLIST_BLOCKED_TOOLS.has(functionName)) {
+        messages.push({
+          role: 'tool',
+          content: JSON.stringify({ success: false, error: 'The client has not requested a shortlist yet. Continue the consultation in text only.' }),
+          tool_call_id: `call_${functionName}_${round}`,
+        })
+        continue
       }
 
       toolCallsMade.push(functionName)

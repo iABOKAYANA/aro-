@@ -25,7 +25,10 @@ import { PUBLIC_PROJECT_WHERE } from '@/lib/project-visibility'
 
 export const dynamic = 'force-dynamic'
 
-const HISTORY_LIMIT = 8
+// Enough for the full discovery → market discussion → shortlist consent
+// sequence. Always load the MOST RECENT turns (then restore chronological
+// order); ascending+take kept only the conversation opening forever.
+const HISTORY_LIMIT = 12
 const ANON_LIMIT = 10
 const ANON_WINDOW_MS = 60 * 60_000
 // Authenticated callers were unlimited — one account could loop the 6-round
@@ -180,13 +183,22 @@ async function loadConversationHistory(convId: string, message: string) {
   // Fetch conversation history
   const history = await db.aIMessage.findMany({
     where: { conversationId: convId },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { createdAt: 'desc' },
     take: HISTORY_LIMIT,
   })
+  const recentChronological = [...history].reverse()
 
   // Build history for LLM
-  const conversationHistory = history
-    .filter(m => !(m.role === 'user' && m.content === message && m === history[history.length - 1]))
+  let duplicateCurrentIndex = -1
+  for (let i = recentChronological.length - 1; i >= 0; i--) {
+    const row = recentChronological[i]
+    if (row.role === 'user' && row.content === message) {
+      duplicateCurrentIndex = i
+      break
+    }
+  }
+  const conversationHistory = recentChronological
+    .filter((_, index) => index !== duplicateCurrentIndex)
     .map(m => ({
       role: m.role as 'user' | 'assistant',
       content: m.content,

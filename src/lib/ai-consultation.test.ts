@@ -4,7 +4,9 @@ import {
   mergeNeeds,
   needsFromHistory,
   isReady,
+  isRecommendationRequest,
   wantsImmediateListings,
+  shouldHoldShortlist,
   askedConsultSlots,
   countConsultQuestions,
   nextConsultQuestion,
@@ -77,6 +79,21 @@ describe('ai-consultation gate', () => {
     expect(q?.content).toContain(CONSULT_MARKER_AR)
   })
 
+  it('budget + unit type is still missing an area; it must not trigger a shortlist', () => {
+    const needs = extractNeeds('عايز شقة بحد أقصى 8 مليون')
+    expect(needs.budgetMax).toBe(8_000_000)
+    expect(needs.propertyType).toBe('APARTMENT')
+    expect(needs.place).toBeUndefined()
+    expect(isReady(needs)).toBe(false)
+    expect(nextConsultQuestion(needs, 'ar', new Set())?.slot).toBe('place')
+  })
+
+  it('budget + area still asks what the client wants (type or purpose)', () => {
+    const needs = extractNeeds('في التجمع بميزانية 8 مليون')
+    expect(isReady(needs)).toBe(false)
+    expect(nextConsultQuestion(needs, 'ar', new Set())?.slot).toBe('typepurpose')
+  })
+
   it('place known but budget missing → asks budget, not place again', () => {
     const history = [
       { role: 'user', content: 'عايز شقة' },
@@ -106,6 +123,20 @@ describe('ai-consultation gate', () => {
     expect(wantsImmediateListings('وريني اللي عندك')).toBe(true)
     expect(wantsImmediateListings('show me what you have')).toBe(true)
     expect(wantsImmediateListings('عايز شقة في التجمع')).toBe(false)
+    expect(wantsImmediateListings('هاتلي اختيارات في التجمع')).toBe(true)
+  })
+
+  it('recommendation wording enters the consultation gate instead of a generic top-project list', () => {
+    expect(isRecommendationRequest('ايه أفضل مشروع يناسبني؟')).toBe(true)
+    expect(isRecommendationRequest('What project would you recommend?')).toBe(true)
+  })
+
+  it('holds cards after offering discussion until the client accepts the shortlist', () => {
+    const assistant = [`رأيي في المنطقة... ${AREA_TAKE_SEGUE_AR}`]
+    expect(shouldHoldShortlist(assistant, 'عايز أعرف أكتر عن المنطقة')).toBe(true)
+    expect(shouldHoldShortlist(assistant, 'تمام')).toBe(false)
+    expect(shouldHoldShortlist(assistant, 'هات القائمة')).toBe(false)
+    expect(shouldHoldShortlist(assistant, 'قارن بين المشروعين دول', true)).toBe(false)
   })
 
   it('counts asked discovery questions from plain assistant texts', () => {
