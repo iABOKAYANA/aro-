@@ -23,7 +23,7 @@ function pickKeywords(text: string): string[] {
     .toLowerCase()
     .replace(/[.,،؟?!؛:;()"'«»\[\]—–…\-\u0640!&]/g, ' ')
     .replace(/\s+/g, ' ')
-    .match(/[a-z\u0600-\u06FF0-9]{4,}/g) || []
+    .match(/[a-z\u0600-\u06FF0-9]{3,}/g) || []
   const seen = new Set<string>()
   const out: string[] = []
   for (const w of words) {
