@@ -545,6 +545,8 @@ export interface KnownCatalogProject {
   nameArabic: string | null
   developerName: string | null
   cityName: string | null
+  /** true = archived register entry: NOT publicly listed (no /projects page). */
+  archived?: boolean
 }
 
 let projectNameCorpus: { loadedAt: number; projects: KnownCatalogProject[] } | null = null
@@ -566,27 +568,54 @@ function normalizeProjectMention(value: string): string {
 export async function findKnownProjectMentions(message: string): Promise<KnownCatalogProject[]> {
   try {
     if (!projectNameCorpus || Date.now() - projectNameCorpus.loadedAt > 60_000) {
-      const rows = await db.project.findMany({
-        where: PUBLIC_PROJECT_WHERE,
-        select: {
-          id: true,
-          name: true,
-          nameArabic: true,
-          slug: true,
-          developer: { select: { companyName: true } },
-          city: { select: { name: true } },
-        },
-      })
+      const [rows, archivedRows] = await Promise.all([
+        db.project.findMany({
+          where: PUBLIC_PROJECT_WHERE,
+          select: {
+            id: true,
+            name: true,
+            nameArabic: true,
+            slug: true,
+            developer: { select: { companyName: true } },
+            city: { select: { name: true } },
+          },
+        }),
+        // The full catalog register: archived projects are NOT public — عين
+        // must recognize ANY name the catalog holds and answer honestly
+        // (no site link, "team can share details") instead of feigning ignorance.
+        db.project.findMany({
+          where: { isActive: false },
+          select: {
+            id: true,
+            name: true,
+            nameArabic: true,
+            slug: true,
+            developer: { select: { companyName: true } },
+            city: { select: { name: true } },
+          },
+        }),
+      ])
       projectNameCorpus = {
         loadedAt: Date.now(),
-        projects: rows.map((row) => ({
-          id: row.id,
-          slug: row.slug,
-          name: row.name,
-          nameArabic: row.nameArabic,
-          developerName: row.developer?.companyName ?? null,
-          cityName: row.city?.name ?? null,
-        })),
+        projects: [
+          ...rows.map((row) => ({
+            id: row.id,
+            slug: row.slug,
+            name: row.name,
+            nameArabic: row.nameArabic,
+            developerName: row.developer?.companyName ?? null,
+            cityName: row.city?.name ?? null,
+          })),
+          ...archivedRows.map((row) => ({
+            id: row.id,
+            slug: row.slug,
+            name: row.name,
+            nameArabic: row.nameArabic,
+            developerName: row.developer?.companyName ?? null,
+            cityName: row.city?.name ?? null,
+            archived: true,
+          })),
+        ],
       }
     }
     const text = ` ${normalizeProjectMention(message)} `
