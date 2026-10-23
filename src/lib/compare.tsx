@@ -137,8 +137,8 @@ export function CompareToggle({ project }: { project: CompareItem }) {
       }
       className={
         active
-          ? 'inline-flex items-center gap-1.5 rounded-full bg-estate-gold px-2.5 py-1 text-[11px] font-semibold text-[#0F1A2C] shadow-sm transition-colors'
-          : 'inline-flex items-center gap-1.5 rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-semibold text-gray-700 backdrop-blur-sm transition-colors hover:bg-estate-gold hover:text-[#0F1A2C] dark:bg-black/50 dark:text-gray-200'
+          ? 'inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-full bg-estate-gold px-2.5 text-[11px] font-semibold text-[#0F1A2C] shadow-sm transition-colors'
+          : 'inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-full bg-white/85 px-2.5 text-[11px] font-semibold text-gray-700 backdrop-blur-sm transition-colors hover:bg-estate-gold hover:text-[#0F1A2C] dark:bg-black/50 dark:text-gray-200'
       }
     >
       <GitCompareArrows className="h-3 w-3" />

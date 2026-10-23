@@ -92,7 +92,7 @@ export default function AISearchPage() {
                 <button
                   key={q}
                   onClick={() => setQuery(q)}
-                  className="rounded-full border px-3 py-1 text-xs transition-colors hover:border-estate-gold hover:text-estate-gold"
+                  className="min-h-[36px] rounded-full border px-3 py-1 text-xs transition-colors hover:border-estate-gold hover:text-estate-gold"
                 >
                   {q.length > 50 ? q.slice(0, 50) + '...' : q}
                 </button>

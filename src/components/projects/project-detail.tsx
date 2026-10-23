@@ -540,9 +540,9 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
       {/* Breadcrumb — wraps on phones; long project names truncate instead of forcing sideways scroll. */}
       <div className="container min-w-0 px-4 pt-8">
         <nav className="mb-6 flex min-w-0 flex-wrap items-center gap-2 text-sm text-muted-foreground">
-          <Link href="/" className="shrink-0 hover:text-foreground">{ar ? 'الرئيسية' : 'Home'}</Link>
+          <Link href="/" className="-my-1.5 shrink-0 py-1.5 hover:text-foreground">{ar ? 'الرئيسية' : 'Home'}</Link>
           <ChevronRight className="h-3 w-3 shrink-0 rtl:rotate-180" />
-          <Link href="/projects" className="shrink-0 hover:text-foreground">{ar ? 'المشاريع' : 'Projects'}</Link>
+          <Link href="/projects" className="-my-1.5 shrink-0 py-1.5 hover:text-foreground">{ar ? 'المشاريع' : 'Projects'}</Link>
           <ChevronRight className="h-3 w-3 shrink-0 rtl:rotate-180" />
           <span className="min-w-0 max-w-full truncate text-foreground">{project.name}</span>
         </nav>
@@ -784,7 +784,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                       )}
                       {project.googleMapsUrl && (
                         <a href={project.googleMapsUrl} target="_blank" rel="noopener noreferrer"
-                          className="text-sm text-estate-gold hover:underline">
+                          className="inline-flex min-h-[36px] items-center gap-1 text-sm text-estate-gold hover:underline">
                           {ar ? 'شوفه على جوجل مابس' : 'View on Google Maps'} <ExternalLink className="inline h-3 w-3" />
                         </a>
                       )}
@@ -1147,7 +1147,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                     </div>
                     {project.googleMapsUrl && (
                       <a href={project.googleMapsUrl} target="_blank" rel="noopener noreferrer"
-                        className="text-sm text-estate-gold hover:underline">
+                        className="inline-flex min-h-[36px] items-center gap-1 text-sm text-estate-gold hover:underline">
                         {ar ? 'شوفه على جوجل مابس' : 'View on Google Maps'} <ExternalLink className="inline h-3 w-3" />
                       </a>
                     )}

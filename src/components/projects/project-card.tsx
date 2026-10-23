@@ -148,7 +148,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         <Link
           href={`/projects/${project.slug}`}
           aria-label={lang === 'ar' ? `فتح مشروع ${project.name}` : `Open ${project.name}`}
-          className="gold-shimmer absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white text-gray-900 opacity-0 shadow-lg transition-all duration-300 group-hover:opacity-100 hover:bg-estate-gold hover:text-white"
+        className="gold-shimmer absolute bottom-3 right-3 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white text-gray-900 opacity-0 shadow-lg transition-all duration-300 group-hover:opacity-100 hover:bg-estate-gold hover:text-white md:min-h-0 md:min-w-0 md:h-8 md:w-8"
         >
           <ArrowUpRight className="h-4 w-4" />
         </Link>

@@ -70,7 +70,9 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:border-[#262626] dark:bg-black/95 dark:supports-[backdrop-filter]:bg-black/60">
       <div className="container flex h-16 items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2">
+      {/* Touch target: the visual logo stays compact, the hit area is 44px
+          (Apple HIG) on phones — mis-taps on a 36px logo annoyed mobile users. */}
+        <Link href="/" className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-2">
           <BrandLogo hideWordmarkOnMobile />
         </Link>
 
@@ -92,7 +94,7 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
         <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
-            className="flex items-center gap-1.5 rounded-full border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 sm:px-3 dark:border-[#262626] dark:text-gray-300 dark:hover:bg-[#0A0A0A]"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-full border border-gray-200 px-3 py-0 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:border-[#262626] dark:text-gray-300 dark:hover:bg-[#0A0A0A]"
           >
             <Globe className="h-3.5 w-3.5" />
             <span>{lang === 'en' ? 'العربية' : 'EN'}</span>
@@ -106,7 +108,7 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
             <button
               onClick={() => setThemeMenuOpen(!themeMenuOpen)}
               aria-label={lang === 'ar' ? 'تبديل المظهر' : 'Toggle theme'}
-              className="flex items-center justify-center rounded-full border border-gray-200 p-2 text-gray-500 transition-colors hover:bg-gray-50 dark:border-[#262626] dark:text-gray-400 dark:hover:bg-[#0A0A0A]"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition-colors hover:bg-gray-50 dark:border-[#262626] dark:text-gray-400 dark:hover:bg-[#0A0A0A]"
             >
               {!mounted || theme === undefined ? <Monitor className="h-4 w-4" /> : theme === 'dark' ? <Moon className="h-4 w-4" /> : theme === 'light' ? <Sun className="h-4 w-4" /> : <Monitor className="h-4 w-4" />}
             </button>
@@ -269,7 +271,7 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
           ))}
 
           <button
-            className="flex items-center justify-center rounded-full p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-[#1a1a1a] lg:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-[#1a1a1a] lg:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={lang === 'ar' ? 'فتح القائمة' : 'Open menu'}
           >

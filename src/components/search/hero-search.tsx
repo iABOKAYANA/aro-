@@ -312,7 +312,7 @@ export function HeroSearch() {
             <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm font-medium lg:justify-end">
               <button
                 onClick={() => router.push('/ai-tools/chat')}
-                className="flex items-center gap-2 text-white/80 transition-colors hover:text-white"
+                className="flex min-h-[44px] items-center gap-2 px-1 text-white/80 transition-colors hover:text-white"
               >
                 <span>{isRtl ? 'اسأل عين' : 'Ask Ayn'}</span>
                 <span className="text-estate-gold">✦</span>
@@ -320,7 +320,7 @@ export function HeroSearch() {
               <ArrowRight className="h-4 w-4 shrink-0 text-white/40 rtl:rotate-180" aria-hidden />
               <button
                 onClick={() => router.push('/projects')}
-                className="flex items-center gap-2 text-white/80 transition-colors hover:text-white"
+                className="flex min-h-[44px] items-center gap-2 px-1 text-white/80 transition-colors hover:text-white"
               >
                 {isRtl ? 'أو تصفح بنفسك على مزاجك' : 'or browse on your own'}
               </button>

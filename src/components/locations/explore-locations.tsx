@@ -294,7 +294,7 @@ export function ExploreLocations() {
                   <Link
                     key={c.slug}
                     href={`/projects?city=${c.slug}`}
-                    className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-foreground transition-colors hover:bg-estate-gold/15 hover:text-estate-gold dark:bg-black"
+                    className="inline-flex min-h-[36px] items-center rounded-full bg-muted px-3 text-xs font-semibold text-foreground transition-colors hover:bg-estate-gold/15 hover:text-estate-gold dark:bg-black"
                   >
                     {lang === 'ar' && c.nameArabic ? c.nameArabic : c.name}
                     <span className="ms-1.5 text-[10px] font-normal text-muted-foreground">{c.count}</span>
@@ -304,21 +304,21 @@ export function ExploreLocations() {
             )}
             <Link
               href="/locations"
-              className="inline-flex shrink-0 items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="inline-flex min-h-[44px] shrink-0 items-center gap-2 px-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {lang === 'ar' ? 'كل المناطق' : 'All areas'}
               <ArrowRight className="h-4 w-4 rtl:rotate-180" />
             </Link>
             <Link
               href="/areas"
-              className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="inline-flex min-h-[44px] shrink-0 items-center gap-2 px-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {lang === 'ar' ? 'دليل المناطق' : 'Area guide'}
               <ArrowRight className="h-4 w-4 rtl:rotate-180" />
             </Link>
             <Link
               href="/projects"
-              className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="inline-flex min-h-[44px] shrink-0 items-center gap-2 px-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {t('home.exploreLink')}
               <ArrowRight className="h-4 w-4 rtl:rotate-180" />
