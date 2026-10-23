@@ -57,7 +57,7 @@ export async function generateMetadata({
     description,
     robots: { index: false },
     openGraph: {
-      title: `مقارنة مشاريع: ${names} | GHAYA`,
+      title: `مقارنة مشاريع: ${names}`,
       description,
       url: `/compare/shared/${params.token}`,
       ...(image ? { images: [{ url: image }] } : {}),

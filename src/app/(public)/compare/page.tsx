@@ -9,15 +9,16 @@ import { SITE_URL, languageAlternates } from '@/lib/site'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'قارن المشاريع | Compare Projects',
+  title: 'قارن المشاريع العقارية في مصر | Compare Projects',
   description:
     'حط لحد ٤ مشاريع جنب بعض — السعر وخطط السداد والمساحات والاستلام والمطور. Compare up to 4 Egyptian projects side by side: prices, payment plans, areas, delivery and developers.',
   alternates: languageAlternates('/compare'),
   openGraph: {
-    title: 'قارن المشاريع | GHAYA REAL ESTATE',
+  title: 'قارن المشاريع العقارية في مصر',
     description:
       'حط لحد ٤ مشاريع جنب بعض — السعر وخطط السداد والمساحات والاستلام والمطور.',
     url: `${SITE_URL}/compare`,
+    siteName: 'GHAYA REAL ESTATE',
     images: [
       {
         url: `${SITE_URL}/og?t=${encodeURIComponent('Compare Projects')}&s=${encodeURIComponent('Price, area and payment plans side by side')}`,

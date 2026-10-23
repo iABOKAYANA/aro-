@@ -1,12 +1,22 @@
 import { Metadata } from 'next'
 import { db } from '@/lib/db'
+import { SITE_NAME, SITE_URL } from '@/lib/site'
 import CareersView from './careers-view'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: 'Careers | GHAYA REAL ESTATE',
-  description: 'Join the GHAYA team and help shape the future of real estate in Egypt.',
+export async function generateMetadata(): Promise<Metadata> {
+  const openPositions = await db.job.count({ where: { isPublished: true } }).catch(() => 0)
+  const title = 'وظائف وفرص عمل | Careers'
+  const description = 'اكتشف فرص العمل المتاحة لدى غاية العقارية.'
+  return {
+    title,
+    description,
+    alternates: { canonical: `${SITE_URL}/careers` },
+    ...(openPositions === 0 ? { robots: { index: false, follow: true } } : {}),
+    openGraph: { type: 'website', title, description, url: `${SITE_URL}/careers`, siteName: SITE_NAME },
+    twitter: { card: 'summary', title, description },
+  }
 }
 
 export default async function CareersPage() {

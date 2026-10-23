@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import { db } from '@/lib/db'
 import { PUBLIC_PROJECT_WHERE } from '@/lib/project-visibility'
-import { SITE_URL } from '@/lib/site'
+import { SITE_NAME, SITE_URL } from '@/lib/site'
 import ProjectsMapView from './map-view'
 
 export const dynamic = 'force-dynamic'
@@ -11,6 +11,13 @@ export const metadata: Metadata = {
   description:
     'كل مشاريع غاية على خريطة مصر تفاعلية — من الساحل الشمالي للقاهرة الجديدة والعاصمة الإدارية. Interactive map of every project listed on GHAYA.',
   alternates: { canonical: `${SITE_URL}/projects/map` },
+  openGraph: {
+    type: 'website',
+    title: 'خريطة المشاريع العقارية في مصر | Projects Map',
+    description: 'استكشف مواقع المشاريع العقارية المعروضة على خريطة مصر.',
+    url: `${SITE_URL}/projects/map`,
+    siteName: SITE_NAME,
+  },
 }
 
 export default async function ProjectsMapPage() {

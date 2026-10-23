@@ -8,8 +8,9 @@ const FullPageChat = dynamic(
 )
 
 export const metadata: Metadata = {
-  title: 'AI Property Assistant | GHAYA REAL ESTATE',
+  title: 'مساعد عقاري ذكي | AI Property Assistant',
   description: 'Chat with our AI assistant for personalized property recommendations.',
+  robots: { index: false, follow: false },
 }
 
 export default function AIChatPage() {

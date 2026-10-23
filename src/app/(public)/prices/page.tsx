@@ -25,9 +25,10 @@ const pricesMetadata: Metadata = {
     'متوسط وأقل سعر متر حسب المنطقة ونوع الوحدة — محسوبة من مخزون غاية الحقيقي (مش تقديرات). Price-per-sqm explorer computed from our real catalog.',
   alternates: languageAlternates('/prices'),
   openGraph: {
-    title: 'أسعار المتر في مصر | GHAYA REAL ESTATE',
+    title: 'أسعار المتر في مصر | Price per Square Meter',
     description: 'أسعار المتر حسب المنطقة والنوع من كتالوج حقيقي موثّق.',
     url: `${SITE_URL}/prices`,
+    siteName: 'GHAYA REAL ESTATE',
   },
 }
 

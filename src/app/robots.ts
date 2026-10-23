@@ -1,6 +1,8 @@
 import type { MetadataRoute } from 'next'
 import { SITE_URL } from '@/lib/site'
 
+export const revalidate = 86_400
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
@@ -17,7 +19,6 @@ export default function robots(): MetadataRoute.Robots {
           '/buyer/',
           '/dashboard/',
           '/auth/',
-          '/saved',
         ],
       },
       // AI crawlers get a narrower view: they must not index the assistant
@@ -29,6 +30,6 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
+    host: new URL(SITE_URL).host,
   }
 }

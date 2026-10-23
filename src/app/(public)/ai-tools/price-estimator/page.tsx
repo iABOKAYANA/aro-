@@ -48,9 +48,9 @@ export default function PriceEstimatorPage() {
       range: { min: estimatedPrice * 0.85, max: estimatedPrice * 1.15 },
       comparableUnits,
       factors: [
-        { label: 'Location premium', labelAr: 'تميز المكان', value: location ? '+10%' : 'Standard', valueAr: location ? '+10%' : 'عادي' },
-        { label: 'Bedroom multiplier', labelAr: 'معامل الأوض', value: bedrooms ? `${bedrooms}BR (+${((bedroomMultiplier - 1) * 100).toFixed(0)}%)` : 'N/A', valueAr: bedrooms ? `${bedrooms} أوض (+${((bedroomMultiplier - 1) * 100).toFixed(0)}%)` : '—' },
-        { label: 'Market trend', labelAr: 'اتجاه السوق', value: 'Stable (+3% YoY)', valueAr: 'مستقر (+3% سنويًا)' },
+        { label: 'Baseline rate assumption', labelAr: 'سعر المتر الأساسي (افتراض)', value: `EGP ${avgPricePerSqm.toLocaleString('en-US')} / sqm`, valueAr: `${avgPricePerSqm.toLocaleString('ar-EG')} جنيه / م²` },
+        { label: 'Bedroom adjustment assumption', labelAr: 'تعديل عدد الغرف (افتراض)', value: bedrooms ? `${bedrooms}BR (+${((bedroomMultiplier - 1) * 100).toFixed(0)}%)` : 'No adjustment', valueAr: bedrooms ? `${bedrooms} أوض (+${((bedroomMultiplier - 1) * 100).toFixed(0)}%)` : 'بدون تعديل' },
+        { label: 'Estimate range assumption', labelAr: 'هامش التقدير (افتراض)', value: '±15%', valueAr: '±15%' },
       ],
     })
     setLoading(false)
@@ -60,9 +60,9 @@ export default function PriceEstimatorPage() {
     <div className="container px-4 py-8 sm:py-12">
       <div className="mx-auto max-w-4xl">
         <div className="mb-6 text-center sm:mb-8">
-          <Badge variant="gold" className="mb-3"><DollarSign className="me-1 h-3 w-3" /> {ar ? 'أداة ذكية' : 'AI Tool'}</Badge>
+          <Badge variant="gold" className="mb-3"><DollarSign className="me-1 h-3 w-3" /> {ar ? 'تقدير أولي' : 'Rough estimate'}</Badge>
           <h1 className="text-2xl font-bold sm:text-3xl">{ar ? 'حاسبة سعر العقار' : 'Property Price Estimator'}</h1>
-          <p className="mt-2 text-muted-foreground">{ar ? 'اعرف القيمة السوقية المتوقعة لأي عقار في مصر' : 'Get an estimated market value for any property in Egypt'}</p>
+          <p className="mt-2 text-muted-foreground">{ar ? 'تقدير توضيحي بافتراضات مبسطة — مش سعر وحدة معروضة أو تقييم عقاري معتمد.' : 'An illustrative calculation using simplified assumptions — not a live listing price or certified valuation.'}</p>
         </div>
 
         <Card className="mb-6 sm:mb-8">
@@ -113,7 +113,7 @@ export default function PriceEstimatorPage() {
           <div className="space-y-4">
             <Card className="border-estate-gold/20 bg-estate-gold/5">
               <CardContent className="p-6 text-center">
-                <p className="text-sm text-muted-foreground">{ar ? 'القيمة السوقية المتوقعة' : 'Estimated Market Value'}</p>
+                <p className="text-sm text-muted-foreground">{ar ? 'تقدير توضيحي غير رسمي' : 'Illustrative estimate — not an appraisal'}</p>
                 <p className="mt-2 text-3xl font-bold sm:text-4xl text-estate-gold">{formatEGP(result.estimatedPrice)}</p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {ar ? 'النطاق' : 'Range'}: {formatEGP(result.range.min)} - {formatEGP(result.range.max)}
@@ -139,7 +139,7 @@ export default function PriceEstimatorPage() {
 
               {result.comparableUnits?.length > 0 && (
                 <Card>
-                  <CardHeader><CardTitle className="text-base">{ar ? 'عقارات مشابهة' : 'Comparable Properties'}</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="text-base">{ar ? 'أمثلة وحدات قريبة في المساحة' : 'Catalog unit examples by area'}</CardTitle></CardHeader>
                   <CardContent className="space-y-2">
                     {result.comparableUnits.map((u: any) => (
                       <div key={u.id} className="flex items-center justify-between gap-3 text-sm">

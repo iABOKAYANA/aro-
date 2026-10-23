@@ -75,6 +75,10 @@ export async function GET(
 
     const { project, ...rest } = unit
 
+    if (unit.isSample || !['AVAILABLE', 'Vacant'].includes(unit.status)) {
+      return NextResponse.json({ error: 'Unit not found' }, { status: 404 })
+    }
+
     // Visibility follows the project (incl. price gate): units of
     // non-approved or priceless projects are invisible here (same 404 as
     // a slug that does not exist). The project select carries no units

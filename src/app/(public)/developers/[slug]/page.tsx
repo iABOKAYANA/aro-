@@ -61,19 +61,18 @@ async function getDeveloper(slug: string) {
 
 export async function generateMetadata({ params }: DevPageProps): Promise<Metadata> {
   const dev = await getDeveloper(params.slug)
-  if (!dev) return { title: 'Developer Not Found', robots: { index: false, follow: false } }
+  if (!dev || dev.projects.length === 0) return { title: 'Developer Not Found', robots: { index: false, follow: false } }
   const title = `${dev.companyNameArabic || dev.companyName} | مشاريع ${dev.companyName} وأسعارها`
+  const description = (dev.descriptionArabic || dev.description || `مشاريع ${dev.companyName} المعروضة في غاية مع الأسعار والأنواع ومعلومات التسليم.`).slice(0, 180)
   return {
     title: { absolute: `${title} | GHAYA REAL ESTATE` },
-    description:
-      dev.descriptionArabic ||
-      dev.description ||
-      `كل مشاريع ${dev.companyName} المعروضة على غاية — الأسعار والأنواع وحالة التسليم.`,
+    description,
     alternates: { canonical: `${SITE_URL}/developers/${dev.slug}` },
     openGraph: {
       title,
       description: `مشاريع ${dev.companyName} على غاية`,
       url: `${SITE_URL}/developers/${dev.slug}`,
+      siteName: 'GHAYA REAL ESTATE',
       images: dev.coverImage ? [{ url: absoluteImage(dev.coverImage)! }] : undefined,
     },
   }

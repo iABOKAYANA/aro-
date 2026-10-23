@@ -2,6 +2,12 @@ import type { MetadataRoute } from 'next'
 import { db } from '@/lib/db'
 import { SITE_URL } from '@/lib/site'
 import { PUBLIC_PROJECT_WHERE, PUBLIC_UNIT_PROJECT_WHERE } from '@/lib/project-visibility'
+import { getFeatureFlags } from '@/lib/feature-flags'
+
+// The catalogue changes without a deployment and the build environment may
+// not have the production database. Resolve sitemap rows at request time so
+// it always reflects the live public catalogue, not a stale build snapshot.
+export const dynamic = 'force-dynamic'
 
 type Row = { slug: string | null; updatedAt?: Date | null }
 
@@ -24,7 +30,7 @@ async function rows<T extends Row>(
       seen.add(url)
       out.push({
         url,
-        lastModified: item.updatedAt ?? new Date(),
+        ...(item.updatedAt ? { lastModified: item.updatedAt } : {}),
         changeFrequency,
         priority,
       })
@@ -36,35 +42,32 @@ async function rows<T extends Row>(
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date()
-
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: `${SITE_URL}/`, lastModified: now, changeFrequency: 'daily', priority: 1 },
-    { url: `${SITE_URL}/projects`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
-    { url: `${SITE_URL}/projects/map`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
-    { url: `${SITE_URL}/ai-tools`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${SITE_URL}/ai-tools/search`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
-    { url: `${SITE_URL}/ai-tools/chat`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
-    { url: `${SITE_URL}/ai-tools/price-estimator`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
-    { url: `${SITE_URL}/ai-tools/investment`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
-    { url: `${SITE_URL}/ai-tools/mortgage`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
-    { url: `${SITE_URL}/compare`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${SITE_URL}/offers`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${SITE_URL}/areas`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${SITE_URL}/ai-tools/affordability`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
-    { url: `${SITE_URL}/ai-tools/rentbuy`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
-    { url: `${SITE_URL}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${SITE_URL}/faq`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${SITE_URL}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${SITE_URL}/careers`, lastModified: now, changeFrequency: 'weekly', priority: 0.5 },
-    { url: `${SITE_URL}/blog`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
-    { url: `${SITE_URL}/press`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
-    { url: `${SITE_URL}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
-    { url: `${SITE_URL}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
-    { url: `${SITE_URL}/cookies`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
-    { url: `${SITE_URL}/saved`, lastModified: now, changeFrequency: 'daily', priority: 0.4 },
-    { url: `${SITE_URL}/developers`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${SITE_URL}/`, changeFrequency: 'daily', priority: 1 },
+    { url: `${SITE_URL}/projects`, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${SITE_URL}/projects/map`, changeFrequency: 'daily', priority: 0.7 },
+    { url: `${SITE_URL}/ai-tools`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${SITE_URL}/ai-tools/search`, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${SITE_URL}/ai-tools/investment`, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${SITE_URL}/ai-tools/mortgage`, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${SITE_URL}/compare`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${SITE_URL}/offers`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${SITE_URL}/areas`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${SITE_URL}/ai-tools/affordability`, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${SITE_URL}/ai-tools/rentbuy`, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${SITE_URL}/about`, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${SITE_URL}/faq`, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${SITE_URL}/contact`, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${SITE_URL}/privacy`, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${SITE_URL}/terms`, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${SITE_URL}/cookies`, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${SITE_URL}/developers`, changeFrequency: 'weekly', priority: 0.7 },
   ]
+
+  // Feature pages only belong in the sitemap while the owner has them enabled.
+  const flags = await getFeatureFlags()
+  if (flags.price_explorer) staticRoutes.push({ url: `${SITE_URL}/prices`, changeFrequency: 'weekly', priority: 0.7 })
+  if (flags.buying_guide) staticRoutes.push({ url: `${SITE_URL}/guides/buying-offplan`, changeFrequency: 'monthly', priority: 0.6 })
 
   const [projects, blogs, press, jobs, units, developers] = await Promise.all([
     rows(
@@ -105,6 +108,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           where: {
             slug: { not: null },
             isSample: false,
+            status: { in: ['AVAILABLE', 'Vacant'] },
             project: { ...PUBLIC_UNIT_PROJECT_WHERE },
           },
           select: { slug: true, updatedAt: true },
@@ -118,7 +122,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     rows(
       () =>
         db.developerProfile.findMany({
-          where: { slug: { not: null }, projects: { some: { isActive: true } } },
+          where: { slug: { not: null }, projects: { some: { ...PUBLIC_PROJECT_WHERE } } },
           select: { slug: true },
           take: 500,
         }),
@@ -127,6 +131,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       'weekly'
     ),
   ])
+
+  // Empty archive pages are thin; add them only once they have indexable
+  // content. Detail pages still enter the sitemap individually above.
+  if (blogs.length > 0) staticRoutes.push({ url: `${SITE_URL}/blog`, changeFrequency: 'daily', priority: 0.8 })
+  if (press.length > 0) staticRoutes.push({ url: `${SITE_URL}/press`, changeFrequency: 'monthly', priority: 0.4 })
+  if (jobs.length > 0) staticRoutes.push({ url: `${SITE_URL}/careers`, changeFrequency: 'weekly', priority: 0.5 })
 
   return [...staticRoutes, ...projects, ...blogs, ...press, ...jobs, ...units, ...developers]
 }

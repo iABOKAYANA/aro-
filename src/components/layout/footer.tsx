@@ -97,8 +97,8 @@ export function Footer({ appType = 'all' }: { appType?: AppType }) {
             </Link>
             <p className="text-sm text-gray-400">
               {lang === 'ar'
-                ? 'منصة مصرية للعقارات مدعومة بالذكاء الاصطناعي. ابحث عن العقار المثالي.'
-                : "Egypt's leading AI-powered real estate platform. Find your perfect property with smart recommendations."}
+                ? 'استكشف المشاريع والوحدات العقارية في مصر، وقارن الأسعار والمساحات وخطط السداد.'
+                : 'Explore Egyptian real estate projects and available units, and compare prices, areas, and payment plans.'}
             </p>
           </div>
 

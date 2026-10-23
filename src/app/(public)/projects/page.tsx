@@ -12,10 +12,11 @@ export const metadata: Metadata = {
     'تصفح مشاريع وكمبوندات مصر — التجمع الخامس والعاصمة الإدارية والشيخ زايد والساحل الشمالي: أسعار حقيقية ومساحات وخطط سداد. Browse verified Egyptian projects and compounds with real prices, areas and payment plans.',
   alternates: languageAlternates('/projects'),
   openGraph: {
-    title: 'مشاريع وكمبوندات مصر | GHAYA REAL ESTATE',
+    title: 'مشاريع وكمبوندات مصر | Projects & Compounds',
     description:
       'تصفح مشاريع وكمبوندات مصر بأسعار حقيقية ومساحات وخطط سداد — التجمع، العاصمة الإدارية، زايد، الساحل.',
     url: `${SITE_URL}/projects`,
+    siteName: 'GHAYA REAL ESTATE',
     images: [
       {
         url: `${SITE_URL}/og?t=${encodeURIComponent('Projects & Compounds in Egypt')}&s=${encodeURIComponent('Real prices, areas and payment plans')}`,

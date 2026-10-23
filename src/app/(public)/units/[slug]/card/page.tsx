@@ -6,6 +6,7 @@ import { getFeatureFlags } from '@/lib/feature-flags'
 import { formatEGP } from '@/lib/utils'
 import { SITE_URL } from '@/lib/site'
 import { absoluteImage } from '@/lib/seo'
+import { isPublicProject } from '@/lib/project-visibility'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,6 +37,9 @@ export default async function UnitCardPage({ params }: { params: { slug: string 
           nameArabic: true,
           slug: true,
           coverImage: true,
+          isActive: true,
+          approvalStatus: true,
+          parentProjectId: true,
           developer: { select: { companyName: true } },
           city: { select: { name: true, nameArabic: true } },
           paymentPlans: { select: { nameArabic: true, name: true, description: true, downPaymentPct: true, installmentYears: true } },
@@ -44,7 +48,12 @@ export default async function UnitCardPage({ params }: { params: { slug: string 
       phase: { select: { name: true } },
     },
   })
-  if (!unit) notFound()
+  if (
+    !unit ||
+    unit.isSample ||
+    !['AVAILABLE', 'Vacant'].includes(unit.status) ||
+    !isPublicProject({ ...unit.project, units: [{ price: unit.price }] })
+  ) notFound()
 
   const p = unit.project
   const rows = [

@@ -2,8 +2,9 @@ import { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { JourneyViewTracker } from '@/components/projects/project-transparency'
 import { db } from '@/lib/db'
-import { SITE_URL, languageAlternates } from '@/lib/site'
+import { SITE_NAME, SITE_URL, languageAlternates } from '@/lib/site'
 import { absoluteImage } from '@/lib/seo'
+import { isPublicProject } from '@/lib/project-visibility'
 import UnitView from './unit-view'
 
 export const dynamic = 'force-dynamic'
@@ -18,6 +19,7 @@ interface UnitPageProps {
  * norm, not an edge case (owner hit "Unit Not Found" on every such link).
  * cuid pattern: 'c' + 24 base-alphanumeric chars. */
 const CUID_RE = /^c[a-z0-9]{24}$/
+const PUBLIC_UNIT_STATUSES = new Set(['AVAILABLE', 'Vacant'])
 
 function unitWhere(key: string) {
   return CUID_RE.test(key) ? { id: key } : { slug: key }
@@ -26,9 +28,25 @@ function unitWhere(key: string) {
 export async function generateMetadata({ params }: UnitPageProps): Promise<Metadata> {
   const unit = await db.unit.findUnique({
     where: unitWhere(params.slug),
-    include: { project: { select: { name: true, slug: true, coverImage: true } } },
+    include: {
+      project: {
+        select: {
+          name: true,
+          slug: true,
+          coverImage: true,
+          isActive: true,
+          approvalStatus: true,
+          parentProjectId: true,
+        },
+      },
+    },
   })
-  if (!unit) return { title: 'Unit Not Found', robots: { index: false, follow: false } }
+  if (
+    !unit ||
+    unit.isSample ||
+    !PUBLIC_UNIT_STATUSES.has(unit.status) ||
+    !isPublicProject({ ...unit.project, units: [{ price: unit.price }] })
+  ) return { title: 'Unit Not Found', robots: { index: false, follow: false } }
   // Suffix once, exactly: metaTitle may or may not end with the brand, and the
   // root layout template would otherwise stack "| GHAYA REAL ESTATE" on top of
   // an already-suffixed string (the doubled title seen on /units pages).
@@ -49,6 +67,7 @@ export async function generateMetadata({ params }: UnitPageProps): Promise<Metad
       title,
       description,
       url,
+      siteName: SITE_NAME,
       images: [{ url: cover, alt: `${unit.project.name} - ${unit.name}` }],
     },
     twitter: { card: 'summary_large_image', title, description, images: [cover] },
@@ -60,12 +79,26 @@ export default async function UnitPage({ params }: UnitPageProps) {
     where: unitWhere(params.slug),
     include: {
       project: {
-        select: { id: true, name: true, slug: true, coverImage: true, city: { select: { name: true } } },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          coverImage: true,
+          isActive: true,
+          approvalStatus: true,
+          parentProjectId: true,
+          city: { select: { name: true } },
+        },
       },
       phase: { select: { name: true } },
     },
   })
-  if (!unit) notFound()
+  if (
+    !unit ||
+    unit.isSample ||
+    !PUBLIC_UNIT_STATUSES.has(unit.status) ||
+    !isPublicProject({ ...unit.project, units: [{ price: unit.price }] })
+  ) notFound()
 
   // Price history for the trend chart (oldest→newest; may be empty).
   const priceHistory = await db.priceHistory.findMany({

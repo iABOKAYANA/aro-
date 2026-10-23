@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { db } from '@/lib/db'
 import { PUBLIC_PROJECT_WHERE } from '@/lib/project-visibility'
-import { SITE_URL } from '@/lib/site'
+import { SITE_NAME, SITE_URL } from '@/lib/site'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 
@@ -14,6 +14,13 @@ export const metadata: Metadata = {
   description:
     'دليل شركات تطوير العقارات في مصر الممثلة على غاية — تاريخ كل شركة ومشاريعها وأقل سعر متاح. Verified developers behind every project listed on GHAYA.',
   alternates: { canonical: `${SITE_URL}/developers` },
+  openGraph: {
+    type: 'website',
+    title: 'مطورو العقارات في مصر | Real Estate Developers',
+    description: 'تعرّف على المطورين ومشاريعهم المتاحة في كتالوج غاية العقارية.',
+    url: `${SITE_URL}/developers`,
+    siteName: SITE_NAME,
+  },
 }
 
 export default async function DevelopersPage() {

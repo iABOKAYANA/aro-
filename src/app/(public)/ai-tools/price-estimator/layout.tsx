@@ -1,8 +1,11 @@
 import { Metadata } from 'next'
+import { SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {
-  title: 'Property Price Estimator',
-  description: 'Get AI-powered property valuations for any property in Egypt. Estimate fair market value based on area, location, and comparable sales.',
+  title: 'حاسبة تقدير سعر العقار | Property Price Estimator',
+  description: 'تقدير أولي غير رسمي يعتمد على افتراضات مبسطة؛ لا يمثل سعر وحدة معروضة أو تقييمًا عقاريًا معتمدًا.',
+  alternates: { canonical: `${SITE_URL}/ai-tools/price-estimator` },
+  robots: { index: false, follow: true },
 }
 
 export default function PriceEstimatorLayout({ children }: { children: React.ReactNode }) {

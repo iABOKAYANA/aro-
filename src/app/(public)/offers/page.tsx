@@ -11,10 +11,11 @@ export const metadata: Metadata = {
     'كل خصومات الكاش الشغالة في مكان واحد — المشروع وخطة السداد ونسبة الخصم والسعر قبل وبعد. Every live cash-discount offer in one radar.',
   alternates: languageAlternates('/offers'),
   openGraph: {
-    title: 'رادار العروض | GHAYA REAL ESTATE',
+    title: 'عروض عقارية في مصر | Real Estate Offers',
     description:
       'كل خصومات الكاش الشغالة في مكان واحد — المشروع والخطة والسعر قبل وبعد.',
     url: `${SITE_URL}/offers`,
+    siteName: 'GHAYA REAL ESTATE',
     images: [
       {
         url: `${SITE_URL}/og?t=${encodeURIComponent('Offers Radar')}&s=${encodeURIComponent('Live cash discounts across Egypt')}`,

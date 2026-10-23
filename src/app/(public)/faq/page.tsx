@@ -9,10 +9,11 @@ export const metadata: Metadata = {
     'إجابات غاية العقارية عن الحجز والمعاينة والأسعار والمناطق والحسابات والمساعد عين والتواصل. GHAYA REAL ESTATE answers on booking, prices, areas, accounts, Ayn and contact.',
   alternates: languageAlternates('/faq'),
   openGraph: {
-    title: 'الأسئلة الشائعة | GHAYA REAL ESTATE',
+    title: 'الأسئلة الشائعة عن العقارات | FAQ',
     description:
       'إجابات سريعة عن الحجز والأسعار والمناطق والحسابات والمساعد عين.',
-    url: `${SITE_URL}/faq`,
+      url: `${SITE_URL}/faq`,
+      siteName: 'GHAYA REAL ESTATE',
     images: [
       {
         url: `${SITE_URL}/og?t=${encodeURIComponent('FAQ')}&s=${encodeURIComponent('Booking, prices, areas and Ayn answers')}`,

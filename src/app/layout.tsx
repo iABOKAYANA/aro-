@@ -20,44 +20,17 @@ export const metadata: Metadata = {
   icons: { icon: '/images/ghaya-logo.svg', apple: '/images/ghaya-logo.png' },
   applicationName: SITE_NAME,
   title: {
-    default: 'GHAYA REAL ESTATE | Smart Real Estate Solutions',
+    default: 'مشاريع ووحدات عقارية في مصر | GHAYA REAL ESTATE',
     template: '%s | GHAYA REAL ESTATE',
   },
-  description: 'Egypt\'s leading AI-powered real estate platform. Find properties, compounds, and projects with smart search and AI recommendations.',
+  description: 'استكشف مشاريع ووحدات عقارية في مصر. Compare Egyptian projects, available units, prices, areas and payment plans on GHAYA.',
   keywords: ['real estate', 'Egypt', 'properties', 'compounds', 'Cairo', 'AI', 'smart search'],
-  alternates: {
-    canonical: `${SITE_URL}/`,
-    languages: {
-      en: `${SITE_URL}/?lang=en`,
-      ar: `${SITE_URL}/?lang=ar`,
-      'x-default': `${SITE_URL}/`,
-    },
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    alternateLocale: ['ar_EG'],
-    url: `${SITE_URL}/`,
-    siteName: SITE_NAME,
-    title: 'GHAYA REAL ESTATE | Smart Real Estate Solutions',
-    description:
-      "Egypt's leading AI-powered real estate platform. Find properties, compounds and projects with smart search and AI recommendations.",
-    images: [
-      { url: `${SITE_URL}/og`, width: 1200, height: 630, alt: SITE_NAME },
-      { url: `${SITE_URL}/images/ghaya-logo.png`, width: 512, height: 512, alt: SITE_NAME },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'GHAYA REAL ESTATE | Smart Real Estate Solutions',
-    description:
-      "Egypt's leading AI-powered real estate platform. Find properties, compounds and projects with smart search and AI recommendations.",
-    images: [`${SITE_URL}/og`],
-  },
   robots: {
     index: true,
     follow: true,
-    googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
+    // Keep Google-specific preview hints here; index/follow inherit the
+    // page-level robots values so a child page's noindex cannot be overridden.
+    googleBot: { 'max-image-preview': 'large', 'max-snippet': -1 },
   },
   category: 'real estate',
 }

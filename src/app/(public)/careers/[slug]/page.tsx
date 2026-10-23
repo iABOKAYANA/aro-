@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
-import { SITE_URL, languageAlternates } from '@/lib/site'
+import { SITE_NAME, SITE_URL, languageAlternates } from '@/lib/site'
 import JobView from './job-view'
 
 export const dynamic = 'force-dynamic'
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: JobPageProps): Promise<Metada
     select: { title: true, description: true, department: true, location: true, isPublished: true },
   })
 
-  if (!job?.isPublished) return { title: 'Job Not Found' }
+  if (!job?.isPublished) return { title: 'Job Not Found', robots: { index: false, follow: false } }
 
   const path = `/careers/${params.slug}`
   const description = job.description.slice(0, 155).trim()
@@ -42,6 +42,7 @@ export async function generateMetadata({ params }: JobPageProps): Promise<Metada
       title: job.title,
       description,
       url: `${SITE_URL}${path}`,
+      siteName: SITE_NAME,
       images: [{ url: `${SITE_URL}/og?t=${encodeURIComponent(job.title)}&s=${encodeURIComponent(`${job.department} · ${job.location}`)}` }],
     },
     twitter: { card: 'summary_large_image', title: job.title, description },

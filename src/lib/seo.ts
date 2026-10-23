@@ -105,12 +105,16 @@ function truncate(s: string, max: number): string {
   return `${s.slice(0, max - 1).trimEnd()}…`
 }
 
+function stripBrandSuffix(title: string): string {
+  return title.replace(/\s*(?:\||—|-)\s*GHAYA(?:\s+REAL\s+ESTATE)?\s*$/i, '').trim()
+}
+
 /**
  * Project detail title — owner `metaTitle` wins; otherwise Arabic-first with
  * real price/city/developer segments (missing pieces are dropped, never faked).
  */
 export function projectTitle(p: SeoProjectLike): string {
-  if (p.metaTitle && p.metaTitle.trim()) return p.metaTitle.trim()
+  if (p.metaTitle && p.metaTitle.trim()) return stripBrandSuffix(p.metaTitle.trim())
   const { ar, en } = pickName(p)
   const name = ar ?? en
   const city = pickCity(p)

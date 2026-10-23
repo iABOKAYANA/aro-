@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import { MapPin } from 'lucide-react'
 import LocationsView from './locations-view'
-import { languageAlternates } from '@/lib/site'
+import { SITE_NAME, SITE_URL, languageAlternates } from '@/lib/site'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,9 +11,11 @@ export const metadata: Metadata = {
     'كل حتة فيها مشاريع معروضة في مكان واحد — اختار المنطقة وشوف مشاريعها وأسعارها. Every area with active projects in one directory: project count and starting price per city.',
   alternates: languageAlternates('/locations'),
   openGraph: {
-    title: 'كل المناطق | GHAYA REAL ESTATE',
+    title: 'المناطق العقارية في مصر | All Areas',
     description:
       'كل حتة فيها مشاريع معروضة في مكان واحد — اختار المنطقة وشوف مشاريعها وأسعارها.',
+    url: `${SITE_URL}/locations`,
+    siteName: SITE_NAME,
   },
 }
 

@@ -33,7 +33,7 @@ export default function AboutView() {
         <div className="grain" aria-hidden="true" />
         <div className="relative z-10 mx-auto flex h-full w-full max-w-4xl flex-col items-center justify-center px-4 text-center">
           <Reveal className="flex flex-col items-center">
-            <p className="cine-kicker">{ar ? 'منصة مصر الأولى للعقارات بالذكاء الاصطناعي' : "Egypt's leading AI-powered real estate platform"}</p>
+            <p className="cine-kicker">{ar ? 'منصة مصرية لاستكشاف العقارات' : 'Explore Egyptian real estate with GHAYA'}</p>
             <h1 className="cine-title mt-4">{ar ? 'عن غاية العقارية' : 'About GHAYA REAL ESTATE'}</h1>
           </Reveal>
         </div>

@@ -11,10 +11,11 @@ export const metadata: Metadata = {
     'معلومات كل منطقة من المشاريع المعروضة فعلا — عدد المشاريع وأقل سعر والمدارس والمستشفيات والمواصلات والمولات. أرقام بس، من غير تقييمات. Per-city facts from listed projects: project count, price range and nearby-service coverage.',
   alternates: languageAlternates('/areas'),
   openGraph: {
-    title: 'دليل المناطق | GHAYA REAL ESTATE',
+    title: 'دليل المناطق العقارية في مصر | Area Guide',
     description:
       'معلومات كل منطقة من المشاريع المعروضة فعلا — عدد المشاريع وأقل سعر والمدارس والمستشفيات والمواصلات والمولات.',
-    url: `${SITE_URL}/areas`,
+        url: `${SITE_URL}/areas`,
+        siteName: 'GHAYA REAL ESTATE',
     images: [
       {
         url: `${SITE_URL}/og?t=${encodeURIComponent('Area Guide')}&s=${encodeURIComponent('Real project counts and prices per city')}`,
