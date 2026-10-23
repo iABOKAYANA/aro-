@@ -321,6 +321,14 @@ export default function CEOProjectDetailPage() {
         setActionError((data as any)?.error || (ar ? 'الحركة دي منفعتش، جرّب تاني.' : 'That action failed, please try again.'))
         return
       }
+      // Publishing an archived project: reactivate + label honestly. When no
+      // verifiable price exists the row stays invisible to the public — the
+      // CEO must hear that, not a silent failure.
+      if (action === 'publish' && (data as any)?.publiclyVisible === false) {
+        setActionError(ar
+          ? 'اتفعّلت النشر رسميًا، بس المشروع مش هيظهر للعامة لحد ما يكون له سعر مسجل (سعر بداية أو وحدة بسعر أو مشروع فرعي بسعر). سجّل السعر وهيظهر فورًا.'
+          : 'Publishing is recorded, but the project stays hidden until it has a verifiable price (start price, a priced unit, or a priced child). Add a price and it goes live instantly.')
+      }
       await fetchProject()
       setRejectModal(false)
       setRejectReason('')
@@ -485,7 +493,11 @@ export default function CEOProjectDetailPage() {
         actions.push({ label: 'Publish', labelAr: 'انشر', action: 'publish', variant: 'bg-estate-gold text-[#0F1A2C] hover:bg-estate-gold/90', icon: Eye })
         break
       case 'ARCHIVED':
-        actions.push({ label: 'Restore', labelAr: 'رجّع', action: 'restore', variant: 'bg-[#D4A843] text-black hover:bg-[#D4A843]/90', icon: RefreshCw })
+        // Two paths out of the archive: back to draft, or straight to
+        // published (single-click — the server flips isActive too; the
+        // response tells the CEO if a recorded price is still missing).
+        actions.push({ label: 'Publish now', labelAr: 'انشر فورًا', action: 'publish', variant: 'bg-green-600 text-white hover:bg-green-500', icon: Eye })
+        actions.push({ label: 'Restore', labelAr: 'رجّع كمسودة', action: 'restore', variant: 'bg-[#D4A843] text-black hover:bg-[#D4A843]/90', icon: RefreshCw })
         break
     }
     return actions

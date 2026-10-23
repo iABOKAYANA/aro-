@@ -49,7 +49,7 @@ const statusActions: Record<string, string[]> = {
   REJECTED: ['submit', 'archive'],
   PUBLISHED: ['unpublish', 'archive'],
   HIDDEN: ['publish', 'archive'],
-  ARCHIVED: ['restore'],
+  ARCHIVED: ['restore', 'publish'],
 }
 
 const actionLabels: Record<string, string> = {

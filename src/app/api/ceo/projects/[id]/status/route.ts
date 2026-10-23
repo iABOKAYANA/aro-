@@ -11,7 +11,10 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   REJECTED: ['DRAFT', 'PENDING'],
   PUBLISHED: ['HIDDEN', 'ARCHIVED'],
   HIDDEN: ['PUBLISHED', 'ARCHIVED'],
-  ARCHIVED: ['DRAFT'],
+  // ARCHIVED → PUBLISHED is the single-click "publish an archived project"
+  // flow: CEO restores, then hits Publish — no re-approval needed for our own
+  // catalog imports (approval already happened when it was first listed).
+  ARCHIVED: ['DRAFT', 'PUBLISHED'],
 }
 
 const ACTION_TO_STATUS: Record<string, string> = {
@@ -77,11 +80,46 @@ export async function POST(
     if (targetStatus === 'PUBLISHED' && !project.publishedAt) {
       updateData.publishedAt = new Date()
     }
+    // Publishing MUST reactivate the row: the archive deactivation sets
+    // `isActive:false` (soft-delete) and are reversed here — otherwise an
+    // archived project stays invisible even with approvalStatus='PUBLISHED'
+    // (the exact trap the owner hit: "نشرت مشروع مؤرشف وما ظهرش").
+    // HIDDEN→PUBLISHED keeps isActive true; APPROVED→PUBLISHED unaffected.
+    if (targetStatus === 'PUBLISHED' && !project.isActive) {
+      updateData.isActive = true
+    }
 
     const updated = await db.project.update({
       where: { id: params.id },
       data: updateData,
     })
+
+    // Honest visibility verdict for the CEO: approval labels are not enough —
+    // the public gate also requires a verifiable price (startPrice > 0, any
+    // priced unit, or an approved active child). Without one the project
+    // stays invisible and the console now says so instead of implying success.
+    const pricedCheck = await db.project.findUnique({
+      where: { id: params.id },
+      select: {
+        isActive: true,
+        approvalStatus: true,
+        parentProjectId: true,
+        startPrice: true,
+        units: { where: { price: { gt: 0 } }, select: { id: true }, take: 1 },
+        childProjects: {
+          where: { isActive: true, approvalStatus: { in: ['APPROVED', 'PUBLISHED'] } },
+          select: { id: true, startPrice: true, units: { where: { price: { gt: 0 } }, select: { id: true }, take: 1 } },
+          take: 1,
+        },
+      },
+    })
+    const publiclyVisible =
+      !!pricedCheck?.isActive &&
+      ['APPROVED', 'PUBLISHED'].includes(pricedCheck.approvalStatus) &&
+      pricedCheck.parentProjectId === null &&
+      ((pricedCheck.startPrice ?? 0) > 0 ||
+        pricedCheck.units.length > 0 ||
+        pricedCheck.childProjects.some((c) => (c.startPrice ?? 0) > 0 || c.units.length > 0))
 
     await logAudit({
       action: `PROJECT_${action.toUpperCase()}`,
@@ -160,7 +198,7 @@ export async function POST(
       }
     }
 
-    return NextResponse.json({ project: updated })
+    return NextResponse.json({ project: updated, publiclyVisible })
   } catch (error) {
     console.error('CEO project status error:', error)
     return NextResponse.json({ error: 'Failed to update project status' }, { status: 500 })
