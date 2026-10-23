@@ -20,6 +20,32 @@ function directChatFn() {
   return AI_CONFIG.provider === 'llamacpp' ? llamacppChat : ollamaChat
 }
 
+// llama.cpp local stack runs an 8192-token context — oversized consult
+// prompts (long history + learned context + tool results) overflow it with a
+// hard 400 and the visitor sees a dead chat. Cheap fit: keep the first
+// message (system contract) + the TAIL of the conversation, each message
+// capped, until an approximate char budget is met.
+const LOCAL_MAX_CHARS = 11_000
+const LOCAL_MSG_CAP = 1_400
+
+function fitLocalContext(messages: OllamaMessage[]): OllamaMessage[] {
+  if (!messages.length) return messages
+  const head = messages[0]
+  const tail = messages.slice(1)
+  let used = head.content.length
+  const kept: OllamaMessage[] = []
+  for (let i = tail.length - 1; i >= 0; i--) {
+    const m = tail[i]
+    const content = m.content.length > LOCAL_MSG_CAP ? `${m.content.slice(0, LOCAL_MSG_CAP)}…` : m.content
+    used += content.length
+    if (used > LOCAL_MAX_CHARS) break
+    kept.unshift({ ...m, content })
+  }
+  used = head.content.length + kept.reduce((n, m) => n + m.content.length, 0)
+  if (used > LOCAL_MAX_CHARS) return [{ ...head, content: head.content.slice(0, LOCAL_MAX_CHARS) }, ...kept]
+  return [head, ...kept]
+}
+
 export async function chatOnce(
   messages: OllamaMessage[],
   tools?: OllamaTool[],
@@ -33,7 +59,7 @@ export async function chatOnce(
     return { response: await generateContent(messages, tools, opts), provider: 'gemini' }
   } catch (err) {
     if (!opts?.signal?.aborted && isGeminiFallbackError(err)) {
-      return { response: await llamacppChat(messages, tools, opts), provider: 'local' }
+      return { response: await llamacppChat(fitLocalContext(messages), tools, opts), provider: 'local' }
     }
     throw err
   }
@@ -64,7 +90,7 @@ export async function streamOnce(
   } catch (err) {
     if (!opts?.signal?.aborted && isGeminiFallbackError(err)) {
       return {
-        text: await llamacppChatStream(messages, onToken, { signal: opts?.signal, timeoutMs: opts?.timeoutMs }),
+        text: await llamacppChatStream(fitLocalContext(messages), onToken, { signal: opts?.signal, timeoutMs: opts?.timeoutMs }),
         provider: 'local',
       }
     }

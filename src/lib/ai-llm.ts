@@ -632,10 +632,14 @@ export async function findKnownProjectMentions(message: string): Promise<KnownCa
       }
     }
     const sorted = [...bestById.values()].sort((a, b) => b.score - a.score)
+    if (process.env.DEBUG_AI_MENTIONS === '1') {
+      console.log('[ai-mentions]', JSON.stringify({ msgLen: message.length, matches: sorted.slice(0, 5).map((m) => ({ name: m.project.name, score: m.score, archived: !!m.project.archived })) }))
+    }
     if (!sorted.length) return []
     const maxScore = sorted[0].score
     return sorted.filter((item) => item.score === maxScore).map((item) => item.project)
-  } catch {
+  } catch (e) {
+    if (process.env.DEBUG_AI_MENTIONS === '1') console.log('[ai-mentions] threw:', String(e).slice(0, 200))
     return [] // knowledge match is best-effort; never fail chat
   }
 }

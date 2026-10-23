@@ -44,8 +44,14 @@ export function NlSearchBox() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: q.trim() }),
       })
-      const d = await res.json().catch(() => ({}))
-      if (!res.ok || !d?.filters) throw new Error('معلش مش قادر أفهم الطلب — جرب صيغة تانية.')
+      const d = await res.json().catch(() => null)
+      // Degrade to a keyword search instead of dead-ending: whether the
+      // endpoint hiccuped (edge/rate-limit) or the request had nothing we
+      // could map confidently, the visitor gets RESULTS, not an apology.
+      if (!res.ok || !d?.filters || (d.confidence === 0 && (d.summary?.length ?? 0) === 0)) {
+        router.push(`/projects?q=${encodeURIComponent(q.trim())}`)
+        return
+      }
       const f = d.filters as Filters
       const params = new URLSearchParams()
       if (f.governorate) params.set('governorate', f.governorate)

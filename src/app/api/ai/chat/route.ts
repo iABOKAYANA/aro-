@@ -320,8 +320,8 @@ function ambiguousProjectReply(matches: KnownCatalogProject[], lang: ChatLang): 
 }
 
 function isProjectCatalogFactQuestion(message: string): boolean {
-  const ar = /(سعر|اسعار|أسعار|بكام|كام|وحده|وحدة|وحدات|متاح|متوفر|مساح|متر|تسليم|استلام|مرحلة|مراحل|تقسيط|قسط|مقدم|خطة|خطط|مطور|الموقع|فين|أين)/i
-  const en = /\b(price|prices|cost|available|availability|unit|units|area|areas|sqm|square meter|delivery|handover|phase|phases|installment|payment|down payment|developer|location|where|how many)\b/i
+  const ar = /(سعر|اسعار|أسعار|بكام|كام|وحده|وحدة|وحدات|متاح|متوفر|مساح|متر|تسليم|استلام|مرحلة|مراحل|تقسيط|قسط|مقدم|خطة|خطط|مطور|الموقع|فين|أين|عندكم|عندك|موجود|مسجل|تفاصيل|معلومات|اسمه)/i
+  const en = /\b(price|prices|cost|available|availability|unit|units|area|areas|sqm|square meter|delivery|handover|phase|phases|installment|payment|down payment|developer|location|where|how many|info|details|do you have|is there)\b/i
   return ar.test(message) || en.test(message)
 }
 
@@ -376,7 +376,7 @@ async function projectCatalogFactsTurn(projectMatch: KnownCatalogProject, messag
       const priceText = inventory._max.price != null && inventory._max.price > inventory._min.price
         ? `${formatCatalogMoney(inventory._min.price, lang)} – ${formatCatalogMoney(inventory._max.price, lang)}`
         : formatCatalogMoney(inventory._min.price, lang)
-      lines.push(lang === 'ar' ? `• وحدات متاحة في المخزون: ${count} (تأسيسات ${priceText}).` : `• Verified available units: ${count} (${priceText}).`)
+      lines.push(lang === 'ar' ? `• وحدات متاحة في المخزون: ${count} بأسعار ${priceText}.` : `• Verified available units: ${count} (${priceText}).`)
     } else if (project.startPrice != null && project.startPrice > 0) {
       lines.push(lang === 'ar'
         ? `• سعر البداية المسجّل: ${formatCatalogMoney(project.startPrice, lang)} (مش تأكيد توفر وحدة).`
@@ -660,6 +660,7 @@ async function tryDeterministicTurn(
   // the repeated budget question).
   if (isProjectCatalogFactQuestion(message)) {
     const matches = await findKnownProjectMentions(message)
+    if (process.env.DEBUG_AI_MENTIONS === '1') console.log('[ai-facts-turn]', JSON.stringify({ matches: matches.map((m) => ({ name: m.name, archived: !!m.archived })) }))
     if (matches.length > 1) return ambiguousProjectReply(matches, lang)
     if (matches.length === 1) return projectCatalogFactsTurn(matches[0], message, lang)
   }
