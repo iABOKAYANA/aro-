@@ -162,7 +162,7 @@ export function Footer({ appType = 'all' }: { appType?: AppType }) {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             {footerLinks.legal.map((link) => (
-              <Link key={link.href} href={link.href} className="text-xs text-gray-500 transition-colors hover:text-gray-300">
+              <Link key={link.href} href={link.href} className="-my-1.5 inline-flex min-h-[36px] items-center text-xs text-gray-500 transition-colors hover:text-gray-300">
                 {legalLabels[lang][link.key]}
               </Link>
             ))}

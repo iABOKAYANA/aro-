@@ -173,8 +173,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </div>
         )}
 
-        {/* Title + Location */}
-        <Link href={`/projects/${project.slug}`}>
+        {/* Title + Location — the whole title is the tap target: 44px hit on
+            phones (-my-1 keeps the visual rhythm), plain on desktop. */}
+        <Link href={`/projects/${project.slug}`} className="-my-1 flex min-h-[44px] items-center md:min-h-0">
           <h2 className="font-display mb-1 text-lg font-semibold leading-snug text-gray-900 transition-colors group-hover:text-estate-gold-dark dark:text-white dark:group-hover:text-estate-gold">
             {projectName}
           </h2>

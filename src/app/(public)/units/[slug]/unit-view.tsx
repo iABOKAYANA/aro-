@@ -146,9 +146,9 @@ export default function UnitView({ unit, gallery, priceHistory = [] }: { unit: U
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <div className="container px-4 py-8">
         <div className="mb-6 flex min-w-0 flex-wrap items-center gap-2 text-sm text-muted-foreground">
-          <Link href="/projects" className="shrink-0 hover:text-estate-gold">{ar ? 'المشاريع' : 'Projects'}</Link>
+          <Link href="/projects" className="-my-1.5 shrink-0 py-1.5 hover:text-estate-gold">{ar ? 'المشاريع' : 'Projects'}</Link>
           <span className="shrink-0">/</span>
-          <Link href={`/projects/${unit.project.slug}`} className="min-w-0 max-w-full shrink-0 truncate hover:text-estate-gold">{unit.project.name}</Link>
+          <Link href={`/projects/${unit.project.slug}`} className="-my-1.5 min-w-0 max-w-full shrink-0 truncate py-1.5 hover:text-estate-gold">{unit.project.name}</Link>
           <span className="shrink-0">/</span>
           <span className="min-w-0 max-w-full truncate text-foreground">{unit.name}</span>
         </div>

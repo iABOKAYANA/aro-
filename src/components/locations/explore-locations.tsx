@@ -227,8 +227,8 @@ function CityFollowButton({ slug }: { slug: string }) {
       title={lang === 'ar' ? (isPublic ? 'الحسابات والتنبيهات في تطبيق غاية — حمّله وتابع من هناك' : 'تابع المدينة عشان توصلك المشاريع الجديدة') : (isPublic ? 'Accounts & alerts live in the Ghaya app — download it and pick up from there' : 'Follow this city for new-project alerts')}
       className={
         following
-          ? 'absolute bottom-4 left-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-estate-gold px-3 py-1.5 text-xs font-semibold text-[#0F1A2C] backdrop-blur transition-colors hover:bg-estate-gold-dark disabled:opacity-70'
-          : 'absolute bottom-4 left-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur transition-colors hover:bg-black/65 disabled:opacity-70'
+          ? 'absolute bottom-4 left-4 z-10 inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-estate-gold px-4 text-xs font-semibold text-[#0F1A2C] backdrop-blur transition-colors hover:bg-estate-gold-dark disabled:opacity-70'
+          : 'absolute bottom-4 left-4 z-10 inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-black/45 px-4 text-xs font-semibold text-white backdrop-blur transition-colors hover:bg-black/65 disabled:opacity-70'
       }
     >
       {busy || !ready ? (
