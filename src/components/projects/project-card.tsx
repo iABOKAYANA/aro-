@@ -99,8 +99,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent" />
         <div className="mashrabiya pointer-events-none absolute inset-0" aria-hidden="true" />
 
-        {/* Status badge */}
-        <div className="absolute left-3 top-3">
+        {/* Status badge — top-4/left-4 so it clears the 3rem card arch curve */}
+        <div className="absolute left-4 top-4">
           <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide', status.bg, status.text)}>
             {lang === 'ar' ? status.labelAr : status.label}
           </span>
@@ -111,7 +111,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <button
             type="button"
             onClick={() => setPlanIdx(0)}
-            className="absolute left-3 top-11 inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm transition-colors hover:bg-estate-gold hover:text-[#0F1A2C] md:min-h-0"
+            className="absolute left-4 top-12 inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm transition-colors hover:bg-estate-gold hover:text-[#0F1A2C] md:min-h-0"
             aria-label={lang === 'ar' ? 'المستر بلان — عرض المستر بلان' : 'MASTER PLAN — View master plan'}
           >
             <LayoutGrid className="h-3 w-3" />
@@ -119,8 +119,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </button>
         )}
 
-        {/* Favorite */}
-        <button aria-label="Save to favorites" className="absolute right-3 top-3 flex h-8 w-8 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-red-500 md:min-h-0 md:min-w-0 md:h-8 md:w-8">
+        {/* Favorite — top-4/right-4 clears the card arch curve */}
+        <button aria-label="Save to favorites" className="absolute right-4 top-4 flex h-8 w-8 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-red-500 md:min-h-0 md:min-w-0 md:h-8 md:w-8">
           <Heart className="h-4 w-4" />
         </button>
 

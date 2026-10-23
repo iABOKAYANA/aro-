@@ -261,15 +261,21 @@ body {
 
 /* Card variant: arch top + hairline gold frame + theme-aware surface. */
 /* Usage: <article class="arch-card bg-card"><div class="arch">…img…</div><div class="p-6">…</div></article> */
+/* Listing-card patch: a 3rem curve (not the full 999px dome) — the dome clipped
+   ~60% of every list cover and cut the status/master-plan badges sitting in the
+   clipped corner region (badge text rendered as "…RUCTION"). */
 .arch-card {
   overflow: hidden;
   border: 1px solid rgba(184, 146, 58, 0.35);
-  border-radius: 12rem 12rem var(--radius) var(--radius);
+  border-radius: 3rem 3rem var(--radius) var(--radius);
   background-color: hsl(var(--card));
 }
 .dark .arch-card {
   border-color: rgba(212, 168, 67, 0.3);
   background-color: #0a0a0a;
+}
+.arch-card .arch {
+  border-radius: 3rem 3rem 0 0;
 }
 
 /* ─── Whisper dot texture ────────────────────────────────────── */

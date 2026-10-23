@@ -73,10 +73,17 @@ const ALLOWED_KEYS: Record<string, string[]> = {
 export async function GET() {
   try {
     const session = await auth()
-    if (!(session?.user as any)?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    const settings = await db.systemSetting.findMany()
+    // Anonymous read for the three PUBLIC sections only (company identity,
+    // platform display prefs like the currency switcher, floating CTA). The
+    // currency-provider runs on every public page where nobody is signed in —
+    // a hard 401 here made every page console-throw and froze CEO-editable
+    // rates at defaults. Internal sections (ai/notifications/…) still require
+    // the CEO session.
+    const isSignedIn = !!(session?.user as any)?.id
+    const publicSections = new Set(['company', 'platform', 'cta'])
+    const settings = await db.systemSetting.findMany({
+      where: isSignedIn ? {} : { category: { in: [...publicSections] } },
+    })
     const grouped: Record<string, Record<string, unknown>> = {
       company: { ...DEFAULTS.company },
       platform: { ...DEFAULTS.platform },
@@ -118,6 +125,11 @@ export async function GET() {
       }
     }
 
+    if (!isSignedIn) {
+      const publicGrouped: Record<string, Record<string, unknown>> = {}
+      for (const section of publicSections) publicGrouped[section] = grouped[section]
+      return NextResponse.json(publicGrouped)
+    }
     return NextResponse.json(grouped)
   } catch (error) {
     console.error('Fetch settings error:', error)
