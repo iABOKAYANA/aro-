@@ -67,7 +67,17 @@ const SHORTLIST_PHRASES = [
   'send me options', 'list them',
 ]
 
-const SHORTLIST_AFFIRMATION_RE = /^(?:اه|آه|ايوه|أيوه|أيوة|تمام|ماشي|موافق|يلا|yes|yeah|sure|okay|ok|sounds good|go ahead|do it)(?:\s|[!.،]|$)/i
+export const SHORTLIST_AFFIRMATION_RE = /^(?:اه|آه|ايوه|أيوه|أيوة|تمام|ماشي|موافق|يلا|yes|yeah|sure|okay|ok|sounds good|go ahead|do it)(?:\s|[!.،]|$)/i
+
+/** Bare consent after the one-time segue offer — the promised list now. */
+export function isShortlistConsent(
+  assistantTexts: string[],
+  currentMessage: string,
+): boolean {
+  const last = assistantTexts[assistantTexts.length - 1] || ''
+  if (!last.includes(AREA_TAKE_SEGUE_AR) && !last.includes(AREA_TAKE_SEGUE_EN)) return false
+  return SHORTLIST_AFFIRMATION_RE.test(currentMessage.trim())
+}
 
 const ASKED_BUDGET_RE = /الميزانية|budget/i
 const ASKED_PLACE_RE = /تكون فين|would you like to be/i

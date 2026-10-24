@@ -94,6 +94,7 @@ const LOCATION_MAP_AR: Record<string, string> = {
   'الشيخ زايد': 'sheikh-zayed',
   'زايد': 'sheikh-zayed',
   'نيو زايد': 'new-zayed',
+  'زايد الجديدة': 'new-zayed',
   'العاصمة الإدارية': 'new-capital-city',
   'العاصمة الادارية': 'new-capital-city',
   'العاصمة الجديدة': 'new-capital-city',
@@ -157,23 +158,33 @@ const PROPERTY_TYPE_MAP: Record<string, PropertyFilterInput['propertyType']> = {
   // English
   'apartment': 'APARTMENT',
   'flat': 'APARTMENT',
+  'flats': 'APARTMENT',
   'شقة': 'APARTMENT',
   'شقه': 'APARTMENT',
   'villa': 'VILLA',
+  'villas': 'VILLA',
   'فيلا': 'VILLA',
   'فلل': 'VILLA',
   'فيلات': 'VILLA',
   'penthouse': 'PENTHOUSE',
+  'pent house': 'PENTHOUSE',
   'بنتهاوس': 'PENTHOUSE',
+  'بنت هاوس': 'PENTHOUSE',
   'روف': 'PENTHOUSE',
   'رووف': 'PENTHOUSE',
   'roof': 'PENTHOUSE',
   'duplex': 'DUPLEX',
+  'duplexes': 'DUPLEX',
   'دوبلكس': 'DUPLEX',
+  'دبلكس': 'DUPLEX',
   'double': 'DUPLEX',
   'townhouse': 'TOWNHOUSE',
   'تاون هاوس': 'TOWNHOUSE',
+  'تاونهاوس': 'TOWNHOUSE',
+  'تاون': 'TOWNHOUSE',
   'town house': 'TOWNHOUSE',
+  'townhome': 'TOWNHOUSE',
+  'town home': 'TOWNHOUSE',
   'توين هاوس': 'TOWNHOUSE',
   'توين': 'TOWNHOUSE',
   'twin house': 'TOWNHOUSE',
@@ -181,8 +192,11 @@ const PROPERTY_TYPE_MAP: Record<string, PropertyFilterInput['propertyType']> = {
   'twin_house': 'TOWNHOUSE',
   'twin': 'TOWNHOUSE',
   'studio': 'STUDIO',
+  'studios': 'STUDIO',
   'استوديو': 'STUDIO',
   'استديو': 'STUDIO',
+  'استوديوهات': 'STUDIO',
+  'استديوهات': 'STUDIO',
   'chalet': 'CHALET',
   'chalets': 'CHALET',
   'شاليه': 'CHALET',
@@ -201,10 +215,13 @@ const PROPERTY_TYPE_MAP: Record<string, PropertyFilterInput['propertyType']> = {
   'medical': 'MEDICAL',
   'طبي': 'MEDICAL',
   'عيادة': 'MEDICAL',
+  'عياده': 'MEDICAL',
   'عيادات': 'MEDICAL',
   'admin': 'ADMINISTRATIVE',
   'إداري': 'ADMINISTRATIVE',
+  'اداري': 'ADMINISTRATIVE',
   'مكتب': 'ADMINISTRATIVE',
+  'مكاتب': 'ADMINISTRATIVE',
   'office': 'ADMINISTRATIVE',
 }
 
@@ -220,6 +237,10 @@ const LISTING_TYPE_MAP: Record<string, PropertyFilterInput['listingType']> = {
   'للايجار': 'RENT',
   'للاستئجار': 'RENT',
   'resale': 'RESALE',
+  're-sale': 'RESALE',
+  'resell': 'RESALE',
+  'ريسيل': 'RESALE',
+  'ري سيل': 'RESALE',
   'إعادة بيع': 'RESALE',
   'ثاني': 'RESALE',
   'تاني': 'RESALE',
@@ -250,6 +271,40 @@ export function normalizeDigits(text: string): string {
     .replace(/٬/g, '')
 }
 
+const AMOUNT_NUMBER_WORDS: Record<string, number> = {
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+  واحد: 1, واحدة: 1, واحده: 1,
+  اتنين: 2, اثنين: 2, اثنان: 2, إثنين: 2,
+  تلات: 3, تلاته: 3, تلاتة: 3, ثلاث: 3, ثلاثه: 3, ثلاثة: 3,
+  اربع: 4, أربعة: 4, أربعه: 4, اربعه: 4, أربع: 4,
+  خمس: 5, خمسه: 5, خمسة: 5,
+  ست: 6, سته: 6, ستة: 6,
+  سبع: 7, سبعه: 7, سبعة: 7,
+  تمن: 8, تمان: 8, تمانية: 8, تمنيه: 8, ثمان: 8, ثمانية: 8,
+  تسع: 9, تسعه: 9, تسعة: 9,
+  عشر: 10, عشرة: 10,
+}
+
+function normalizeSpokenAmounts(text: string): string {
+  const wordPattern = Object.keys(AMOUNT_NUMBER_WORDS)
+    .sort((a, b) => b.length - a.length)
+    .join('|')
+  const scalePattern = '(?:millions?|m|thousands?|مليونين|مليونان|ملايين|مليون|آلاف|الاف|ألف|الف|جنيه|egp)'
+  const spelledAmount = new RegExp(
+    `(^|[\\s،,])(${wordPattern})(?:\\s*(?:و\\s*)?(نص|نصف)|\\s+and\\s+(?:a\\s+)?(half))?\\s+(${scalePattern})(?=$|[\\s،,.])`,
+    'gi',
+  )
+
+  return text
+    .replace(/(^|[\s،,])مليون(?:\s*و\s*)?(?:نص|نصف)(?=$|[\s،,.])/gi, '$1 1.5 million')
+    .replace(/(^|[\s،,])ن(?:ص|صف)\s+مليون(?=$|[\s،,.])/gi, '$1 0.5 million')
+    .replace(/(\d+(?:\.\d+)?)\s*(?:مليون|million)\s*(?:و\s*)?ن(?:ص|صف)/gi, (_, amount: string) => `${Number(amount) + 0.5} million`)
+    .replace(/(^|[\s،,])مليونين(?=$|[\s،,.])/gi, '$1 2 million')
+    .replace(spelledAmount, (_, prefix: string, word: string, arabicHalf: string | undefined, englishHalf: string | undefined, scale: string) =>
+      `${prefix}${AMOUNT_NUMBER_WORDS[word.toLowerCase()] ?? AMOUNT_NUMBER_WORDS[word]}${arabicHalf || englishHalf ? '.5' : ''} ${scale}`,
+    )
+}
+
 // Price magnitude: مليون/million → ×1e6, ألف → ×1e3. Detection is
 // text-wide on purpose — mixed "5 مليون و 500 ألف" is vanishingly rare in
 // chat queries, and a bare number with ألف must not become millions.
@@ -260,46 +315,55 @@ function priceMultiplier(text: string): number {
 
 function parsePrice(text: string): { minPrice?: number; maxPrice?: number } {
   const result: { minPrice?: number; maxPrice?: number } = {}
-  const mult = priceMultiplier(text)
+  // The payment amount is not the total purchase budget. Strip it before
+  // looking for a project-price phrase, but leave any later budget untouched.
+  const priceText = text.replace(/(?:مقدم(?:ة)?|down\s+payment|deposit)\s*(?:(?:من|of)\s*)?(?:جنيه|egp)?\s*[\d,.]+\s*(?:%|million|m|مليون|ألف|الاف|الف|thousand)?/gi, ' ')
+  const mult = priceMultiplier(priceText)
 
-  // Pattern: "from X to Y" / "between X and Y" / "من X لـ Y" / "من X الى Y" / "من X إلى Y"
-  const betweenMatch = text.match(/(?:between|from|من)\s*([\d,.]+)\s*(?:to|and|-\s*|لـ|الى|إلى|حتى)\s*([\d,.]+)\s*(?:million|m|مليون|ألف|الاف|الف|جنيه|egp|thousand)?/i)
+  // Spoken range forms: "بين ٥ و٨ مليون", "من 5 لحد 8", "from 5 to 8M".
+  // Don't mistake a bedroom/area range for a budget range.
+  const betweenMatch = priceText.match(/(?:between|from|ما بين|بين|من)\s*([\d,.]+)\s*(?:(?:million|m|مليون|ألف|الاف|الف)\s*)?(?:to|and|-\s*|ل(?:ـ|حد)?|لغاية|لغايه|الى|إلى|حتى|و)\s*([\d,.]+)\s*(?:million|m|مليون|ألف|الاف|الف|جنيه|egp|thousand)?/i)
   if (betweenMatch) {
-    result.minPrice = parseNumber(betweenMatch[1]) * mult
-    result.maxPrice = parseNumber(betweenMatch[2]) * mult
-    return result
+    const rangeEnd = (betweenMatch.index || 0) + betweenMatch[0].length
+    const unitAfterRange = priceText.slice(rangeEnd)
+    const isRoomOrAreaRange = /^\s*(?:bedrooms?|beds?|rooms?|br|bd|غرف|غرفة|غرفه|نوم|أوض|اوض|أوضة|اوضة|متر|م2|sqm|m2)(?:\s|$|[،,])/i.test(unitAfterRange)
+    if (!isRoomOrAreaRange) {
+      result.minPrice = parseNumber(betweenMatch[1]) * mult
+      result.maxPrice = parseNumber(betweenMatch[2]) * mult
+      return result
+    }
   }
 
   // Pattern: "under X" / "below X" / "أقل من X" / "تحت X" / "لحد X"
-  const underMatch = text.match(/(?:under|below|less than|up to|maximum|max|أقل من|اقل من|تحت|لحد|لغاية|لغايه|بحد أقصى|بحد اقصي|لا يزيد عن|مش اكتر من|مش أكتر من)\s*([\d,.]+)\s*(?:million|m|مليون|ألف|الاف|الف|جنيه|egp|thousand)?/i)
+  const underMatch = priceText.match(/(?:under|below|less than|up to|maximum|max|أقل من|اقل من|تحت|لحد|لغاية|لغايه|بحد أقصى|بحد اقصي|لا يزيد عن|مش اكتر من|مش أكتر من)\s*([\d,.]+)\s*(?:million|m|مليون|ألف|الاف|الف|جنيه|egp|thousand)?/i)
   if (underMatch) {
     result.maxPrice = parseNumber(underMatch[1]) * mult
     return result
   }
 
   // Pattern: "over X" / "above X" / "أكثر من X" / "فوق X" / "يبدأ من X"
-  const overMatch = text.match(/(?:over|above|more than|starting from|from|أكثر من|أكتر من|اكثر من|اكتر من|فوق|ابتداء من|يبدأ من|يبتدي من|بداية من|بدايه من)\s*([\d,.]+)\s*(?:million|m|مليون|ألف|الاف|الف|جنيه|egp|thousand)?/i)
+  const overMatch = priceText.match(/(?:over|above|more than|starting from|from|أكثر من|أكتر من|اكثر من|اكتر من|فوق|ابتداء من|يبدأ من|يبتدي من|بداية من|بدايه من)\s*([\d,.]+)\s*(?:million|m|مليون|ألف|الاف|الف|جنيه|egp|thousand)?/i)
   if (overMatch) {
     result.minPrice = parseNumber(overMatch[1]) * mult
     return result
   }
 
   // Pattern: "X million" as standalone (interpret as max price)
-  const singleMatch = text.match(/(?:معايا|عندي|ميزانيتي|بـ|Budget)?\s*([\d,.]+)\s*(?:million|m|مليون|ألف|الاف|الف|thousand)/i)
+  const singleMatch = priceText.match(/(?:معايا|عندي|ميزانيتي|ميزانيه|بـ|Budget)?\s*([\d,.]+)\s*(?:million|m|مليون|ألف|الاف|الف|thousand)/i)
   if (singleMatch && !result.minPrice && !result.maxPrice) {
     result.maxPrice = parseNumber(singleMatch[1]) * mult
     return result
   }
 
   // Pattern: "X M" or "Xm"
-  const shortMatch = text.match(/([\d,.]+)\s*[mM](?:\s|$|,|\.)/)
+  const shortMatch = priceText.match(/([\d,.]+)\s*[mM](?:\s|$|,|\.)/)
   if (shortMatch && !result.minPrice && !result.maxPrice) {
     result.maxPrice = parseNumber(shortMatch[1]) * 1_000_000
   }
 
   // Pattern: a bare 7+-digit figure ("8000000", "8000000 جنيه") = max price
   if (!result.minPrice && !result.maxPrice) {
-    const bigMatch = text.match(/(\d{7,})\s*(?:جنيه|egp|le)?/i)
+    const bigMatch = priceText.match(/(\d{7,})\s*(?:جنيه|egp|le)?/i)
     if (bigMatch) result.maxPrice = parseNumber(bigMatch[1])
   }
 
@@ -490,51 +554,84 @@ function parseArea(text: string): { minArea?: number; maxArea?: number } {
   return result
 }
 
-function parseDeveloper(text: string): string | undefined {
-  const developers: Record<string, string> = {
-    'sodic': 'SODIC',
-    'mountain view': 'Mountain View',
-    'emaar': 'Emaar',
-    'palm hills': 'Palm Hills',
-    'talaat moustafa': 'Talaat Moustafa Group',
-    'tmg': 'Talaat Moustafa Group',
-    'dar al-mimar': 'Dar Al-Mimar',
-    'dar al mimar': 'Dar Al-Mimar',
-    'reef': 'Reef Development',
-    'tatweer': 'Tatweer Misr',
-    'tatweer misr': 'Tatweer Misr',
-    'orabia': 'Orabi Group',
-    'rozen': 'Rozen Homes',
-    'delta': 'Delta Homes',
-    'city edge': 'City Edge',
-    'compressed': 'BESIX',
-    'besix': 'BESIX',
-    'hassan allam': 'Hassan Allam',
-    'allam': 'Hassan Allam',
-    'al futtaim': 'Al Futtaim',
-    'futtaim': 'Al Futtaim',
-    'memaar': 'Memaar Properties',
-    'memar': 'Memaar Properties',
-    'ornia': 'Ornia',
-    'premier': 'Premier Group',
-    'pioneers': 'Pioneers Properties',
-    'upward': 'Upward Development',
-    'crystal': 'Crystal Lagoons',
-  }
+/** Arabic/English alias → canonical developer name (matches DeveloperProfile rows). */
+const DEVELOPER_ALIAS_MAP: Record<string, string> = {
+  'ماونتن فيو': 'Mountain View',
+  'ماونتنفيو': 'Mountain View',
+  'طلعت مصطفى جروب': 'Talaat Mustafa Group',
+  'مجموعة طلعت مصطفى': 'Talaat Mustafa Group',
+  'طلعت مصطفى': 'Talaat Mustafa Group',
+  'دار المعمار': 'Dar Al-Mimar',
+  'تطوير مصر': 'Tatweer Misr',
+  'سيتي إيدج': 'City Edge',
+  'سيتي ايدج': 'City Edge',
+  'حسن علام': 'Hassan Allam',
+  'بالم هيلز': 'Palm Hills',
+  'سوديك': 'SODIC',
+  'إعمار مصر': 'Emaar',
+  'اعمار مصر': 'Emaar',
+  'إعمار': 'Emaar',
+  'اعمار': 'Emaar',
+  'sodic': 'SODIC',
+  'mountain view': 'Mountain View',
+  'emaar': 'Emaar',
+  'palm hills': 'Palm Hills',
+  'talaat moustafa': 'Talaat Mustafa Group',
+  'tmg': 'Talaat Mustafa Group',
+  'dar al-mimar': 'Dar Al-Mimar',
+  'dar al mimar': 'Dar Al-Mimar',
+  'reef': 'Reef Development',
+  'tatweer': 'Tatweer Misr',
+  'tatweer misr': 'Tatweer Misr',
+  'orabia': 'Orabi Group',
+  'rozen': 'Rozen Homes',
+  'delta': 'Delta Homes',
+  'city edge': 'City Edge',
+  'compressed': 'BESIX',
+  'besix': 'BESIX',
+  'hassan allam': 'Hassan Allam',
+  'allam': 'Hassan Allam',
+  'al futtaim': 'Al Futtaim',
+  'futtaim': 'Al Futtaim',
+  'memaar': 'Memaar Properties',
+  'memar': 'Memaar Properties',
+  'ornia': 'Ornia',
+  'premier': 'Premier Group',
+  'pioneers': 'Pioneers Properties',
+  'upward': 'Upward Development',
+  'crystal': 'Crystal Lagoons',
+}
 
+function parseDeveloper(text: string): string | undefined {
   const lower = text.toLowerCase()
-  for (const [keyword, name] of Object.entries(developers)) {
+  for (const [keyword, name] of Object.entries(DEVELOPER_ALIAS_MAP)) {
     if (lower.includes(keyword)) return name
   }
   return undefined
 }
 
+/**
+ * All the recognizable spellings of a canonical developer name — the
+ * canonical string itself plus every alias that maps to it. Used to
+ * match DeveloperProfile rows (English `companyName` AND Arabic
+ * `companyNameArabic`) and to broaden search filters.
+ */
+export function developerAliasesFor(canonical: string): string[] {
+  const trimmed = canonical.trim()
+  if (!trimmed) return []
+  const aliases: string[] = [trimmed]
+  for (const [keyword, name] of Object.entries(DEVELOPER_ALIAS_MAP)) {
+    if (name === trimmed && keyword !== trimmed) aliases.push(keyword)
+  }
+  return aliases
+}
+
 function parseFinishing(text: string): string | undefined {
   const lower = text.toLowerCase()
-  if (lower.includes('semi finished') || lower.includes('نص تشطيب')) return 'SEMI_FINISHED'
-  if (lower.includes('finished') || lower.includes('تشطيب') || lower.includes('جاهز')) return 'FINISHED'
-  if (lower.includes('core') || lower.includes('basic')) return 'CORE_SHELL'
-  if (lower.includes('super') || lower.includes('premium')) return 'SUPER_LUXURY'
+  if (lower.includes('semi finished') || lower.includes('half finished') || /نص\s*تشطيب|نصف\s*تشطيب|نص\s*متشطب|نصف\s*متشطب/.test(text)) return 'SEMI_FINISHED'
+  if (lower.includes('super') || lower.includes('premium') || /سوبر\s*لوكس|الترا\s*لوكس|ألترا\s*لوكس/.test(text)) return 'SUPER_LUXURY'
+  if (lower.includes('core') || lower.includes('basic') || /على\s*المحارة|علي\s*المحاره|طوب\s*أحمر|طوب\s*احمر|بدون\s*تشطيب/.test(text)) return 'CORE_SHELL'
+  if (lower.includes('finished') || lower.includes('تشطيب') || lower.includes('متشطب') || lower.includes('جاهز')) return 'FINISHED'
   return undefined
 }
 
@@ -561,7 +658,7 @@ export interface ParsedFilters {
 }
 
 export function parseNaturalLanguageQuery(query: string): ParsedFilters {
-  query = normalizeDigits(query)
+  query = normalizeSpokenAmounts(normalizeDigits(query))
   const filters: PropertyFilterInput = {
     page: 1,
     limit: 12,
@@ -722,6 +819,9 @@ export function hasListingIntent(text: string): boolean {
   const lower = q.toLowerCase()
   if (LISTING_VERBS.some((v) => lower.includes(v))) return true
   const { summary } = parseNaturalLanguageQuery(q)
+  const namesDeveloper = summary.some((item) => item.field === 'developer')
+  const asksForDeveloperProjects = /مشاريع|مشروع|كمبوند|كمبوندات|projects?|compounds?|developments?|show|list|عرض|وريني|هات|اعرض|متاح/i.test(lower)
+  if (namesDeveloper && asksForDeveloperProjects) return true
   const slots = new Set(
     summary.filter((s) => s.field !== 'sortBy' && s.field !== 'developer').map((s) => s.field),
   )

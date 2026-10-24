@@ -22,6 +22,8 @@ import {
 } from '@/lib/ai-lead-capture'
 import { toolCreateInquiry, toolCompareProjects, type ComparisonData } from '@/lib/ai-tools'
 import { PUBLIC_PROJECT_WHERE } from '@/lib/project-visibility'
+import { parseNaturalLanguageQuery, developerAliasesFor } from '@/lib/ai-search-parser'
+import { classifySiteIntent } from '@/lib/ai-site-knowledge'
 
 export const dynamic = 'force-dynamic'
 
@@ -147,6 +149,23 @@ async function resolveConversation(
     effectiveSessionId = existing.sessionId || (sessionId as string) || null
   } else {
     effectiveSessionId = (sessionId as string) || `session-${Date.now()}`
+    // Session continuity: callers who only send the sessionId (some mobile
+    // clients, scripted tests) must keep ONE conversation per session —
+    // creating a fresh conversation every turn silently wipes the whole
+    // history (consultation slots, shortlist state, lead capture). Only
+    // anonymous conversations are bound to a session; signed-in users are
+    // never merged via sessionId.
+    if (sessionId) {
+      const existingBySession = await db.aIConversation.findFirst({
+        where: { sessionId: effectiveSessionId, userId: null },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true },
+      })
+      if (existingBySession) {
+        convId = existingBySession.id
+        return { convId, effectiveSessionId }
+      }
+    }
     const conv = await db.aIConversation.create({
       data: {
         userId: userId || null,
@@ -335,6 +354,20 @@ function isProjectCatalogFactQuestion(message: string): boolean {
   const ar = /(سعر|اسعار|أسعار|بكام|كام|وحده|وحدة|وحدات|متاح|متوفر|مساح|متر|تسليم|استلام|مرحلة|مراحل|تقسيط|قسط|مقدم|خطة|خطط|مطور|الموقع|فين|أين|عندكم|عندك|موجود|مسجل|تفاصيل|معلومات|اسمه)/i
   const en = /\b(price|prices|cost|available|availability|unit|units|area|areas|sqm|square meter|delivery|handover|phase|phases|installment|payment|down payment|developer|location|where|how many|info|details|do you have|is there)\b/i
   return ar.test(message) || en.test(message)
+}
+
+/**
+ * "مشاريع سوديك امتى تسليمها؟" is a DEVELOPER-scoped plural question — it
+ * must flow through the search tools (developer filter + delivery data),
+ * never the single-project facts turn, which would either pick one child
+ * project or ask "which one?" when the family ties.
+ */
+function isDeveloperScopedPluralQuestion(message: string): boolean {
+  const developerNamed = parseNaturalLanguageQuery(message).summary.some((s) => s.field === 'developer')
+  if (!developerNamed) {
+    return false
+  }
+  return /مشاريع|مشروعات|كمبوندات|compounds?|projects?|developments?/i.test(message)
 }
 
 async function projectCatalogFactsTurn(projectMatch: KnownCatalogProject, message: string, lang: ChatLang): Promise<DeterministicTurn | null> {
@@ -613,6 +646,87 @@ async function projectCatalogFactsTurn(projectMatch: KnownCatalogProject, messag
   }
 }
 
+/**
+ * "مشاريع سوديك امتى تسليمها؟" — a DEVELOPER-scoped plural question.
+ * Answers deterministically from the public catalog: the developer's
+ * published projects (real links) and an honest delivery-date answer.
+ * The catalog records no delivery dates at all (deliveryDate/deliveryTerms
+ * are empty for every row), so the turn says so and never guesses; the
+ * closing question keeps the consult-first flow alive without repeating
+ * the single-project "which one?" ambiguity error.
+ */
+async function developerFactsTurn(message: string, lang: ChatLang): Promise<DeterministicTurn | null> {
+  const devSummaries = parseNaturalLanguageQuery(message).summary.filter((s) => s.field === 'developer')
+  if (!devSummaries.length) return null
+  const canonical = String(devSummaries[0].value || '').trim()
+  if (!canonical) return null
+
+  const candidates = [...new Set([canonical, ...developerAliasesFor(canonical)])]
+  const profiles = await db.developerProfile.findMany({
+    where: {
+      OR: candidates.flatMap((candidate) => [
+        { companyName: { contains: candidate } },
+        { companyNameArabic: { contains: candidate } },
+      ]),
+    },
+    select: { id: true, companyName: true, companyNameArabic: true },
+  })
+  if (!profiles.length) return null
+
+  const developerWhere = {
+    AND: [
+      { OR: profiles.map((profile) => ({ developerId: profile.id })) },
+      PUBLIC_PROJECT_WHERE,
+    ],
+  }
+  const projects = await db.project.findMany({
+    where: developerWhere,
+    select: { name: true, nameArabic: true, slug: true },
+    orderBy: { name: 'asc' },
+    take: 15,
+  })
+  if (!projects.length) return null
+
+  const total = await db.project.count({ where: developerWhere })
+  const devLabel = lang === 'ar'
+    ? profiles[0].companyNameArabic || profiles[0].companyName || canonical
+    : profiles[0].companyName || canonical
+  const links = projects.map((project) => {
+    const name = lang === 'ar' ? project.nameArabic || project.name : project.name
+    return `[${name}](/projects/${project.slug})`
+  })
+  const isDeliveryQuestion = /(امتى|إمتى|تسليم|استلام|delivery|handover|when)/i.test(message)
+
+  const lines: string[] = []
+  const totalText = lang === 'ar'
+    ? `${total} مشروع منشور على كتالوج غاية`
+    : `${total} projects published on the GHAYA catalog`
+  lines.push(lang === 'ar'
+    ? `**${devLabel}** عندهم ${totalText}: ${links.join('، ')}.`
+    : `**${devLabel}** has ${totalText}: ${links.join(', ')}.`)
+  if (total > projects.length) {
+    lines.push(lang === 'ar'
+      ? 'ودي عيّنة — القايمة كاملة على الموقع.' : 'That is a sample — the full list is on the site.')
+  }
+  if (isDeliveryQuestion) {
+    lines.push(lang === 'ar'
+      ? `أما ميعاد التسليم: مش مسجل في كتالوجنا لأي واحد فيهم، ومش هنخمّن — ميعاد الاستلام بيتحدد بالمشروع والمرحلة نفسها، وأدق مصدر ليه فريق ${devLabel} نفسه.`
+      : `As for delivery dates: none are recorded in our catalog for any of them, and we will not guess — delivery is decided per project and phase, and ${devLabel}'s own team is the authoritative source.`)
+  }
+  lines.push(lang === 'ar'
+    ? 'لو واحد فيهم عجبك قولي اسمه نعمّق فيه، أو شاركني ميزانيتك عشان أرشحلك الأنسب.'
+    : 'If one of them caught your eye, name it and I will go deeper — or share your budget and I will shortlist the best fits.')
+
+  const content = lines.join('\n')
+  return {
+    content,
+    blocks: [{ type: 'text', content }],
+    toolCallsMade: ['developer_details'],
+    provider: 'grounded',
+  }
+}
+
+
 async function whatsAppHref(): Promise<string | null> {
   try {
     const { readContactCtas, toWhatsAppHref } = await import('@/lib/contact-cta')
@@ -669,7 +783,9 @@ function recentComparePair(turns: RecentTurn[]): string[] | null {
       if (b?.type === 'property_grid' && Array.isArray(b.projects) && b.projects.length >= 2) {
         const names = b.projects
           .slice(0, 2)
-          .map((p: any) => (typeof p?.name === 'string' ? p.name.trim() : ''))
+          // Slugs preserve exact identity when different developers share a
+          // project name; the comparison tool resolves the canonical slug.
+          .map((p: any) => (typeof p?.slug === 'string' ? p.slug.trim() : typeof p?.name === 'string' ? p.name.trim() : ''))
           .filter(Boolean)
         if (names.length >= 2) return names
       }
@@ -755,11 +871,18 @@ async function tryDeterministicTurn(
   // LLM deciding to call a tool. Read current inventory from SQLite and answer
   // deterministically (this was the failure mode behind fabricated prices and
   // the repeated budget question).
-  if (isProjectCatalogFactQuestion(message)) {
-    const matches = await findKnownProjectMentions(message)
-    if (process.env.DEBUG_AI_MENTIONS === '1') console.log('[ai-facts-turn]', JSON.stringify({ matches: matches.map((m) => ({ name: m.name, archived: !!m.archived })) }))
-    if (matches.length > 1) return ambiguousProjectReply(matches, lang)
-    if (matches.length === 1) return projectCatalogFactsTurn(matches[0], message, lang)
+  if (classifySiteIntent(message) !== 'COMPARISON' && isProjectCatalogFactQuestion(message)) {
+    if (process.env.DEBUG_AI_GATE === '1') console.log('[dev-turn]', JSON.stringify({ dev: isDeveloperScopedPluralQuestion(message), k: classifySiteIntent(message), f: isProjectCatalogFactQuestion(message) }))
+    if (isDeveloperScopedPluralQuestion(message)) {
+      const devTurn = await developerFactsTurn(message, lang)
+      if (process.env.DEBUG_AI_GATE === '1') console.log('[dev-turn] result', JSON.stringify({ fired: !!devTurn, tools: devTurn?.toolCallsMade }))
+      if (devTurn) return devTurn
+    } else {
+      const matches = await findKnownProjectMentions(message)
+      if (process.env.DEBUG_AI_MENTIONS === '1') console.log('[ai-facts-turn]', JSON.stringify({ matches: matches.map((m) => ({ name: m.name, archived: !!m.archived })) }))
+      if (matches.length > 1) return ambiguousProjectReply(matches, lang)
+      if (matches.length === 1) return projectCatalogFactsTurn(matches[0], message, lang)
+    }
   }
 
   // ── A: short compare affirmation resolves against the shown pair ──
@@ -769,9 +892,13 @@ async function tryDeterministicTurn(
       const res = await toolCompareProjects(pair)
       if (res.success) {
         const data = res.data as ComparisonData
+        const links = data.projects.map((project) => {
+          const name = lang === 'ar' ? project.nameArabic || project.name : project.name
+          return `[${name}](/projects/${project.slug})`
+        })
         const intro = lang === 'ar'
-          ? `مقارنة بين **${data.projects.map((p) => p.name).join(' و ')}**:`
-          : `Comparing **${data.projects.map((p) => p.name).join(' vs ')}**:`
+          ? `دي مقارنة مبنية على بيانات الكتالوج بين ${links.join(' و ')}:`
+          : `Here’s a catalog-grounded comparison of ${links.join(' vs ')}:`
         const blocks: ResponseBlock[] = [
           { type: 'text', content: intro },
           { type: 'comparison', title: '', data },

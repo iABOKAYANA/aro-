@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import type { PropertyFilterInput } from '@/lib/validations'
 import type { SearchResult } from '@/types'
 import { PUBLIC_CHILD_PROJECT_WHERE, PUBLIC_PROJECT_WHERE, PUBLIC_UNIT_PROJECT_WHERE } from '@/lib/project-visibility'
+import { developerAliasesFor } from '@/lib/ai-search-parser'
 
 export async function searchProjects(filters: PropertyFilterInput & { developer?: string; amenities?: string | string[] }) {
   const {
@@ -90,13 +91,17 @@ export async function searchProjects(filters: PropertyFilterInput & { developer?
     where.status = status
   }
   if (developer) {
-    // Accept a developer id or (a substring of) the company name.
+    // Accept a developer id or (a substring of) the company name. The
+    // parser's alias table broadens a canonical name ("Emaar") to the
+    // Arabic aliases Cairo clients actually type ("إعمار مصر").
+    const developerCandidates = [...new Set([developer, ...developerAliasesFor(developer)])]
     and.push({
       developer: {
-        OR: [
-          { id: developer },
-          { companyName: { contains: developer } },
-        ],
+        OR: developerCandidates.flatMap((candidate) => [
+          { id: candidate },
+          { companyName: { contains: candidate } },
+          { companyNameArabic: { contains: candidate } },
+        ]),
       },
     })
   }

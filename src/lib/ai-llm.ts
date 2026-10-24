@@ -3,6 +3,7 @@ import { chatOnce, streamOnce, type ServedProvider } from '@/lib/ai/provider-rou
 import { AI_TOOLS } from '@/lib/ai/tools'
 import { SYSTEM_PROMPT } from '@/lib/ai-system-prompt'
 import { AI_CONFIG } from '@/lib/ai/config'
+import { resolveProjectName } from '@/lib/ai-project-matching'
 import { db } from '@/lib/db'
 import { PUBLIC_PROJECT_WHERE } from '@/lib/project-visibility'
 import { hasListingIntent, parseNaturalLanguageQuery } from '@/lib/ai-search-parser'
@@ -16,6 +17,7 @@ import {
   discoveryExhausted,
   isExplicitPopularityRequest,
   isRecommendationRequest,
+  isShortlistConsent,
   hasRecommended,
   isReady,
   needsFromHistory,
@@ -341,7 +343,6 @@ function toolResultToBlocks(toolName: string, result: any): ResponseBlock[] {
     }
     case 'compare_projects': {
       const d = data as ComparisonData
-      blocks.push({ type: 'text', content: `مقارنة بين **${d.projects.map(p => p.name).join(' و ')}**:` })
       blocks.push({ type: 'comparison', title: '', data: d })
       break
     }
@@ -571,19 +572,6 @@ export interface KnownCatalogProject {
 
 let projectNameCorpus: { loadedAt: number; projects: KnownCatalogProject[] } | null = null
 
-function normalizeProjectMention(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize('NFKC')
-    .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
-    .replace(/[أإآ]/g, 'ا')
-    .replace(/ى/g, 'ي')
-    .replace(/ة/g, 'ه')
-    .replace(/[^a-z0-9\u0600-\u06FF]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
 /** Match an explicit, unambiguous public project name in the user's message. */
 export async function findKnownProjectMentions(message: string): Promise<KnownCatalogProject[]> {
   try {
@@ -638,34 +626,26 @@ export async function findKnownProjectMentions(message: string): Promise<KnownCa
         ],
       }
     }
-    const text = ` ${normalizeProjectMention(message)} `
-    const bestById = new Map<string, { project: KnownCatalogProject; score: number }>()
-    for (const project of projectNameCorpus.projects) {
-      const variants = [project.name, project.nameArabic || '']
-        .map(normalizeProjectMention)
-        .filter((name) => name.length >= 4)
-      for (const name of variants) {
-        if (text.includes(` ${name} `)) {
-          const previous = bestById.get(project.id)
-          if (!previous || previous.score < name.length) bestById.set(project.id, { project, score: name.length })
-        }
-      }
-    }
-    const sorted = [...bestById.values()].sort((a, b) => b.score - a.score)
+    const sorted = resolveProjectName(message, projectNameCorpus.projects)
     if (process.env.DEBUG_AI_MENTIONS === '1') {
       console.log('[ai-mentions]', JSON.stringify({ msgLen: message.length, matches: sorted.slice(0, 5).map((m) => ({ name: m.project.name, score: m.score, archived: !!m.project.archived })) }))
     }
     if (!sorted.length) return []
-    const maxScore = sorted[0].score
-    return sorted.filter((item) => item.score === maxScore).map((item) => item.project)
+    return sorted.map((item) => item.project)
   } catch (e) {
     if (process.env.DEBUG_AI_MENTIONS === '1') console.log('[ai-mentions] threw:', String(e).slice(0, 200))
     return [] // knowledge match is best-effort; never fail chat
   }
 }
 
+/**
+ * Confident single project mention only. Ambiguous ties (same score across
+ * families like "The Lakes / Meadows / Hazel of Sodic East") must NOT bypass
+ * the consultation gate — a client shorthand for an area is not a catalog
+ * task; discovery should still run.
+ */
 async function mentionsKnownProject(message: string): Promise<boolean> {
-  return (await findKnownProjectMentions(message)).length > 0
+  return (await findKnownProjectMentions(message)).length === 1
 }
 
 // Best-effort server-side search used when the model returns zero tool calls
@@ -988,8 +968,8 @@ function finalSummaryAsk(lang: 'ar' | 'en', toolCallsMade: string[]): string {
       : 'Recommend the best 2-3: one line each on why it fits + one next-step question. Keep it very brief.'
   }
   return lang === 'ar'
-    ? 'قارن النتايج كخبير يتكلم لعميله: افتتح برأيك النهائي (أنصح بمين وطلب العميل هو إيه)، بعدين الفروقات اللي بتفرق فعلًا (السعر مقابل ميزانيته، هيكل السداد، التسليم، المكان) في 4-8 سطور، وبعدين "اختار كذا لو… واختار كذا لو…". الجدول ظاهر قدام العميل أصلًا — ممنوع تسرد كل خلية فيه، اتكلم في الخلاصة والرأي، وبسّط سؤال واحد للخطوة الجاية. بالعربي المصري.'
-    : 'Compare like an expert talking to their client: OPEN with your verdict (who you\'d pick for this profile), then the deltas that actually decide it (price vs budget, payment structure, delivery, location) in 4-8 lines, then "choose X if… / choose Y if…". The table is already on screen — never narrate every cell; give the takeaways and your opinion, then ONE next-step question.'
+    ? 'قارن كخبير بيتكلم مع العميل: افتتح برأيك النهائي حسب طلبه، ثم وضّح الفروقات الحاسمة من البيانات الموجودة فقط (سعر المشروع، الوحدات المتاحة وأسعارها ومساحاتها، خطط السداد الفعالة، التسليم، والموقع). اربط كل اسم مشروع برابطه. لو معلومة مش موجودة، قول إنها غير مسجلة بدل ما تفترضها. الجدول ظاهر بالفعل؛ ما تسردش كل خلية—اشرح الخلاصة في 4-8 سطور واختم بسؤال واحد مفيد للخطوة الجاية، بالمصري.'
+    : 'Compare as an expert talking to the client: open with your verdict for THEIR stated priorities, then explain the decisive differences using only supplied facts (recorded project price, available units and their price/area ranges, active payment plans, delivery and location). Link every project name. If a field is missing, say it is not recorded; never infer it. The table is already visible—do not repeat every cell. Give the takeaway in 4-8 lines and end with one useful next-step question.'
 }
 
 async function runForcedSearch(
@@ -998,6 +978,8 @@ async function runForcedSearch(
 ): Promise<{ tools: string[]; blocks: ResponseBlock[]; intro: string; total: number }> {
   const parsed = parseNaturalLanguageQuery(mergedQuery)
   const base = { ...parsed.filters, limit: 6 } as Record<string, unknown>
+  const developer = parsed.summary.find((item) => item.field === 'developer')?.value
+  if (developer) base.developer = developer
   delete base.page
 
   const attempts: Array<{ name: string; drop: string[] }> = [
@@ -1047,6 +1029,52 @@ async function runForcedSearch(
     ? `تمام — بعد ما درست اللي عندنا، دول أقرب ${best.total} اختيار لطلبك 👇`
     : `Done — I studied our catalog; here are the closest ${best.total} fits 👇`
   return { tools: best.tools, blocks: best.blocks, intro, total: best.total }
+}
+
+// A bare consent/continuation ("تمام", "يلا") carries no filters of its own —
+// search straight from the client profile merged across the conversation.
+async function runForcedSearchFromNeeds(
+  needs: ConsultNeeds,
+  lang: 'ar' | 'en',
+): Promise<{ tools: string[]; blocks: ResponseBlock[]; intro: string; total: number }> {
+  const base: Record<string, unknown> = { limit: 6 }
+  if (needs.place) base.city = needs.place
+  if (needs.propertyType) base.propertyType = needs.propertyType
+  if (needs.budgetMin !== undefined) base.minPrice = needs.budgetMin
+  if (needs.budgetMax !== undefined) base.maxPrice = needs.budgetMax
+  if (Object.keys(base).length <= 1) return { tools: [], blocks: [], intro: '', total: 0 }
+
+  const attempts: Record<string, unknown>[] = [base, { ...base, minPrice: undefined, maxPrice: undefined }]
+  for (const filters of attempts) {
+    const res = await toolSearchProjects(filters as any)
+    if (res.success && (res.data as any)?.total > 0) {
+      const d = res.data as any
+      const blocks = toolResultToBlocks('search_projects', res)
+      const tools = ['search_projects']
+      try {
+        const ures = await toolSearchUnits(filters as any)
+        if (ures.success && (ures.data as any)?.total > 0) {
+          blocks.push(...toolResultToBlocks('search_units', ures))
+          tools.push('search_units')
+        }
+      } catch { /* units are a bonus — never fail the fallback */ }
+      const chipFilters: Record<string, string | number> = {}
+      for (const [k, v] of Object.entries(filters)) {
+        if ((typeof v === 'string' || typeof v === 'number') && v !== '') chipFilters[k] = v
+      }
+      blocks.push({ type: 'filter_update', filters: chipFilters, chips: [] })
+      const intro = lang === 'ar'
+        ? `تمام — دول أقرب ${d.total} اختيار مع الميزانية اللي حددناها 👇`
+        : `Done — here are the closest ${d.total} fits for the budget we set 👇`
+      return { tools, blocks, intro, total: d.total }
+    }
+  }
+  return { tools: [], blocks: [], intro: '', total: 0 }
+}
+
+const EMPTY_REPLY: Record<'ar' | 'en', string> = {
+  ar: 'تمام. لو حابب أرشحلك أقوى 3 يخيّروك جوه ميزانيتك، قول «هات القايمة»، ولو محتار في حاجة بعينها قولي عليها وأنا أوفّسها لك على بيانات الكتالوج.',
+  en: 'Sure. Say "show the list" for my top-3 within your budget, or name what you are unsure about and I will walk you through the catalog facts.',
 }
 
 // Language guard: the small model occasionally leaks CJK tokens into Arabic
@@ -1111,6 +1139,8 @@ interface PreparedLLMRequest {
   listingTurn: boolean
   /** False until the client has completed discovery and accepted a shortlist. */
   shortlistAllowed: boolean
+  /** Client profile merged across the conversation — powers needs-based fallbacks. */
+  needs: ConsultNeeds
   deadline: number
   toolCallsMade: string[]
   allBlocks: ResponseBlock[]
@@ -1133,11 +1163,10 @@ async function prepareLLMRequest(
   const hasPersonalizedCriteria =
     needs.place !== undefined || needs.budgetMin !== undefined || needs.budgetMax !== undefined ||
     needs.propertyType !== undefined || needs.purpose !== undefined || needs.bedrooms !== undefined
-  const listingTurn =
+  let listingTurn =
     isListingTurn(currentMessage, conversationHistory) ||
     siteKind === 'BEST' ||
     (siteKind === 'CHEAPEST' && hasPersonalizedCriteria)
-
   // ── Site-knowledge grounding ──────────────────────────────────
   // Fact-listing intents (areas / cheapest / booking / calculators / a
   // named project) are answered DETERMINISTICALLY from live site data —
@@ -1179,7 +1208,7 @@ async function prepareLLMRequest(
       return {
         lang,
         grounded: { content: grounded.content, blocks: allBlocks, toolCallsMade, provider: 'grounded' },
-        messages: [], mergedQuery: '', listingTurn: false, shortlistAllowed: false, deadline: 0,
+        messages: [], mergedQuery: '', listingTurn: false, shortlistAllowed: false, needs, deadline: 0,
         toolCallsMade, allBlocks,
       }
     }
@@ -1196,13 +1225,30 @@ async function prepareLLMRequest(
   let stateBlock = stateBlockRaw
   let shortlistAllowed = true
   const namesProject = await mentionsKnownProject(currentMessage)
+  const assistantTexts = conversationHistory
+    .filter((m) => m.role === 'assistant')
+    .map((m) => m.content)
+    .slice(-6)
+  // Bare consent right after the one-time segue ("قائمة قوية أو ندردش؟") IS
+  // the promised shortlist turn — the model often keeps chatting here, so the
+  // turn is forced into the listing path (needs-based search delivers the
+  // list deterministically when it refuses tools).
+  if (isShortlistConsent(assistantTexts, currentMessage)) listingTurn = true
+  if (process.env.DEBUG_AI_GATE === '1') {
+    console.log('[ai-gate]', JSON.stringify({
+      m: currentMessage.slice(0, 40),
+      listingTurn,
+      namesProject,
+      isReady: isReady(needs),
+      needsValues: needs,
+      lastAssistantHasSegue: !!(assistantTexts[assistantTexts.length - 1] || '').includes(AREA_TAKE_SEGUE_AR),
+      slotsRevealed: slotsRevealedBy(conversationHistory, currentMessage),
+      assistantCount: assistantTexts.length,
+    }))
+  }
   // Bypass: the client named a catalog project — answer it (tool-grounded),
   // never interrogate budget first.
   if (listingTurn && !wantsImmediateListings(currentMessage) && !namesProject) {
-    const assistantTexts = conversationHistory
-      .filter((m) => m.role === 'assistant')
-      .map((m) => m.content)
-      .slice(-6)
     const directCatalogTask = namesProject || siteKind === 'COMPARISON'
     if (shouldHoldShortlist(assistantTexts, currentMessage, directCatalogTask)) {
       shortlistAllowed = false
@@ -1236,6 +1282,7 @@ async function prepareLLMRequest(
             mergedQuery,
             listingTurn: false,
             shortlistAllowed: false,
+            needs,
             deadline: 0,
             toolCallsMade: [],
             allBlocks: [],
@@ -1266,6 +1313,7 @@ async function prepareLLMRequest(
         mergedQuery,
         listingTurn: false,
         shortlistAllowed: false,
+        needs,
         deadline: 0,
         toolCallsMade: [],
         allBlocks: [],
@@ -1338,7 +1386,7 @@ async function prepareLLMRequest(
   messages.push({ role: 'user', content: currentMessage })
 
   return {
-    lang, grounded: null, messages, mergedQuery, listingTurn, shortlistAllowed, deadline,
+    lang, grounded: null, messages, mergedQuery, listingTurn, shortlistAllowed, needs, deadline,
     toolCallsMade, allBlocks,
   }
 }
@@ -1351,7 +1399,7 @@ export async function callLLM(
 ): Promise<LLMResult> {
   const prep = await prepareLLMRequest(conversationHistory, currentMessage, ctx, langOverride)
   if (prep.grounded) return prep.grounded
-  const { lang, messages, mergedQuery, listingTurn, shortlistAllowed, deadline, toolCallsMade, allBlocks } = prep
+  const { lang, messages, mergedQuery, listingTurn, shortlistAllowed, needs, deadline, toolCallsMade, allBlocks } = prep
   const requestTools = toolsForTurn(ctx, shortlistAllowed)
   const track: FallbackTrack = { fellBack: false }
 
@@ -1369,7 +1417,8 @@ export async function callLLM(
       if (toolCallsMade.length === 0 && listingTurn && shortlistAllowed) {
         // The model refused to retrieve: run the default search server-side
         // and attach real results instead of a bare clarifying question.
-        const forced = await runForcedSearch(mergedQuery, lang)
+        let forced = await runForcedSearch(mergedQuery, lang)
+        if (forced.total === 0) forced = await runForcedSearchFromNeeds(needs, lang)
         if (forced.total > 0) {
           toolCallsMade.push(...forced.tools)
           allBlocks.push(...forced.blocks)
@@ -1382,6 +1431,8 @@ export async function callLLM(
       }
       content = await guardLanguage(content, messages, lang, allBlocks.length > 0, track)
       content = withCompareNudge(content, allBlocks, toolCallsMade, lang)
+      // Never return a blank assistant turn to the client.
+      if (!content.trim() && allBlocks.length === 0) content = EMPTY_REPLY[lang]
       return {
         content,
         blocks: allBlocks,
@@ -1503,7 +1554,7 @@ export async function callLLMStream(
     cb.onToken?.(prep.grounded.content)
     return prep.grounded
   }
-  const { lang, messages, mergedQuery, listingTurn, shortlistAllowed, deadline, toolCallsMade, allBlocks } = prep
+  const { lang, messages, mergedQuery, listingTurn, shortlistAllowed, needs, deadline, toolCallsMade, allBlocks } = prep
   const requestTools = toolsForTurn(ctx, shortlistAllowed)
   const track: FallbackTrack = { fellBack: false }
 
@@ -1522,7 +1573,11 @@ export async function callLLMStream(
       if (toolCallsMade.length === 0 && listingTurn && shortlistAllowed) {
         // The model refused to retrieve: run the default search server-side
         // and attach real results instead of a bare clarifying question.
-        const forced = await runForcedSearch(mergedQuery, lang)
+        let forced = await runForcedSearch(mergedQuery, lang)
+        if (forced.total === 0) forced = await runForcedSearchFromNeeds(needs, lang)
+        if (process.env.DEBUG_AI_GATE === '1') {
+          console.log('[forced]', JSON.stringify({ mergedQuery: mergedQuery.slice(0, 90), total: forced.total, tools: forced.tools }))
+        }
         if (forced.total > 0) {
           toolCallsMade.push(...forced.tools)
           allBlocks.push(...forced.blocks)
@@ -1550,12 +1605,17 @@ export async function callLLMStream(
       }
       cb.onStatus?.('summarizing', lang === 'ar' ? 'بكتب الإجابة…' : 'Writing the answer…')
       const streamed = await streamFinalText(messages, cb, track)
-      const content = withCompareNudge(
+      let content = withCompareNudge(
         await guardLanguage(streamed, messages, lang, allBlocks.length > 0, track),
         allBlocks,
         toolCallsMade,
         lang,
       )
+      // Never return a blank assistant turn to the client.
+      if (!content.trim() && allBlocks.length === 0) {
+        content = EMPTY_REPLY[lang]
+        cb.onToken?.(content)
+      }
       return {
         content,
         blocks: allBlocks,

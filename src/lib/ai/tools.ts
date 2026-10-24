@@ -5,7 +5,7 @@ export const AI_TOOLS: OllamaTool[] = [
     type: 'function',
     function: {
       name: 'search_projects',
-      description: 'Search for real estate projects in the database. Use when the user wants to see projects/compounds matching specific criteria (location, budget, bedrooms, property type, etc). Returns project summaries with key details.',
+      description: 'Search the live public GHAYA catalog for projects matching the client\'s Arabic or English request (area, budget, bedrooms, property type, developer). Pass the developer as developerName; use the client\'s words, not invented aliases. Returns public project summaries only.',
       parameters: {
         type: 'object',
         properties: {
@@ -16,7 +16,7 @@ export const AI_TOOLS: OllamaTool[] = [
           bedrooms: { type: 'number', description: 'Number of bedrooms' },
           minPrice: { type: 'number', description: 'Minimum price in EGP' },
           maxPrice: { type: 'number', description: 'Maximum price in EGP' },
-          developerName: { type: 'string', description: 'Filter by developer name' },
+          developerName: { type: 'string', description: 'Optional developer name in Arabic or English (e.g. SODIC / سوديك, Mountain View / ماونتن فيو).' },
           sortBy: { type: 'string', description: '"price_asc", "price_desc", "newest"' },
           limit: { type: 'number', description: 'Max results (default 6)' },
         },
@@ -47,11 +47,11 @@ export const AI_TOOLS: OllamaTool[] = [
     type: 'function',
     function: {
       name: 'get_project_details',
-      description: 'Get detailed info about a specific project: description, developer, payment plans, amenities, units.',
+      description: 'Get detailed info about one public GHAYA project: catalog description, developer, active payment plans, amenities, and available units. Accept the client\'s Arabic/English name, common transliteration, or slug. If the name is ambiguous, ask which one; never pick a random partial match.',
       parameters: {
         type: 'object',
         properties: {
-          nameOrSlug: { type: 'string', description: 'Project name or slug, e.g. "Eastown", "mountain-view-icity"' },
+          nameOrSlug: { type: 'string', description: 'Project name in Arabic/English, common spelling or transliteration, or slug (e.g. "Eastown", "ماونتن فيو اي سيتي", "mountain-view-icity").' },
         },
         required: ['nameOrSlug'],
       },
@@ -75,7 +75,7 @@ export const AI_TOOLS: OllamaTool[] = [
     type: 'function',
     function: {
       name: 'compare_projects',
-      description: 'Side-by-side data for 2-4 GHAYA projects (price range, location, developer, payment, delivery). Names may be Arabic, English or slugs — one entry per project. DISCUSS the client question first; only call this when the client EXPLICITLY asks to see a comparison table, or after your text take when they still want the numbers. The table renders automatically below your reply — never repeat rows in text, give the verdict instead.',
+      description: 'Verified comparison data for 2-4 PUBLIC GHAYA projects: recorded project prices, buyable available-unit count and price/area ranges, active payment plans, location, delivery and developer. Pass one user-supplied Arabic/English name or slug per project; the server resolves common spelling variants and rejects ambiguous names instead of guessing. Compare using the client\'s priorities; the table is shown with your answer, so explain the verdict and fit without inventing missing facts.',
       parameters: {
         type: 'object',
         properties: {

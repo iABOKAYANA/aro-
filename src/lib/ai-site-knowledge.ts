@@ -524,8 +524,12 @@ const PRESS_RES = [/صحافه/, /صحافة/, /أخباركم/, /اخباركم
 const CAREERS_RES = [/وظايف/, /وظائف/, /وظيفه/, /وظيفة/, /شغل عندكم/, /توظيف/, /انضم.*فريق/, /\bcareers?\b/, /\bjobs?\b/, /hiring/, /vacanc/, /join.*team/, /open positions/]
 const OFFERS_RES = [/عروض/, /خصومات/, /خصم/, /\boffers?\b/, /discounts?/, /\bdeals\b/, /cash discount/]
 const LEGAL_RES = [/شروط الاستخدام/, /الخصوصيه/, /الخصوصية/, /الكوكيز/, /\bterms\b/, /\bprivacy\b/, /\bcookies\b/, /legal@/]
-const PLATFORM_RES = [/قارن.*ازاي/, /ازاي.*قارن/, /المقارنه/, /المقارنة/, /المحفوظ/, /بحوثاتي/, /how.*compare/, /\bsaved\b/, /بروكر.*(انضم|اشترك|اقدم)/, /مطور.*(ضيف|اعرض|اشترك|ابعت)/, /broker.*join/, /developer.*(submit|list|join)/, /جوله\s*(ال)?افتراضيه/, /جولة\s*(ال)?افتراضية/, /virtual tour/]
-const COMPARE_RES = [/قارن/, /مقارنه/, /مقارنة/, /الفرق بين/, /أنهي أحسن/, /compare/, /\bvs\b/, /versus/, /which is better/]
+const PLATFORM_RES = [/قارن.*ازاي/, /ازاي.*قارن/, /ازاي.*مقارنه/, /ازاي.*مقارنة/, /المقارنه/, /المقارنة/, /المحفوظ/, /بحوثاتي/, /how.*compare/, /\bsaved\b/, /بروكر.*(انضم|اشترك|اقدم)/, /مطور.*(ضيف|اعرض|اشترك|ابعت)/, /broker.*join/, /developer.*(submit|list|join)/, /جوله\s*(ال)?افتراضيه/, /جولة\s*(ال)?افتراضية/, /virtual tour/]
+const COMPARE_RES = [
+  /قارن/, /مقارنه/, /مقارنة/, /الفرق بين/, /ايه الفرق/, /إيه الفرق/,
+  /محتار.*بين/, /أنهي أحسن/, /انهي احسن/, /مين.*(?:أحسن|احسن)/, /(?:أفضل|افضل|أحسن|احسن).*بين/,
+  /compare/, /\bvs\b/, /versus/, /which is better/,
+]
 
 export function classifySiteIntent(message: string): SiteIntentKind {
   const norm = normalizeAr(message)
@@ -549,14 +553,6 @@ export function classifySiteIntent(message: string): SiteIntentKind {
   if (BOOK_RES.some((r) => r.test(message))) return 'HOW_TO_BOOK'
   if (AREA_RES.some((r) => r.test(message))) return 'WHERE_AREAS'
   if (DEV_LIST_RES.some((r) => r.test(message) || r.test(lower))) return 'DEVELOPERS'
-  if (CHEAP_RES.some((r) => r.test(message) || r.test(norm))) return 'CHEAPEST'
-  if (BEST_RES.some((r) => r.test(message) || r.test(norm))) return 'BEST'
-  if (CALC_RES.some((r) => r.test(message))) {
-    // Concrete numbers ("احسب قسط شقة بـ 5 مليون على 7 سنين") belong to the
-    // payment tool path, not the static calculator guide.
-    if (/\d/.test(normalizeDigits(message))) return 'GENERAL'
-    return 'CALCULATOR'
-  }
   // Site-content intents (static pages + published content) — before BOTH
   // COMPARE_RES and the broad ABOUT_RES project matcher, so "ازاي اقارن…"
   // (how-to) doesn't become a project comparison and site questions never
@@ -577,6 +573,14 @@ export function classifySiteIntent(message: string): SiteIntentKind {
   if (siteHit(LEGAL_RES)) return 'SITE_HELP'
   if (siteHit(PLATFORM_RES)) return 'SITE_HELP'
   if (COMPARE_RES.some((r) => r.test(message) || r.test(lower))) return 'COMPARISON'
+  if (CHEAP_RES.some((r) => r.test(message) || r.test(norm))) return 'CHEAPEST'
+  if (BEST_RES.some((r) => r.test(message) || r.test(norm))) return 'BEST'
+  if (CALC_RES.some((r) => r.test(message))) {
+    // Concrete numbers ("احسب قسط شقة بـ 5 مليون على 7 سنين") belong to the
+    // payment tool path, not the static calculator guide.
+    if (/\d/.test(normalizeDigits(message))) return 'GENERAL'
+    return 'CALCULATOR'
+  }
   if (ABOUT_RES.some((r) => r.test(message) || r.test(lower))) return 'PROJECT_ABOUT'
   return 'GENERAL'
 }

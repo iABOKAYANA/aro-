@@ -4,6 +4,7 @@ import {
   normalizeListingTypeInput,
   normalizePropertyTypeInput,
   parseNaturalLanguageQuery,
+  hasListingIntent,
 } from '@/lib/ai-search-parser'
 
 describe('parseNaturalLanguageQuery', () => {
@@ -49,6 +50,14 @@ describe('parseNaturalLanguageQuery', () => {
     const { filters, summary } = parseNaturalLanguageQuery('sodic villa')
     expect(summary.find((s) => s.field === 'developer')?.value).toBe('SODIC')
     expect(filters.city).toBeUndefined()
+  })
+
+  it('understands colloquial Arabic project and developer words', () => {
+    const { filters, summary } = parseNaturalLanguageQuery('عايز تاون في زايد من سوديك')
+    expect(filters.propertyType).toBe('TOWNHOUSE')
+    expect(filters.city).toBe('sheikh-zayed')
+    expect(summary.find((s) => s.field === 'developer')?.value).toBe('SODIC')
+    expect(hasListingIntent('مشاريع سوديك في زايد')).toBe(true)
   })
 
   it('maps sort hints (cheapest / luxury)', () => {
@@ -185,6 +194,28 @@ describe('parseNaturalLanguageQuery', () => {
     expect(parseNaturalLanguageQuery('شقة 500 ألف').filters.maxPrice).toBe(500_000)
     expect(parseNaturalLanguageQuery('شقة تحت 8 مليون جنيه').filters.maxPrice).toBe(8_000_000)
     expect(parseNaturalLanguageQuery('شقة 8000000').filters.maxPrice).toBe(8_000_000)
+  })
+
+  it('understands spoken amounts and common Egyptian budget ranges', () => {
+    expect(parseNaturalLanguageQuery('ميزانيتي خمسة مليون').filters.maxPrice).toBe(5_000_000)
+    expect(parseNaturalLanguageQuery('ميزانيتي خمسة ونص مليون').filters.maxPrice).toBe(5_500_000)
+    expect(parseNaturalLanguageQuery('ميزانيتي مليون ونص').filters.maxPrice).toBe(1_500_000)
+    expect(parseNaturalLanguageQuery('شقة بين ٥ و٨ مليون').filters).toMatchObject({ minPrice: 5_000_000, maxPrice: 8_000_000 })
+    expect(parseNaturalLanguageQuery('شقة من ٥ لحد ٨ مليون').filters).toMatchObject({ minPrice: 5_000_000, maxPrice: 8_000_000 })
+    expect(parseNaturalLanguageQuery('شقة مقدم ٢ مليون').filters.maxPrice).toBeUndefined()
+    expect(parseNaturalLanguageQuery('شقة بمقدم ٢ مليون وميزانية ٨ مليون').filters.maxPrice).toBe(8_000_000)
+    expect(parseNaturalLanguageQuery('شقة ٣ غرف من ١٢٠ لـ ١٥٠ متر تحت ٨ مليون').filters).toMatchObject({
+      bedrooms: 3,
+      minArea: 120,
+      maxArea: 150,
+      maxPrice: 8_000_000,
+    })
+  })
+
+  it('recognizes colloquial finishing descriptions', () => {
+    expect(parseNaturalLanguageQuery('عايز شقة نص تشطيب').filters.finishingType).toBe('SEMI_FINISHED')
+    expect(parseNaturalLanguageQuery('عايز شقة سوبر لوكس').filters.finishingType).toBe('SUPER_LUXURY')
+    expect(parseNaturalLanguageQuery('عايز شقة على المحارة').filters.finishingType).toBe('CORE_SHELL')
   })
 
   it('normalizes raw tool args (display names, Arabic, any case)', () => {
