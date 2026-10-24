@@ -74,12 +74,12 @@ export function PageWidgets() {
           href="/ai-tools/chat"
           aria-label={isRtl ? 'اسأل «عين» — مساعدك العقاري' : 'Ask “Ain” — your real-estate assistant'}
           className={cn(
-            'group fixed z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-estate-navy text-estate-gold shadow-xl ring-1 ring-estate-gold/40 transition-all duration-300 hover:bg-estate-gold hover:text-estate-navy dark:bg-black dark:hover:bg-estate-gold dark:hover:text-black',
+            'group fixed z-[60] flex h-14 w-14 max-sm:h-16 max-sm:w-16 items-center justify-center rounded-full bg-estate-navy text-estate-gold shadow-xl ring-1 ring-estate-gold/40 transition-all duration-300 hover:bg-estate-gold hover:text-estate-navy dark:bg-black dark:hover:bg-estate-gold dark:hover:text-black',
             bottomPos,
             isRtl ? 'left-6' : 'right-6'
           )}
         >
-          <Sparkles className="h-6 w-6" />
+          <Sparkles className="h-6 w-6 max-sm:h-7 max-sm:w-7" />
           <span
             className={cn(
               'pointer-events-none absolute top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-estate-gold/30 bg-card px-3 py-1.5 text-xs font-semibold text-foreground opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100',

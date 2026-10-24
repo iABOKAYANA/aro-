@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useLanguage } from '@/lib/language-context'
 import { useFeatureFlag } from '@/components/flags/flags-provider'
 import { BrandLogo } from '@/components/layout/brand-logo'
@@ -71,6 +72,7 @@ const locationLabels: Record<string, Record<string, string>> = {
 }
 
 export function Footer({ appType = 'all' }: { appType?: AppType }) {
+  const pathname = usePathname() || ''
   const { lang, t } = useLanguage()
   // Feature switches: tools the CEO turned OFF vanish from the footer too.
   const pricesOn = useFeatureFlag('price_explorer')
@@ -86,6 +88,11 @@ export function Footer({ appType = 'all' }: { appType?: AppType }) {
   // in doubt KEEP. `appType` is still threaded through (and exposed as
   // data-app-type for host assertions) so a future staff-only footer entry
   // can branch here without re-plumbing. Nothing hidden on 'console'.
+  // The full-page chat (عين) is a 100dvh app shell — a marketing footer under
+  // it turns the phone screen into a double scroll (page scroll vs chat
+  // scroll) and unpins the composer. Same hiding rule as the floating
+  // widgets; hidden on the chat route only.
+  if (pathname.startsWith('/ai-tools/chat')) return null
   return (
     <footer data-app-type={appType} className="relative overflow-hidden border-t border-estate-gold/25 bg-estate-navy text-white dark:border-[rgba(212,168,67,0.25)] dark:bg-black">
       <div className="mashrabiya pointer-events-none absolute inset-0 opacity-40" aria-hidden="true" />

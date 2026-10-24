@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { X, Smartphone } from 'lucide-react'
 
 /**
@@ -12,6 +13,7 @@ import { X, Smartphone } from 'lucide-react'
 const DISMISS_KEY = 'pwa-banner-dismissed'
 
 export function InstallPwaBanner() {
+  const pathname = usePathname() || ''
   const [prompt, setPrompt] = useState<any>(null)
   const [show, setShow] = useState(false)
   const [isIos, setIsIos] = useState(false)
@@ -42,7 +44,9 @@ export function InstallPwaBanner() {
     return () => window.removeEventListener('beforeinstallprompt', onPrompt)
   }, [])
 
-  if (installed || !show) return null
+  // عين's chat page is a bottom-fixed composer app shell — a fixed bottom
+  // install banner lands right on top of the input box on phones.
+  if (installed || !show || pathname.startsWith('/ai-tools/chat')) return null
 
   const dismiss = () => {
     setShow(false)

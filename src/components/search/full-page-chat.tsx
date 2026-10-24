@@ -263,7 +263,7 @@ export function FullPageChat() {
                         className="flex flex-col items-center gap-1 rounded-2xl border border-gray-200 p-2.5 sm:p-3 transition-all hover:border-[#D4A843]/40 hover:bg-[#D4A843]/5 active:scale-95 dark:border-[#262626] dark:bg-[#0A0A0A]"
                       >
                         <a.icon className="h-4 w-4 sm:h-5 sm:w-5 text-[#D4A843]" />
-                        <span className="text-[11px] sm:text-xs font-medium text-gray-700 dark:text-gray-300">{a.label}</span>
+                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{a.label}</span>
                       </button>
                     ))}
                   </div>
@@ -277,7 +277,7 @@ export function FullPageChat() {
                         className="group flex w-full items-center gap-3 rounded-2xl border border-gray-100 px-4 py-3 text-left transition-all hover:border-[#D4A843]/30 hover:bg-[#D4A843]/5 dark:border-[#262626] dark:bg-[#0A0A0A]"
                       >
                         <ArrowRight className="h-4 w-4 flex-shrink-0 text-gray-300 group-hover:text-[#D4A843] rtl:rotate-180" />
-                        <span className="text-sm text-gray-600 group-hover:text-[#D4A843] dark:text-gray-300">{s.label}</span>
+                        <span className="text-sm max-sm:text-base text-gray-600 group-hover:text-[#D4A843] dark:text-gray-300">{s.label}</span>
                       </button>
                     ))}
                   </div>
