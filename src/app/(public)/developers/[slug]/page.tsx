@@ -6,6 +6,7 @@ import { PUBLIC_PROJECT_WHERE } from '@/lib/project-visibility'
 import { SITE_URL } from '@/lib/site'
 import { absoluteImage } from '@/lib/seo'
 import { ProjectCard } from '@/components/projects/project-card'
+import { DevAinStrip } from '@/components/developers/dev-ain-strip'
 import { Badge } from '@/components/ui/badge'
 
 export const dynamic = 'force-dynamic'
@@ -123,6 +124,10 @@ export default async function DeveloperPage({ params }: DevPageProps) {
           {dev.descriptionArabic || dev.description}
         </p>
       )}
+
+      {/* عين on the developer page: questions deep-link into the chat, the
+          developer-scoped turn answers from the catalog. */}
+      <DevAinStrip developerName={dev.companyName} />
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {dev.projects.map((p) => (

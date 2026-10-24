@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ChevronDown, MessageCircleQuestion } from 'lucide-react'
+import { ChevronDown, MessageCircleQuestion, Sparkles } from 'lucide-react'
 import { useLanguage } from '@/lib/language-context'
 import { Reveal } from '@/components/design'
 import { cn } from '@/lib/utils'
@@ -110,6 +110,22 @@ export default function FaqView() {
           ))}
 
           <hr className="gold-hairline my-8" />
+
+          {/* عين on the FAQ page: when the list misses, she takes over. */}
+          <Reveal>
+            <div className="mb-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-3 rounded-2xl border border-estate-gold/30 bg-estate-gold/5 px-5 py-4 text-center">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-estate-navy dark:text-estate-gold">
+                <Sparkles className="h-4 w-4 shrink-0" />
+                {ar ? 'ملقتش سؤالك؟ اسأل عين' : 'Not answered here? Ask Ain'}
+              </p>
+              <Link
+                href="/ai-tools/chat"
+                className="inline-flex min-h-11 items-center rounded-full bg-estate-navy px-4 text-sm font-semibold text-estate-gold transition-colors hover:bg-estate-gold hover:text-estate-navy dark:bg-black dark:hover:bg-estate-gold dark:hover:text-black sm:min-h-0"
+              >
+                {ar ? 'اتكلم عين دلوقتي' : 'Talk to Ain now'}
+              </Link>
+            </div>
+          </Reveal>
 
           <Reveal>
             <p className="text-center text-sm text-muted-foreground">
