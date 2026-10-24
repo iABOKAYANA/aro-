@@ -159,7 +159,7 @@ function LaunchCard({ project, isRtl }: { project: any; isRtl: boolean }) {
             isRtl ? 'bg-gradient-to-l' : 'bg-gradient-to-r'
           }`}
         />
-        <span className="absolute left-3 top-3 rounded-full bg-estate-gold px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#0F1A2C] shadow">
+        <span className="absolute left-3 top-3 rounded-full bg-estate-gold px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[#0F1A2C] shadow">
           {isRtl ? 'جديد' : 'New'}
         </span>
       </Reveal>

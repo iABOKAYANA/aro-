@@ -242,13 +242,13 @@ export function FullPageChat() {
                       {aiStatus === 'loading' && (
                         <>
                           <Loader2 className="h-3 w-3 animate-spin text-gray-400" />
-                          <span className="text-[10px] text-gray-400">{lang === 'ar' ? 'جاري التحقق...' : 'Checking...'}</span>
+                          <span className="text-[11px] text-gray-400">{lang === 'ar' ? 'جاري التحقق...' : 'Checking...'}</span>
                         </>
                       )}
                       {aiStatus === 'online' && (
                         <>
                           <span className="h-2 w-2 rounded-full bg-green-500" />
-                          <span className="text-[10px] text-green-600">{lang === 'ar' ? 'المساعد الذكي متصل' : 'AI Online'}</span>
+                          <span className="text-[11px] text-green-600">{lang === 'ar' ? 'المساعد الذكي متصل' : 'AI Online'}</span>
                         </>
                       )}
                     </div>
@@ -263,7 +263,7 @@ export function FullPageChat() {
                         className="flex flex-col items-center gap-1 rounded-2xl border border-gray-200 p-2.5 sm:p-3 transition-all hover:border-[#D4A843]/40 hover:bg-[#D4A843]/5 active:scale-95 dark:border-[#262626] dark:bg-[#0A0A0A]"
                       >
                         <a.icon className="h-4 w-4 sm:h-5 sm:w-5 text-[#D4A843]" />
-                        <span className="text-[10px] sm:text-xs font-medium text-gray-700 dark:text-gray-300">{a.label}</span>
+                        <span className="text-[11px] sm:text-xs font-medium text-gray-700 dark:text-gray-300">{a.label}</span>
                       </button>
                     ))}
                   </div>
@@ -348,7 +348,7 @@ export function FullPageChat() {
             {activeCount > 0 && (
               <div className="mx-auto mb-2 flex max-w-2xl flex-wrap gap-1.5">
                 {Object.entries(filters).filter(([k, v]) => v && v !== '' && k !== 'page' && !(k === 'sortBy' && v === 'newest')).map(([key, val]) => (
-                  <span key={key} className="inline-flex items-center gap-1 rounded-full bg-[#D4A843]/10 px-2.5 py-0.5 text-[10px] font-medium text-[#B8922E]">
+                  <span key={key} className="inline-flex items-center gap-1 rounded-full bg-[#D4A843]/10 px-2.5 py-0.5 text-[11px] font-medium text-[#B8922E]">
                     {String(val).replace(/-/g, ' ')}
                     <button
                       type="button"
@@ -381,13 +381,13 @@ export function FullPageChat() {
                   onClick={() => send()}
                   disabled={isTyping || !input.trim()}
                   className={cn(
-                    'flex h-9 w-9 items-center justify-center rounded-full transition-all',
+                    'flex h-11 w-11 items-center justify-center rounded-full transition-all',
                     input.trim() && !isTyping
                       ? 'bg-[#D4A843] text-white hover:bg-[#B8922E] shadow-sm'
                       : 'bg-gray-200 text-gray-400 dark:bg-[#262626] dark:text-gray-400'
                   )}
                 >
-                  <Send className="h-4 w-4 rtl:rotate-180" />
+                  <Send className="h-5 w-5 rtl:rotate-180" />
                 </button>
               </div>
             </div>
@@ -420,11 +420,11 @@ export function FullPageChat() {
                   >
                     <div className="min-w-0 flex-1">
                       <h4 className="truncate text-sm font-semibold text-gray-800 group-hover:text-[#D4A843] dark:text-white">{p.name}</h4>
-                      {p.developerName && <p className="text-[10px] text-gray-400">{p.developerName}</p>}
-                      {p.city && <p className="text-[10px] text-gray-400">📍 {p.city}</p>}
+                      {p.developerName && <p className="text-[11px] text-gray-400">{p.developerName}</p>}
+                      {p.city && <p className="text-[11px] text-gray-400">📍 {p.city}</p>}
                       <div className="mt-1.5 flex items-center gap-2">
                         {p.startPrice && <span className="text-xs font-bold text-[#D4A843]">{formatEGP(p.startPrice)} ج.م</span>}
-                        {p.unitCount > 0 && <span className="text-[10px] text-gray-400">{p.unitCount} وحدة</span>}
+                        {p.unitCount > 0 && <span className="text-[11px] text-gray-400">{p.unitCount} وحدة</span>}
                       </div>
                       {p.propertyTypes?.length > 0 && (
                         <div className="mt-1 flex flex-wrap gap-1">
@@ -448,14 +448,14 @@ export function FullPageChat() {
                       <h4 className="truncate text-sm font-semibold text-gray-800 group-hover:text-[#D4A843] dark:text-white">{u.projectName}</h4>
                       <span className="flex-shrink-0 rounded-full bg-[#D4A843]/10 px-1.5 py-0.5 text-[9px] font-medium text-[#B8922E]">{u.unitType.replace(/_/g, ' ')}</span>
                     </div>
-                    <div className="mt-1 flex items-center gap-2 text-[10px] text-gray-400">
+                    <div className="mt-1 flex items-center gap-2 text-[11px] text-gray-400">
                       {u.bedrooms != null && <span>🛏 {u.bedrooms}</span>}
                       {u.bathrooms != null && <span>🚿 {u.bathrooms}</span>}
                       <span>📐 {u.area}m²</span>
                     </div>
                     <div className="mt-1.5 flex items-center justify-between">
                       <span className="text-xs font-bold text-[#D4A843]">{formatEGP(u.price)} ج.م</span>
-                      {u.pricePerSqm && <span className="text-[10px] text-gray-400">{formatEGP(u.pricePerSqm)}/m²</span>}
+                      {u.pricePerSqm && <span className="text-[11px] text-gray-400">{formatEGP(u.pricePerSqm)}/m²</span>}
                     </div>
                   </a>
                 ))}

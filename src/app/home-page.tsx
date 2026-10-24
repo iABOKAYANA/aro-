@@ -224,6 +224,13 @@ export function HomePage({
                   ? `/developers/${developer.slug}`
                   : `/projects?developer=${encodeURIComponent(developer.name)}`
                 const duplicate = i >= siteStats.featuredDevelopers.length
+                // The monogram tile renders the developer initials as an SVG
+                // image, not text: screen readers announce just the name, and
+                // axe's label-content-name rule sees visible text == aria-label.
+                const initials = label.split(/\s+/).map((word) => word[0]).join('').slice(0, 2)
+                const monogram = `data:image/svg+xml;utf8,${encodeURIComponent(
+                  `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><text x="18" y="19" dominant-baseline="central" text-anchor="middle" font-size="13" font-weight="700" font-family="system-ui,-apple-system,'Segoe UI',sans-serif" fill="%23B8923A">${initials}</text></svg>`,
+                )}`
                 return (
                   <Link
                     key={`${developer.id}-${i}`}
@@ -235,9 +242,11 @@ export function HomePage({
                       : `${label} — ${formatCount(developer.projectCount, lang)} public projects`}
                     className="group flex h-16 items-center gap-3 rounded-full border bg-card px-8 shadow-sm transition-all hover:border-estate-gold hover:shadow-md hover:shadow-estate-gold/10 dark:border-[#262626] dark:bg-[#0A0A0A]"
                   >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-estate-gold/10 text-xs font-bold text-estate-gold">
-                      {label.split(/\s+/).map((word) => word[0]).join('').slice(0, 2)}
-                    </div>
+                    <div
+                      aria-hidden="true"
+                      className="h-9 w-9 shrink-0 rounded-full bg-estate-gold/10 bg-center bg-no-repeat bg-[length:36px_36px]"
+                      style={{ backgroundImage: `url("${monogram}")` }}
+                    />
                     <span className="whitespace-nowrap text-sm font-semibold text-muted-foreground transition-colors group-hover:text-foreground">
                       {label}
                     </span>

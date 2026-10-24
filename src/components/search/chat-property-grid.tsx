@@ -20,7 +20,7 @@ export function ChatPropertyGrid({ title, projects, units, total }: ChatProperty
 
   return (
     <div className="mt-1">
-      {title && <p className="mb-1.5 text-[10px] font-medium text-gray-400 uppercase tracking-wide">{title}</p>}
+      {title && <p className="mb-1.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide">{title}</p>}
       <div className="space-y-1.5">
         {projects && projects.map((p) => (
           <Link
@@ -34,7 +34,7 @@ export function ChatPropertyGrid({ title, projects, units, total }: ChatProperty
                 <h4 className="truncate text-xs font-semibold text-gray-800 group-hover:text-[#D4A843] dark:text-white">{p.name}</h4>
                 <ChevronRight className="h-3 w-3 flex-shrink-0 text-gray-300 group-hover:text-[#D4A843] rtl:rotate-180" />
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-[10px] text-gray-400">
+              <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-400">
                 {p.developerName && <span>{p.developerName}</span>}
                 {p.city && <span className="flex items-center gap-0.5"><MapPin className="h-2.5 w-2.5 shrink-0" />{p.city}</span>}
               </div>
@@ -57,7 +57,7 @@ export function ChatPropertyGrid({ title, projects, units, total }: ChatProperty
                 <h4 className="truncate text-xs font-semibold text-gray-800 group-hover:text-[#D4A843] dark:text-white">{u.projectName}</h4>
                 <span className="flex-shrink-0 rounded-full bg-[#D4A843]/10 px-1.5 py-0.5 text-[8px] font-medium text-[#B8922E]">{u.unitType.replace(/_/g, ' ')}</span>
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-[10px] text-gray-400">
+              <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-400">
                 {u.bedrooms != null && <span className="flex items-center gap-0.5"><Bed className="h-2.5 w-2.5 shrink-0" />{u.bedrooms}</span>}
                 {u.bathrooms != null && <span className="flex items-center gap-0.5"><Bath className="h-2.5 w-2.5 shrink-0" />{u.bathrooms}</span>}
                 <span className="flex items-center gap-0.5"><Maximize className="h-2.5 w-2.5 shrink-0" />{u.area}{ar ? 'م²' : 'm²'}</span>
@@ -74,7 +74,7 @@ export function ChatPropertyGrid({ title, projects, units, total }: ChatProperty
         <Link
           href="/projects"
           target="_blank"
-          className="mt-1.5 flex items-center justify-center gap-1 rounded-full border border-dashed border-gray-200 py-1.5 text-[10px] text-gray-400 transition-colors hover:border-[#D4A843]/30 hover:text-[#D4A843] dark:border-[#262626] dark:text-gray-400"
+          className="mt-1.5 flex items-center justify-center gap-1 rounded-full border border-dashed border-gray-200 py-1.5 text-[11px] text-gray-400 transition-colors hover:border-[#D4A843]/30 hover:text-[#D4A843] dark:border-[#262626] dark:text-gray-400"
         >
           {ar ? <>عرض كل {total} نتيجة</> : <>View all {total} results</>}
           <ChevronRight className="h-2.5 w-2.5 rtl:rotate-180" />

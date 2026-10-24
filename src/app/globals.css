@@ -67,6 +67,20 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ═══ Senior-comfortable phones (clients aged 50+) ═══════════════════
+   Larger type for every rem-based size (~+6%), anti double-tap-zoom,
+   and the shared primitives (Button/Input) lift to 48px targets via
+   their own max-sm overrides. Keep this block FIRST so later rules
+   (dark overrides, leaflet) stay authoritative. */
+@media (max-width: 639.98px) {
+  html {
+    font-size: 17px;
+  }
+  body {
+    touch-action: manipulation;
+  }
+}
+
 .skip-link {
   position: fixed;
   inset-inline-start: 1rem;

@@ -16,11 +16,14 @@ const buttonVariants = cva(
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
-        default: 'h-10 px-4 py-2',
-        sm: 'h-9 rounded-full px-3',
-        lg: 'h-11 rounded-full px-8',
+        // Phones serve the site to older clients too: every size keeps a
+        // ≥44px reach and 16px text on mobile (h-11/h-12 max-sm), desktop
+        // keeps the original compact rhythm.
+        default: 'h-10 px-4 py-2 max-sm:h-12 max-sm:px-5 max-sm:text-base',
+        sm: 'h-9 rounded-full px-3 max-sm:h-11 max-sm:px-4 max-sm:text-base',
+        lg: 'h-11 rounded-full px-8 max-sm:h-12',
         xl: 'h-12 rounded-full px-10 text-base',
-        icon: 'h-10 w-10',
+        icon: 'h-10 w-10 max-sm:h-12 max-sm:w-12',
       },
     },
     defaultVariants: {

@@ -258,11 +258,11 @@ export function ChatSearch() {
         </div>
         <div className="flex-1">
           <span className="text-sm font-semibold text-gray-800 dark:text-white">{ar ? 'المساعد الذكي' : 'AI Assistant'}</span>
-          <span className="ms-2 text-[10px] text-gray-400">{ar ? 'خبير العقارات' : 'Real estate expert'}</span>
+          <span className="ms-2 text-[11px] text-gray-400">{ar ? 'خبير العقارات' : 'Real estate expert'}</span>
         </div>
         <div className="flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5">
           <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
-          <span className="text-[10px] text-green-600">{ar ? 'متصل' : 'Online'}</span>
+          <span className="text-[11px] text-green-600">{ar ? 'متصل' : 'Online'}</span>
         </div>
       </div>
 
@@ -322,7 +322,7 @@ export function ChatSearch() {
                 {msg.chips && msg.chips.length > 0 && (
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {msg.chips.map((c) => (
-                      <span key={c.field} className="inline-block rounded-full bg-[#D4A843]/10 px-2 py-0.5 text-[10px] font-medium text-[#B8922E]">
+                      <span key={c.field} className="inline-block rounded-full bg-[#D4A843]/10 px-2 py-0.5 text-[11px] font-medium text-[#B8922E]">
                         {c.value}
                       </span>
                     ))}
@@ -357,7 +357,7 @@ export function ChatSearch() {
       {/* Input */}
       <div className="border-t border-gray-100 px-3 py-2 dark:border-[#262626] dark:bg-black">
         {error && (
-          <div className="mb-1.5 rounded-2xl bg-red-50 px-2.5 py-1 text-[10px] text-red-500">{error}</div>
+          <div className="mb-1.5 rounded-2xl bg-red-50 px-2.5 py-1 text-[11px] text-red-500">{error}</div>
         )}
         <div className="flex items-center gap-2">
           <input

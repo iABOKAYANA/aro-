@@ -101,7 +101,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
         {/* Status badge — top-4/left-4 so it clears the 3rem card arch curve */}
         <div className="absolute left-4 top-4">
-          <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide', status.bg, status.text)}>
+          <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide', status.bg, status.text)}>
             {lang === 'ar' ? status.labelAr : status.label}
           </span>
         </div>
@@ -111,7 +111,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <button
             type="button"
             onClick={() => setPlanIdx(0)}
-            className="absolute left-4 top-12 inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm transition-colors hover:bg-estate-gold hover:text-[#0F1A2C] md:min-h-0"
+            className="absolute left-4 top-12 inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm transition-colors hover:bg-estate-gold hover:text-[#0F1A2C] md:min-h-0"
             aria-label={lang === 'ar' ? 'المستر بلان — عرض المستر بلان' : 'MASTER PLAN — View master plan'}
           >
             <LayoutGrid className="h-3 w-3" />
@@ -126,7 +126,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
         {/* New launch badge — sits below the 44px phone favorite circle (top-16 base, top-12 desktop). */}
         {isNewLaunch && (
-          <span className="absolute right-3 top-16 inline-flex items-center rounded-full bg-estate-gold px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#0F1A2C] shadow-md md:top-12">
+          <span className="absolute right-3 top-16 inline-flex items-center rounded-full bg-estate-gold px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[#0F1A2C] shadow-md md:top-12">
             {lang === 'ar' ? 'جديد' : 'New'}
           </span>
         )}
@@ -134,7 +134,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         {/* Progress bar */}
         {project.completionPercent != null && project.completionPercent > 0 && (
           <div className="absolute bottom-0 left-0 right-0 px-3 pb-3">
-            <div className="flex items-center justify-between text-[10px] font-medium text-white/80 mb-1">
+            <div className="flex items-center justify-between text-[11px] font-medium text-white/80 mb-1">
               <span>{lang === 'ar' ? 'الإنشاء' : 'Construction'}</span>
               <span>{project.completionPercent}%</span>
             </div>
@@ -190,7 +190,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         {/* Property types */}
         <div className="mb-3 flex flex-wrap gap-1">
           {(typeof project.propertyTypes === 'string' ? JSON.parse(project.propertyTypes) : project.propertyTypes || []).slice(0, 3).map((type: string) => (
-            <span key={type} className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-500 dark:bg-black dark:text-gray-400">
+            <span key={type} className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-500 dark:bg-black dark:text-gray-400">
               {type.replace(/_/g, ' ')}
             </span>
           ))}
@@ -200,7 +200,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         <hr className="gold-hairline mb-3" />
         <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2">
           <div className="min-w-0">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
               {lang === 'ar' ? 'يبدأ من' : 'Starting from'}
             </p>
             <p className="font-display break-words text-lg font-bold text-estate-navy dark:text-estate-gold">
