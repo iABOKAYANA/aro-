@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, ArrowUpRight, Brain, Phone } from 'lucide-react'
+import { ArrowRight, Brain, Phone } from 'lucide-react'
 import { HeroSearch } from '@/components/search/hero-search'
 import { ProjectCard } from '@/components/projects/project-card'
 // Booking modal + next-auth graph splits out; button shell still SSR'd.
@@ -22,11 +22,7 @@ import { Reveal, SectionHeader } from '@/components/design'
 import { useLanguage } from '@/lib/language-context'
 import { formatEGP } from '@/lib/utils'
 import { getRecentProjects, type SavedProject } from '@/lib/saved-projects'
-
-const developerLogos = [
-  'SODIC', 'Mountain View', 'Emaar', 'Palm Hills', 'Talaat Moustafa Group',
-  'Dar Al-Mimar', 'Coldwell Banker', 'Reef Development',
-]
+import type { PublicHomepageStats } from '@/lib/public-homepage-stats'
 
 function recentLabel(savedAt: number, ar: boolean): string {
   const days = Math.floor((Date.now() - savedAt) / 86_400_000)
@@ -40,31 +36,22 @@ function recentLabel(savedAt: number, ar: boolean): string {
   return `Seen ${days}d ago`
 }
 
-export function HomePage() {
+function formatCount(value: number, lang: 'en' | 'ar'): string {
+  return new Intl.NumberFormat(lang === 'ar' ? 'ar-EG' : 'en-US').format(value)
+}
+
+export function HomePage({
+  siteStats,
+  initialProjects,
+}: {
+  siteStats: PublicHomepageStats | null
+  initialProjects: any[]
+}) {
   const { t, lang } = useLanguage()
-  const [projects, setProjects] = useState<any[]>([])
-  const [stats, setStats] = useState({ totalProjects: 0, totalDevelopers: 0, totalCities: 0 })
-  const [statsReady, setStatsReady] = useState(false)
+  const projects = initialProjects
   const [recent, setRecent] = useState<SavedProject[]>([])
   const [newLaunches, setNewLaunches] = useState<any[]>([])
   const { toggle: toggleCompare, has: hasCompare } = useCompare()
-
-  useEffect(() => {
-    fetch('/api/projects?limit=6')
-      .then(r => r.json())
-      .then(d => {
-        const items = d.projects || d.items || []
-        setProjects(items)
-        const cities = new Set(items.map((p: any) => p.city?.name).filter(Boolean))
-        const devs = new Set(items.map((p: any) => p.developer?.companyName).filter(Boolean))
-        setStats({ totalProjects: items.length, totalDevelopers: devs.size, totalCities: cities.size })
-        setStatsReady(true)
-      })
-      .catch(() => {
-        // Keep the stats bar hidden on failure — never flash 0+.
-        setStatsReady(false)
-      })
-  }, [])
 
   useEffect(() => {
     setRecent(getRecentProjects())
@@ -77,8 +64,8 @@ export function HomePage() {
   const featuredKicker =
     installmentTerms.length > 0
       ? (lang === 'ar'
-        ? `${installmentTerms.length} مشاريع فيها تقسيط ${Math.max(...installmentTerms)} سنين — تحب تشوف أنهي؟`
-        : `${installmentTerms.length} projects with plans up to ${Math.max(...installmentTerms)} years — which one catches your eye?`)
+        ? `${installmentTerms.length} من المشاريع المعروضة فيها تقسيط لحد ${Math.max(...installmentTerms)} سنة — تحب تشوف أنهي؟`
+        : `${installmentTerms.length} featured projects have plans up to ${Math.max(...installmentTerms)} years — which one catches your eye?`)
       : t('home.featuredProjectsCount')
 
   useEffect(() => {
@@ -91,28 +78,28 @@ export function HomePage() {
 
   return (
     <div className="dark:bg-black">
-      <HeroSearch />
+      <HeroSearch availableUnits={siteStats?.availableUnitCount ?? null} />
 
-      {/* Stats bar — hidden until the counts load so it never flashes 0+ */}
-      {statsReady && (
-      <section className="border-b bg-muted/30 py-6 dark:border-[#262626] dark:bg-black">
-        <div className="container px-4">
-          <div className="grid grid-cols-3 gap-2 text-center sm:gap-4 [&>*]:min-w-0">
-            <Reveal>
-              <p className="text-2xl font-bold text-estate-gold">{stats.totalProjects}+</p>
-              <p className="break-words text-xs text-muted-foreground">{t('stat.properties')}</p>
-            </Reveal>
-            <Reveal delay={80}>
-              <p className="text-2xl font-bold text-estate-gold">{stats.totalDevelopers}+</p>
-              <p className="break-words text-xs text-muted-foreground">{t('stat.developers')}</p>
-            </Reveal>
-            <Reveal delay={160}>
-              <p className="text-2xl font-bold text-estate-gold">{stats.totalCities}+</p>
-              <p className="break-words text-xs text-muted-foreground">{t('stat.citiesCovered')}</p>
-            </Reveal>
+      {/* Server-counted public catalog metrics — never totals from the first 6 cards. */}
+      {siteStats && (
+        <section className="border-b bg-muted/30 py-6 dark:border-[#262626] dark:bg-black">
+          <div className="container px-4">
+            <div className="grid grid-cols-3 gap-2 text-center sm:gap-4 [&>*]:min-w-0">
+              <Reveal>
+                <p className="text-2xl font-bold text-estate-gold">{formatCount(siteStats.projectCount, lang)}</p>
+                <p className="break-words text-xs text-muted-foreground">{t('stat.properties')}</p>
+              </Reveal>
+              <Reveal delay={80}>
+                <p className="text-2xl font-bold text-estate-gold">{formatCount(siteStats.developerCount, lang)}</p>
+                <p className="break-words text-xs text-muted-foreground">{t('stat.developers')}</p>
+              </Reveal>
+              <Reveal delay={160}>
+                <p className="text-2xl font-bold text-estate-gold">{formatCount(siteStats.cityCount, lang)}</p>
+                <p className="break-words text-xs text-muted-foreground">{t('stat.citiesCovered')}</p>
+              </Reveal>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
       )}
 
       {/* Featured Projects — ProjectCard itself is sibling-owned: only the wrapper is styled */}
@@ -216,44 +203,58 @@ export function HomePage() {
       {/* Explore Locations */}
       <ExploreLocations />
 
-      {/* Developer Logos - Scrolling Marquee */}
-      <section className="border-t border-b py-14 overflow-hidden dark:border-[#262626] dark:bg-black">
-        <div className="container px-4">
-          <Reveal className="mb-10 text-center">
-            <h2 className="font-display display-2">{t('home.trustedDevelopers')}</h2>
-            <p className="mt-2 text-muted-foreground">{t('home.trustedSubtitle')}</p>
-          </Reveal>
-        </div>
-
-        <div className="relative">
-          <div className="absolute start-0 top-0 z-10 h-full w-24 bg-gradient-to-r from-background to-transparent" />
-          <div className="absolute end-0 top-0 z-10 h-full w-24 bg-gradient-to-l from-background to-transparent" />
-
-          <div className="flex w-max gap-8 animate-marquee">
-            {[...developerLogos, ...developerLogos].map((name, i) => (
-              <Link
-                key={`${name}-${i}`}
-                href={`/projects?q=${encodeURIComponent(name)}`}
-                className="group flex h-16 items-center gap-3 rounded-full border bg-card px-8 shadow-sm transition-all hover:border-estate-gold hover:shadow-md hover:shadow-estate-gold/10 dark:border-[#262626] dark:bg-[#0A0A0A]"
-              >
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-estate-gold/10 text-xs font-bold text-estate-gold">
-                  {name.split(' ').map(w => w[0]).join('').slice(0, 2)}
-                </div>
-                <span className="whitespace-nowrap text-sm font-semibold text-muted-foreground transition-colors group-hover:text-foreground">
-                  {name}
-                </span>
-              </Link>
-            ))}
+      {/* Developers with currently published catalog projects */}
+      {siteStats && siteStats.featuredDevelopers.length > 0 && (
+        <section className="border-t border-b py-14 overflow-hidden dark:border-[#262626] dark:bg-black">
+          <div className="container px-4">
+            <Reveal className="mb-10 text-center">
+              <h2 className="font-display display-2">{t('home.trustedDevelopers')}</h2>
+              <p className="mt-2 text-muted-foreground">{t('home.trustedSubtitle')}</p>
+            </Reveal>
           </div>
-        </div>
 
-        <div className="mt-8 text-center">
-          <Link href="/projects" className="inline-flex min-h-[44px] items-center gap-2 px-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            {t('home.viewAll')}
-            <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-          </Link>
-        </div>
-      </section>
+          <div className="relative">
+            <div className="absolute start-0 top-0 z-10 h-full w-24 bg-gradient-to-r from-background to-transparent" />
+            <div className="absolute end-0 top-0 z-10 h-full w-24 bg-gradient-to-l from-background to-transparent" />
+
+            <div className="flex w-max gap-8 animate-marquee">
+              {[...siteStats.featuredDevelopers, ...siteStats.featuredDevelopers].map((developer, i) => {
+                const label = lang === 'ar' && developer.nameArabic ? developer.nameArabic : developer.name
+                const href = developer.slug
+                  ? `/developers/${developer.slug}`
+                  : `/projects?developer=${encodeURIComponent(developer.name)}`
+                const duplicate = i >= siteStats.featuredDevelopers.length
+                return (
+                  <Link
+                    key={`${developer.id}-${i}`}
+                    href={href}
+                    aria-hidden={duplicate}
+                    tabIndex={duplicate ? -1 : 0}
+                    aria-label={lang === 'ar'
+                      ? `${label} — ${formatCount(developer.projectCount, lang)} مشروع منشور`
+                      : `${label} — ${formatCount(developer.projectCount, lang)} public projects`}
+                    className="group flex h-16 items-center gap-3 rounded-full border bg-card px-8 shadow-sm transition-all hover:border-estate-gold hover:shadow-md hover:shadow-estate-gold/10 dark:border-[#262626] dark:bg-[#0A0A0A]"
+                  >
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-estate-gold/10 text-xs font-bold text-estate-gold">
+                      {label.split(/\s+/).map((word) => word[0]).join('').slice(0, 2)}
+                    </div>
+                    <span className="whitespace-nowrap text-sm font-semibold text-muted-foreground transition-colors group-hover:text-foreground">
+                      {label}
+                    </span>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <Link href="/developers" className="inline-flex min-h-[44px] items-center gap-2 px-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+              {lang === 'ar' ? 'كل المطورين' : 'View all developers'}
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* CTA — cinematic band: scrim + vignette + grain depth over the navy
           gradient (same copy, links, and buttons), wipe entrance. */}

@@ -371,6 +371,8 @@ export function ChatSearch() {
             className="flex-1 border-0 bg-transparent px-2 py-1.5 text-base text-gray-800 placeholder:text-gray-400 focus:outline-none dark:text-white"
           />
           <button
+            type="button"
+            aria-label={ar ? 'إرسال الرسالة' : 'Send message'}
             onClick={() => send()}
             disabled={isTyping || !input.trim()}
             className={cn(

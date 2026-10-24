@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
@@ -14,6 +15,7 @@ import NotificationBell from '@/components/notification-bell'
 import type { AppType } from '@/lib/app-type'
 
 export function Navbar({ appType = 'all' }: { appType?: AppType }) {
+  const pathname = usePathname() || '/'
   const { data: session, status } = useSession()
   const { lang, setLang, t } = useLanguage()
   // Feature switch: price explorer link visibility (fetches once, fails open).
@@ -27,6 +29,17 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
   // mount — otherwise server and client render different SVGs on first paint.
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
+
+  useEffect(() => {
+    if (!mobileOpen) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      setMobileOpen(false)
+      document.getElementById('mobile-navigation-toggle')?.focus()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [mobileOpen])
 
   const user = session?.user as any
   const isRtl = lang === 'ar'
@@ -76,19 +89,24 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
           <BrandLogo hideWordmarkOnMobile />
         </Link>
 
-        <nav className="hidden items-center gap-6 whitespace-nowrap lg:flex xl:gap-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href + link.label}
-              href={link.href}
-              className={cn(
-                'text-sm font-medium text-gray-600 underline-offset-4 transition-colors hover:text-estate-gold hover:underline hover:decoration-estate-gold/60 dark:text-gray-300 dark:hover:text-[#E8C56D]',
-                link.wideOnly && 'hidden xl:inline-block'
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
+        <nav aria-label={isRtl ? 'القائمة الرئيسية' : 'Main navigation'} className="hidden items-center gap-6 whitespace-nowrap lg:flex xl:gap-8">
+          {navLinks.map((link) => {
+            const active = pathname === link.href || (link.href !== '/' && pathname.startsWith(`${link.href}/`))
+            return (
+              <Link
+                key={link.href + link.label}
+                href={link.href}
+                className={cn(
+                  'text-sm font-medium underline-offset-4 transition-colors hover:text-estate-gold hover:underline hover:decoration-estate-gold/60 dark:hover:text-[#E8C56D]',
+                  active ? 'text-estate-gold dark:text-[#E8C56D]' : 'text-gray-600 dark:text-gray-300',
+                  link.wideOnly && 'hidden xl:inline-block'
+                )}
+                aria-current={active ? 'page' : undefined}
+              >
+                {link.label}
+              </Link>
+            )
+          })}
         </nav>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
@@ -271,9 +289,15 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
           ))}
 
           <button
+            id="mobile-navigation-toggle"
+            type="button"
             className="flex h-11 w-11 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-[#1a1a1a] lg:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label={lang === 'ar' ? 'فتح القائمة' : 'Open menu'}
+            aria-label={mobileOpen
+              ? (lang === 'ar' ? 'إغلاق القائمة' : 'Close menu')
+              : (lang === 'ar' ? 'فتح القائمة' : 'Open menu')}
+            aria-expanded={mobileOpen}
+            aria-controls={mobileOpen ? 'mobile-navigation' : undefined}
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -281,18 +305,25 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
       </div>
 
       {mobileOpen && (
-        <div className="max-h-[calc(100vh-4rem)] max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-gray-200 bg-white px-4 py-4 dark:border-[#262626] dark:bg-black lg:hidden">
-          <nav className="flex flex-col gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href + link.label}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className="py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                {link.label}
-              </Link>
-            ))}
+        <div id="mobile-navigation" className="max-h-[calc(100vh-4rem)] max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-gray-200 bg-white px-4 py-4 dark:border-[#262626] dark:bg-black lg:hidden">
+          <nav aria-label={isRtl ? 'القائمة الرئيسية' : 'Main navigation'} className="flex flex-col gap-1">
+            {navLinks.map((link) => {
+              const active = pathname === link.href || (link.href !== '/' && pathname.startsWith(`${link.href}/`))
+              return (
+                <Link
+                  key={link.href + link.label}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    'min-h-[44px] py-2.5 text-sm font-medium',
+                    active ? 'text-estate-gold dark:text-[#E8C56D]' : 'text-gray-700 dark:text-gray-300'
+                  )}
+                  aria-current={active ? 'page' : undefined}
+                >
+                  {link.label}
+                </Link>
+              )
+            })}
             {showAuth && (session ? (
               <>
                 {showStaff && (
@@ -301,7 +332,7 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
                 </Link>
                 )}
                 <button
-                  onClick={() => signOut({ callbackUrl: '/' })}
+                  onClick={() => { setMobileOpen(false); signOut({ callbackUrl: '/' }) }}
                   className="py-2.5 text-start text-sm font-medium text-red-500"
                 >
                   {t('nav.signOut')}

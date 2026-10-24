@@ -40,7 +40,7 @@ function getVoiceRecognizerCtor(): VoiceRecognizerCtor | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
 }
 
-export function HeroSearch() {
+export function HeroSearch({ availableUnits }: { availableUnits: number | null }) {
   const router = useRouter()
   const { lang } = useLanguage()
   const [question, setQuestion] = useState('')
@@ -207,9 +207,20 @@ export function HeroSearch() {
               </div>
 
               <div className="absolute -bottom-4 -left-2 rounded-2xl bg-estate-copper px-4 py-3 text-[#0F1A2C] shadow-xl sm:-left-4 sm:px-6 sm:py-5">
-                <p className="text-2xl font-bold sm:text-3xl">4,280</p>
-                <p className="text-sm">{isRtl ? 'وحدة في مشاريع' : 'Units in Projects'}</p>
-                <p className="text-sm font-medium">{isRtl ? 'مميزة' : 'Featured'}</p>
+                {availableUnits !== null ? (
+                  <>
+                    <p className="text-2xl font-bold sm:text-3xl">
+                      {new Intl.NumberFormat(isRtl ? 'ar-EG' : 'en-US').format(availableUnits)}
+                    </p>
+                    <p className="text-sm">{isRtl ? 'وحدة متاحة' : 'Available units'}</p>
+                    <p className="text-xs font-medium">{isRtl ? 'بسعر مسجل' : 'with a recorded price'}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-bold">{isRtl ? 'كتالوج غاية' : 'GHAYA catalog'}</p>
+                    <p className="text-sm">{isRtl ? 'مشاريع عقارية في مصر' : 'Egyptian real estate'}</p>
+                  </>
+                )}
               </div>
 
               <div className="absolute -bottom-6 right-0 max-w-[62%] rounded-full bg-white/90 px-4 py-2 text-center text-sm font-medium text-gray-700 shadow-md dark:border dark:border-[#262626] dark:bg-[#0A0A0A] dark:text-white sm:left-1/2 sm:right-auto sm:max-w-[92%] sm:-translate-x-1/2 sm:-bottom-8 sm:whitespace-nowrap">
@@ -235,23 +246,23 @@ export function HeroSearch() {
             <h1 className="cine-title mb-6">
               {isRtl ? (
                 <>
-                  اختيار بينك
+                  اختيارك الصح
                   <br />
-                  <span className="text-estate-gold">يوفر وقتك.</span>
+                  <span className="text-estate-gold">يوفّر وقتك.</span>
                 </>
               ) : (
                 <>
-                  Choosing Between You
+                  The right choice
                   <br />
-                  <span className="text-estate-gold">Saves Your Time.</span>
+                  <span className="text-estate-gold">saves you time.</span>
                 </>
               )}
             </h1>
 
             <p className="mb-8 text-base leading-relaxed text-white/70 md:text-lg">
               {isRtl
-                ? 'ننقل السوق العقاري المصري حول ما يهمك فعلاً: الموقع. الشفافية. طريقة السداد. والخيارات التي تناسبك.'
-                : 'We bring the Egyptian real estate market to what actually matters to you: Location. Transparency. Payment method. And the options that suit you.'}
+                ? 'بنرتّب لك السوق العقاري المصري حسب اللي يهمك فعلًا: المنطقة، وضوح البيانات، وطريقة السداد.'
+                : 'Navigate Egypt’s property market by what matters to you: location, clear information, and payment terms.'}
             </p>
             </div>
 

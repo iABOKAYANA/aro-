@@ -221,11 +221,16 @@ export function QuickFilters({ total, resultCount }: QuickFiltersProps) {
                 role="combobox"
                 aria-expanded={showSuggest}
                 aria-autocomplete="list"
+                aria-haspopup="listbox"
+                aria-controls={showSuggest ? 'project-suggestions' : undefined}
+                aria-label={ar ? 'ابحث في المشاريع' : 'Search projects'}
                 placeholder={t('projects.searchPlaceholder')}
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 ps-10 pe-11 py-2.5 text-base text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-estate-gold-dark focus:bg-white focus:ring-1 focus:ring-estate-gold/30 md:pe-9 md:text-sm dark:border-[#262626] dark:bg-[#0A0A0A] dark:text-white dark:focus:border-estate-gold dark:focus:ring-estate-gold/20"
               />
               {searchValue && (
                 <button
+                  type="button"
+                  aria-label={ar ? 'مسح البحث' : 'Clear search'}
                   onClick={() => { setSearchValue(''); setSuggestOpen(false); setFilter('q' as any, ''); requestAnimationFrame(() => pushToURL()) }}
                   className="absolute end-1 top-1/2 flex min-h-[44px] min-w-[44px] -translate-y-1/2 items-center justify-center rounded-full text-gray-400 hover:text-gray-600 md:end-3 md:min-h-0 md:min-w-0 md:p-0.5"
                 >
@@ -234,6 +239,7 @@ export function QuickFilters({ total, resultCount }: QuickFiltersProps) {
               )}
               {showSuggest && (
                 <div
+                  id="project-suggestions"
                   role="listbox"
                   aria-label={ar ? 'اقتراحات المشاريع' : 'Project suggestions'}
                   className="absolute start-0 end-0 top-full z-50 mt-1.5 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-[#262626] dark:bg-[#0A0A0A]"
@@ -291,7 +297,11 @@ export function QuickFilters({ total, resultCount }: QuickFiltersProps) {
             {/* Sort */}
             <div ref={sortRef} className="relative">
               <button
+                type="button"
                 onClick={() => { setSortOpen(!sortOpen); setCityOpen(false); setTypeOpen(false) }}
+                aria-label={ar ? `ترتيب النتائج: ${t(currentSort.labelKey)}` : `Sort results: ${t(currentSort.labelKey)}`}
+                aria-expanded={sortOpen}
+                aria-controls={sortOpen ? 'project-sort-options' : undefined}
                 className={cn(
                   'flex min-h-[44px] items-center gap-2 rounded-full border px-3.5 py-2.5 text-sm font-medium transition-all md:min-h-0',
                   sortOpen
@@ -304,7 +314,7 @@ export function QuickFilters({ total, resultCount }: QuickFiltersProps) {
                 <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', sortOpen && 'rotate-180')} />
               </button>
               {sortOpen && (
-                <div className="absolute end-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-[#262626] dark:bg-[#0A0A0A]">
+                <div id="project-sort-options" className="absolute end-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-[#262626] dark:bg-[#0A0A0A]">
                   {SORT_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
@@ -326,7 +336,11 @@ export function QuickFilters({ total, resultCount }: QuickFiltersProps) {
 
             {/* Advanced */}
             <button
+              type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
+              aria-label={ar ? 'فلاتر البحث المتقدمة' : 'Advanced search filters'}
+              aria-expanded={showAdvanced}
+              aria-controls={showAdvanced ? 'advanced-project-filters' : undefined}
               className={cn(
                 'flex min-h-[44px] items-center gap-2 rounded-full border px-3.5 py-2.5 text-sm font-medium transition-all md:min-h-0',
                 showAdvanced || activeCount > 0
@@ -486,7 +500,7 @@ export function QuickFilters({ total, resultCount }: QuickFiltersProps) {
 
       {/* Advanced filters panel */}
       {showAdvanced && (
-        <div className="border-b border-gray-200 bg-white dark:border-[#262626] dark:bg-black">
+        <div id="advanced-project-filters" className="border-b border-gray-200 bg-white dark:border-[#262626] dark:bg-black">
           <div className="container px-4 py-5">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-1.5">

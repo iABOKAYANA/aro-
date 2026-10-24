@@ -24,6 +24,7 @@ type RevealProps = {
 export function Reveal({ children, className, delay = 0, distance = 24, variant = 'rise', as = 'div' }: RevealProps) {
   const ref = useRef<HTMLDivElement | null>(null)
   const [visible, setVisible] = useState(false)
+  const [pending, setPending] = useState(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -33,15 +34,24 @@ export function Reveal({ children, className, delay = 0, distance = 24, variant 
     }
     const el = ref.current
     if (!el) return
+    const bounds = el.getBoundingClientRect()
+    if (bounds.top < window.innerHeight && bounds.bottom > 0) {
+      setVisible(true)
+      return
+    }
     if (typeof IntersectionObserver === 'undefined') {
       setVisible(true)
       return
     }
+    // SSR and the first client paint stay visible (including with JS disabled).
+    // Only off-screen content is hidden after hydration while it waits to enter.
+    setPending(true)
     const io = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             setVisible(true)
+            setPending(false)
             io.disconnect()
             break
           }
@@ -60,7 +70,7 @@ export function Reveal({ children, className, delay = 0, distance = 24, variant 
   }
 
   return (
-    <Tag ref={ref} style={style} className={cn('reveal', variant === 'wipe' && 'reveal-wipe', visible && 'reveal-visible', className)}>
+    <Tag ref={ref} style={style} className={cn('reveal', pending && 'reveal-pending', variant === 'wipe' && 'reveal-wipe', visible && 'reveal-visible', className)}>
       {children}
     </Tag>
   )

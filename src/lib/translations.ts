@@ -59,8 +59,8 @@ export const translations = {
     'book.signIn': 'Sign in to book',
     'book.signInDesc': 'You need an account to book a meeting.',
     'home.featuredProjectsCount': 'featured projects',
-    'home.trustedDevelopers': 'Our Developers',
-    'home.trustedSubtitle': 'The biggest names in Egyptian real estate',
+    'home.trustedDevelopers': 'Developers in our catalog',
+    'home.trustedSubtitle': 'Companies with projects currently listed on GHAYA',
     'home.readyCTA': 'Ready to Find Your Dream Home?',
     'home.readySubtitle': 'Let our AI help you discover the perfect property based on your preferences and budget.',
     'home.tryAiSearch': 'Try AI Search',
@@ -81,7 +81,7 @@ export const translations = {
     'feature.instantMatchingDesc': 'Get matched with properties that fit your budget and lifestyle instantly.',
 
     // Stats
-    'stat.properties': 'Properties',
+    'stat.properties': 'Public projects',
     'stat.happyClients': 'Happy Clients',
     'stat.developers': 'Developers',
     'stat.citiesCovered': 'Cities Covered',
@@ -211,8 +211,8 @@ export const translations = {
     'book.signIn': 'سجّل دخول عشان تحجز',
     'book.signInDesc': 'محتاج حساب عندنا عشان تحجز موعد.',
     'home.featuredProjectsCount': 'مشاريع مميزة',
-    'home.trustedDevelopers': 'المطورين بتوعنا',
-    'home.trustedSubtitle': ' أكبر الأسماء في العقارات في مصر',
+    'home.trustedDevelopers': 'مطوّرون في كتالوج غاية',
+    'home.trustedSubtitle': 'شركات لها مشاريع منشورة حاليًا على غاية',
     'home.readyCTA': 'جاهز تلاقي البيت اللي بتحلم بيه؟',
     'home.readySubtitle': 'خلّي الذكاء الاصطناعي يساعدك تلاقي العقار المناسب حسب احتياجاتك وميزانيتك.',
     'home.tryAiSearch': 'جرّب البحث بالذكاء',
@@ -233,7 +233,7 @@ export const translations = {
     'feature.instantMatchingDesc': 'احصل على عقارات تناسب ميزانيتك وأسلوب حياتك فوراً.',
 
     // Stats
-    'stat.properties': 'عقارات',
+    'stat.properties': 'مشاريع منشورة',
     'stat.happyClients': 'عميل سعيد',
     'stat.developers': 'مطوّر',
     'stat.citiesCovered': 'مدينة',
@@ -308,4 +308,3 @@ export const translations = {
     'projects.clearAll': 'مسح الكل',
   },
 } as const
-

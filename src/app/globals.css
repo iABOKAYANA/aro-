@@ -67,6 +67,25 @@ html {
   scroll-behavior: smooth;
 }
 
+.skip-link {
+  position: fixed;
+  inset-inline-start: 1rem;
+  top: 1rem;
+  z-index: 100;
+  transform: translateY(calc(-100% - 1.5rem));
+  border-radius: 0.75rem;
+  background: #d4a843;
+  padding: 0.75rem 1rem;
+  color: #0f1a2c;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
+  transition: transform 160ms ease-out;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 /* Sticky navbar (~64-72px) — hash anchors land below it, not underneath. */
 :target,
 [id] {
@@ -93,6 +112,18 @@ body {
 }
 .dark :focus-visible {
   outline-color: rgba(232, 197, 109, 0.9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html,
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ─── Gradient Utilities ───────────────────── */
@@ -386,14 +417,22 @@ body {
 /* ─── Scroll reveal (driven by <Reveal/>) ──────────────────────── */
 /* Usage: <Reveal delay={80}><h2 className="display-2">…</h2></Reveal> */
 .reveal {
-  opacity: 0;
-  transform: translateY(var(--reveal-distance, 24px));
+  opacity: 1;
+  transform: translateY(0);
   transition:
     opacity 0.7s ease,
     transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal-pending {
+  opacity: 0;
+  transform: translateY(var(--reveal-distance, 24px));
   will-change: opacity, transform;
 }
 .reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-pending:focus-within {
   opacity: 1;
   transform: translateY(0);
 }
@@ -574,10 +613,16 @@ body {
 /* Usage: <Reveal variant="wipe"><img … /></Reveal> */
 .reveal.reveal-wipe {
   transform: none;
-  clip-path: inset(0 0 100% 0);
+  clip-path: none;
   transition:
     opacity 0.7s ease,
     clip-path 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal-pending.reveal-wipe {
+  clip-path: inset(0 0 100% 0);
+}
+.reveal-pending.reveal-wipe:focus-within {
+  clip-path: inset(0 0 0 0);
 }
 .reveal.reveal-wipe.reveal-visible {
   transform: none;

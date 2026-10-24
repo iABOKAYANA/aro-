@@ -3,6 +3,9 @@ import { Suspense } from 'react'
 import { HomePage } from '@/app/home-page'
 import { organizationJsonLd } from '@/lib/seo'
 import { SITE_NAME, SITE_URL } from '@/lib/site'
+import { getPublicHomepageStats } from '@/lib/public-homepage-stats'
+import { searchProjects } from '@/lib/search'
+import { computeIsNewLaunch, getNewLaunchesConfig } from '@/lib/new-launches'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,15 +28,24 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image', title: homeTitle, description: homeDescription, images: [`${SITE_URL}/og`] },
 }
 
-export default function Page() {
+export default async function Page() {
   // Server-rendered Organization + WebSite (+SearchAction) graph so crawlers
   // see it without JS; the interactive homepage itself stays client-side.
   const jsonLd = organizationJsonLd()
+  const [siteStats, projectResults, launchConfig] = await Promise.all([
+    getPublicHomepageStats(),
+    searchProjects({ page: 1, limit: 6, sortBy: 'newest' }).catch(() => ({ items: [] as any[] })),
+    getNewLaunchesConfig(),
+  ])
+  const initialProjects = projectResults.items.map((project) => ({
+    ...project,
+    isNewLaunch: computeIsNewLaunch(launchConfig, project),
+  }))
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Suspense fallback={<div className="flex min-h-[60vh] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-estate-gold border-t-transparent" /></div>}>
-        <HomePage />
+        <HomePage siteStats={siteStats} initialProjects={initialProjects} />
       </Suspense>
     </>
   )

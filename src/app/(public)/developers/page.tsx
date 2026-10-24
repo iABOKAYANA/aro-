@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'مطورو العقارات في مصر | Real Estate Developers',
   description:
-    'دليل شركات تطوير العقارات في مصر الممثلة على غاية — تاريخ كل شركة ومشاريعها وأقل سعر متاح. Verified developers behind every project listed on GHAYA.',
+    'دليل شركات التطوير المرتبطة بمشاريع منشورة على غاية — تفاصيل الشركة ومشاريعها والأسعار المسجلة. Browse developer profiles and currently listed projects on GHAYA.',
   alternates: { canonical: `${SITE_URL}/developers` },
   openGraph: {
     type: 'website',
@@ -44,7 +44,7 @@ export default async function DevelopersPage() {
   })
 
   const cards = devs
-    .filter((d) => d.slug && d.projects.length > 0)
+    .filter((d) => d.projects.length > 0)
     .sort((a, b) => b.projects.length - a.projects.length)
 
   return (
@@ -63,7 +63,11 @@ export default async function DevelopersPage() {
             ...d.projects.map((p) => p.startPrice ?? Infinity).filter(Number.isFinite)
           )
           return (
-            <Link key={d.id} href={`/developers/${d.slug}`} className="group">
+            <Link
+              key={d.id}
+              href={d.slug ? `/developers/${d.slug}` : `/projects?developer=${encodeURIComponent(d.companyName)}`}
+              className="group"
+            >
               <Card className="h-full border-estate-gold/15 transition-colors group-hover:border-estate-gold/40">
                 <CardContent className="flex h-full items-center gap-4 p-5">
                   {d.logo && (

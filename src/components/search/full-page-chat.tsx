@@ -350,7 +350,12 @@ export function FullPageChat() {
                 {Object.entries(filters).filter(([k, v]) => v && v !== '' && k !== 'page' && !(k === 'sortBy' && v === 'newest')).map(([key, val]) => (
                   <span key={key} className="inline-flex items-center gap-1 rounded-full bg-[#D4A843]/10 px-2.5 py-0.5 text-[10px] font-medium text-[#B8922E]">
                     {String(val).replace(/-/g, ' ')}
-                    <button onClick={() => { clearFilters(); setTimeout(() => pushToURL(), 0) }} className="ml-0.5 hover:text-red-500">
+                    <button
+                      type="button"
+                      aria-label={lang === 'ar' ? `إزالة فلتر ${key}` : `Remove ${key} filter`}
+                      onClick={() => { clearFilters(); setTimeout(() => pushToURL(), 0) }}
+                      className="ml-0.5 hover:text-red-500"
+                    >
                       <X className="h-2.5 w-2.5" />
                     </button>
                   </span>
@@ -371,6 +376,8 @@ export function FullPageChat() {
                   className="flex-1 bg-transparent px-2 py-2 text-base text-gray-800 placeholder:text-gray-400 focus:outline-none dark:text-white"
                 />
                 <button
+                  type="button"
+                  aria-label={lang === 'ar' ? 'إرسال الرسالة' : 'Send message'}
                   onClick={() => send()}
                   disabled={isTyping || !input.trim()}
                   className={cn(

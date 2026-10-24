@@ -26,8 +26,14 @@ export function useLanguage() {
 
 // ─── Provider ────────────────────────────────────────────
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<'en' | 'ar'>('en')
+export function LanguageProvider({
+  children,
+  initialLanguage = 'en',
+}: {
+  children: ReactNode
+  initialLanguage?: 'en' | 'ar'
+}) {
+  const [lang, setLangState] = useState<'en' | 'ar'>(initialLanguage)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -43,6 +49,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = lang
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
     localStorage.setItem('estateai-lang', lang)
+    const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+    document.cookie = `ghaya-lang=${lang}; Max-Age=31536000; Path=/; SameSite=Lax${secure}`
   }, [lang, mounted])
 
   const setLang = useCallback((newLang: 'en' | 'ar') => {

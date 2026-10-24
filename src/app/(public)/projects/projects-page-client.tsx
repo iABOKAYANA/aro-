@@ -71,13 +71,17 @@ export function ProjectsPageClient({ results, searchParams, q }: ProjectsPageCli
               </p>
               <h1 className="break-words text-3xl font-bold text-white md:text-4xl">
                 {q ? (
-                  <>Search results for <span className="text-estate-gold">&ldquo;{q}&rdquo;</span></>
+                  ar ? (
+                    <>نتائج البحث عن <span className="text-estate-gold">&ldquo;{q}&rdquo;</span></>
+                  ) : (
+                    <>Search results for <span className="text-estate-gold">&ldquo;{q}&rdquo;</span></>
+                  )
                 ) : (
-                  'Find Your Perfect Home'
+                  ar ? 'اكتشف العقار المناسب لك' : 'Find Your Perfect Home'
                 )}
               </h1>
               <p className="mt-3 text-sm text-white/60">
-                Browse premium compounds and developments across Egypt
+                {ar ? 'تصفّح المشاريع والوحدات المنشورة في مختلف أنحاء مصر.' : 'Browse projects and units currently listed across Egypt.'}
               </p>
               <div className="mt-4">
                 <NlSearchBox />
@@ -93,7 +97,7 @@ export function ProjectsPageClient({ results, searchParams, q }: ProjectsPageCli
             <div className="flex items-center justify-center py-24">
               <div className="flex flex-col items-center gap-3">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-estate-gold border-t-transparent" />
-                <p className="text-sm text-muted-foreground">Loading projects...</p>
+                <p className="text-sm text-muted-foreground">{ar ? 'جارٍ تحميل المشاريع...' : 'Loading projects...'}</p>
               </div>
             </div>
           }>

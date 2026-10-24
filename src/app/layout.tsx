@@ -48,6 +48,8 @@ export default async function RootLayout({
   // fail open to 'all' (today's chrome).
   const requestHeaders = headers()
   const stamped = requestHeaders.get('x-app-type')
+  const savedLanguage = requestHeaders.get('cookie')?.match(/(?:^|;\s*)ghaya-lang=(ar|en)(?:;|$)/)?.[1]
+  const initialLanguage = savedLanguage === 'ar' ? 'ar' : 'en'
   const appType: AppType =
     stamped === 'public' || stamped === 'console' || stamped === 'all'
       ? stamped
@@ -70,7 +72,7 @@ export default async function RootLayout({
   if (pathname === '/guides/buying-offplan' && !flags.buying_guide) notFound()
   if (pathname.startsWith('/track/') && !flags.inquiry_tracking) notFound()
   return (
-    <html lang="en" dir="ltr" className={`${inter.variable} ${amiri.variable} ${plexSansArabic.variable}`} suppressHydrationWarning>
+    <html lang={initialLanguage} dir={initialLanguage === 'ar' ? 'rtl' : 'ltr'} className={`${inter.variable} ${amiri.variable} ${plexSansArabic.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased" data-app-mode={appMode} data-app-type={appType}>
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
@@ -82,7 +84,7 @@ function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', '${gaId}');`}
         </Script>
-        <Providers appType={appType} initialFlags={await getFeatureFlags()}>
+        <Providers appType={appType} initialFlags={await getFeatureFlags()} initialLanguage={initialLanguage}>
           {children}
         </Providers>
       </body>
