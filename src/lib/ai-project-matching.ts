@@ -35,11 +35,19 @@ function isNameFiller(token: string): boolean {
 }
 
 export function normalizeProjectName(value: string): string {
-  return value
+  // Defensive: alias arrays may carry holes (candidate rows without a slug or
+  // nameArabic). normalizeProjectName must treat those as empty, never crash
+  // mid-scoring — a broken alias would otherwise take down the whole match.
+  return String(value ?? '')
     .toLowerCase()
     .normalize('NFKC')
     .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
     .replace(/[أإآ]/g, 'ا')
+    // Persian keheh/Arabic yeh borrowed from phones' keyboards (هايد بارک،
+    // ماونتن فيو) must unify with the Arabic keheh/yeh or one character
+    // separates a full-coverage compound name from a partial noun match.
+    .replace(/[\u06A9\u06AA]/g, 'ك')
+    .replace(/[\u06CC\u0649\u064A]/g, 'ي')
     .replace(/ى/g, 'ي')
     .replace(/ة/g, 'ه')
     // Arabic punctuation shares the \u0600-\u06FF block the keep-class
@@ -152,7 +160,14 @@ export function resolveProjectName<T extends ProjectNameCandidate>(
 
   const ranked = candidates
     .map((project) => {
-      const aliases = [project.name, project.nameArabic || '', project.slug, acronymForName(project.name)]
+      // Hole-tolerant: candidates from older call sites may omit slug or
+      // nameArabic entirely (not just null) — scorch them off the alias list.
+      const aliases = [
+        project.name,
+        project.nameArabic || '',
+        project.slug || '',
+        acronymForName(project.name),
+      ].filter((alias): alias is string => Boolean(alias))
       let best: ProjectNameMatch<T> | null = null
       for (const alias of aliases) {
         const score = scoreAlias(query, alias)

@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { MapPin, Bed, Bath, Maximize, Building2, ArrowRight, MessageCircle } from 'lucide-react'
+import { MapPin, Bed, Bath, Maximize, Building2, ArrowRight, MessageCircle, Sparkles } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -206,7 +206,7 @@ export default function UnitView({ unit, gallery, priceHistory = [] }: { unit: U
 
                 {unit.deliveryTerms && (
                   <div className="mt-6">
-                <h3 className="font-display text-lg">{ar ? 'شروط الاستلام' : 'Delivery Terms'}</h3>
+                <h2 className="font-display text-lg">{ar ? 'شروط الاستلام' : 'Delivery Terms'}</h2>
                     <p className="text-muted-foreground">{unit.deliveryTerms}</p>
                   </div>
                 )}
@@ -221,7 +221,7 @@ export default function UnitView({ unit, gallery, priceHistory = [] }: { unit: U
 
                 {unit.floorPlan && (
                   <div className="mt-6">
-                    <h3 className="font-display mb-3 text-lg">{ar ? 'المخطط' : 'Floor Plan'}</h3>
+                    <h2 className="font-display mb-3 text-lg">{ar ? 'المخطط' : 'Floor Plan'}</h2>
                     <div className="overflow-hidden rounded-2xl border bg-white dark:border-[#262626] dark:bg-[#0A0A0A]">
                       <Image
                         src={unit.floorPlan}
@@ -248,6 +248,16 @@ export default function UnitView({ unit, gallery, priceHistory = [] }: { unit: U
                 {unit.pricePerSqm && (
                   <p className="mb-4 text-sm text-muted-foreground">{formatEGP(unit.pricePerSqm)}{ar ? '/للمتر' : '/sqm'}</p>
                 )}
+
+                {/* عين on the unit page: one tap asks the chat about this
+                    project's recorded units — catalog-grounded answer. */}
+                <a
+                  href={`/ai-tools/chat?q=${encodeURIComponent(ar ? `بكام الوحدات في ${unit.project.name}؟` : `How much are units in ${unit.project.name}?`)}`}
+                  className="mb-4 flex min-h-11 items-center gap-2 rounded-xl border border-estate-gold/30 bg-estate-gold/5 px-3 text-sm font-medium text-estate-gold underline-offset-4 hover:bg-estate-gold/10"
+                >
+                  <Sparkles className="h-4 w-4 shrink-0" />
+                  {ar ? 'اسأل عين عن الوحدة دي' : 'Ask Ain about this unit'}
+                </a>
 
                 {/* Recorded price history trend (F-watch companion) */}
                 <PriceTrend history={priceHistory} ar={ar} />

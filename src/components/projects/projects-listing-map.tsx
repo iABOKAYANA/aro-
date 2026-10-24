@@ -21,6 +21,8 @@ interface MapPin {
 
 interface ProjectsListingMapProps {
   searchParams: Record<string, string | undefined>
+  /** عين-acknowledged project ids (name-match flow): replaces `q` for pins. */
+  ids?: string[]
 }
 
 const EGYPT_CENTER: [number, number] = [30.0444, 31.2357]
@@ -45,7 +47,7 @@ function getL(): any {
  * container div. `exact` pins are full gold price pills; `city` (centroid
  * fallback) pins are dimmed and labelled with their city.
  */
-export function ProjectsListingMap({ searchParams }: ProjectsListingMapProps) {
+export function ProjectsListingMap({ searchParams, ids }: ProjectsListingMapProps) {
   const { lang } = useLanguage()
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
@@ -56,6 +58,12 @@ export function ProjectsListingMap({ searchParams }: ProjectsListingMapProps) {
 
   const query = useMemo(() => {
     const params = new URLSearchParams({ limit: '100' })
+    // عين matched named project(s) → pins are those exact projects; the raw
+    // phrase can't match names and would zero the map, so drop it.
+    if (ids && ids.length > 0) {
+      params.set('ids', ids.join(','))
+      return params.toString()
+    }
     for (const key of [
       'q',
       'governorate',
@@ -76,7 +84,7 @@ export function ProjectsListingMap({ searchParams }: ProjectsListingMapProps) {
       if (searchParams[key]) params.set(key, searchParams[key]!)
     }
     return params.toString()
-  }, [searchParams])
+  }, [searchParams, ids])
 
   const fetchPins = useCallback(() => {
     setStatus('loading')

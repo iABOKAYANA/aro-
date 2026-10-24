@@ -574,6 +574,19 @@ let projectNameCorpus: { loadedAt: number; projects: KnownCatalogProject[] } | n
 
 /** Match an explicit, unambiguous public project name in the user's message. */
 export async function findKnownProjectMentions(message: string): Promise<KnownCatalogProject[]> {
+  const matches = await matchKnownProjectNames(message)
+  return matches.map((item) => item.project)
+}
+
+/**
+ * Same recognition with the score preserved — page-level flows (e.g. the
+ * /projects search understanding) need the number to enforce an evidence
+ * floor before they re-rank the whole listing around a name. Highest-score
+ * ties are kept (ambiguous families stay ambiguous; callers decide).
+ */
+export async function matchKnownProjectNames(
+  message: string,
+): Promise<Array<{ project: KnownCatalogProject; score: number }>> {
   try {
     if (!projectNameCorpus || Date.now() - projectNameCorpus.loadedAt > 60_000) {
       const [rows, archivedRows] = await Promise.all([
@@ -631,7 +644,7 @@ export async function findKnownProjectMentions(message: string): Promise<KnownCa
       console.log('[ai-mentions]', JSON.stringify({ msgLen: message.length, matches: sorted.slice(0, 5).map((m) => ({ name: m.project.name, score: m.score, archived: !!m.project.archived })) }))
     }
     if (!sorted.length) return []
-    return sorted.map((item) => item.project)
+    return sorted
   } catch (e) {
     if (process.env.DEBUG_AI_MENTIONS === '1') console.log('[ai-mentions] threw:', String(e).slice(0, 200))
     return [] // knowledge match is best-effort; never fail chat

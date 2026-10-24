@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { List, Map as MapIcon } from 'lucide-react'
+import { List, Map as MapIcon, Sparkles } from 'lucide-react'
 import { ProjectsResults } from '@/components/projects/projects-results'
 // Map widget loads only when the user switches to map view (default is list).
 // Browser-only (Leaflet CDN injection via document/window), so ssr:false.
@@ -16,6 +16,7 @@ import { useLanguage } from '@/lib/language-context'
 import { cn } from '@/lib/utils'
 import SaveSearchButton from '@/components/saved-searches/save-search-button'
 import { NlSearchBox } from '@/components/projects/nl-search-box'
+import { type AiSearchUnderstanding } from '@/lib/ai-page-search'
 
 interface ProjectItem {
   id: string
@@ -49,9 +50,26 @@ interface ProjectsPageClientProps {
   }
   searchParams: Record<string, string | undefined>
   q?: string
+  ai?: AiSearchUnderstanding | null
 }
 
-export function ProjectsPageClient({ results, searchParams, q }: ProjectsPageClientProps) {
+/** عين's understanding surfaces as small labeled chips, localized here. */
+const AI_CHIP_LABELS: Record<string, [string, string]> = {
+  project: ['المشروع', 'Project'],
+  city: ['المكان', 'Location'],
+  governorate: ['المنطقة', 'Region'],
+  propertyType: ['النوع', 'Type'],
+  listingType: ['العرض', 'Listing'],
+  bedrooms: ['الغرف', 'Bedrooms'],
+  bathrooms: ['الحمامات', 'Bathrooms'],
+  minPrice: ['من سعر', 'From price'],
+  maxPrice: ['لحد سعر', 'Up to price'],
+  minArea: ['من مساحة', 'Min area'],
+  maxArea: ['لحد مساحة', 'Max area'],
+  developer: ['المطور', 'Developer'],
+}
+
+export function ProjectsPageClient({ results, searchParams, q, ai }: ProjectsPageClientProps) {
   const { lang } = useLanguage()
   const [view, setView] = useState<'list' | 'map'>('list')
   const ar = lang === 'ar'
@@ -129,9 +147,27 @@ export function ProjectsPageClient({ results, searchParams, q }: ProjectsPageCli
                 </div>
                 <SaveSearchButton searchParams={searchParams} />
               </div>
+              {/* عين understood the browser query — show what she got, honestly. */}
+              {ai && ai.chips.length > 0 && (
+                <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-estate-gold/30 bg-estate-gold/5 px-4 py-3">
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-estate-gold">
+                    <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                    {ar ? 'عين فهمت:' : 'Ain understood:'}
+                  </span>
+                  {ai.chips.map((chip, i) => (
+                    <span
+                      key={`${chip.field}-${i}`}
+                      className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-gray-700 ring-1 ring-estate-gold/20 dark:bg-black dark:text-gray-200"
+                    >
+                      {AI_CHIP_LABELS[chip.field]?.[ar ? 0 : 1] ?? chip.field}{' '}
+                      <span className="font-semibold text-gray-900 dark:text-white">{chip.value}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
               <QuickFilters total={results.total} resultCount={results.items.length} />
               {view === 'map' ? (
-                <ProjectsListingMap searchParams={searchParams} />
+                <ProjectsListingMap searchParams={searchParams} ids={ai?.ids} />
               ) : (
                 <ProjectsResults results={results} searchParams={searchParams} />
               )}

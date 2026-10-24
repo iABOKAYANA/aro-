@@ -8,7 +8,7 @@ import { useSearchParams } from 'next/navigation'
 import {
   MapPin, Bed, Bath, Maximize, Heart, Share2, Phone, Mail,
   ChevronRight, Building2, Calendar, CheckCircle2, Globe, ExternalLink, X, Check, Star,
-  Copy, MessageCircle, Home, Store, Stethoscope, Layers, Warehouse, Tent, Briefcase
+  Copy, MessageCircle, Home, Store, Stethoscope, Layers, Warehouse, Tent, Briefcase, Sparkles
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -599,6 +599,34 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
       </section>
 
       <div className="container px-4 py-8">
+
+      {/* عين on the page, not just in the chat: prefilled questions land in
+          /ai-tools/chat (?q= auto-sends) and come back grounded in this
+          project's catalog rows — prices that exist, delivery that honestly
+          says "not recorded". */}
+      <section aria-label={ar ? ('اسأل عين عن ' + (project.name || '')) : `Ask Ain about ${(project.name || '')}`} className="mb-8 rounded-2xl border border-estate-gold/30 bg-estate-gold/5 p-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-estate-navy dark:text-estate-gold">
+            <Sparkles className="h-4 w-4 shrink-0" />
+            {ar ? 'اسأل عين عن المشروع ده' : 'Ask Ain about this project'}
+          </p>
+          <nav className="flex flex-wrap gap-2" aria-label={ar ? 'أسئلة جاهزة' : 'Ready questions'}>
+            {[
+              ar ? `بكام الوحدات في ${project.name}؟` : `How much are units in ${project.name}?`,
+              ar ? `ايه خطط السداد في ${project.name}؟` : `What are the payment plans for ${project.name}?`,
+              ar ? `امتى التسليم في ${project.name}؟` : `When is ${project.name} delivered?`,
+            ].map((question) => (
+              <a
+                key={question}
+                href={`/ai-tools/chat?q=${encodeURIComponent(question)}`}
+                className="inline-flex min-h-11 items-center rounded-full border border-estate-gold/40 bg-white px-3.5 text-sm font-medium text-estate-navy transition-colors hover:bg-estate-gold hover:text-[#0F1A2C] md:min-h-8 dark:border-estate-gold/30 dark:bg-black dark:text-estate-gold dark:hover:text-black"
+              >
+                {question}
+              </a>
+            ))}
+          </nav>
+        </div>
+      </section>
 
       {/* Project video — direct file or YouTube embed; nothing when absent */}
       {!!project.videoUrl && (

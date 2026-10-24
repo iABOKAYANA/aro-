@@ -4,9 +4,10 @@ import type { SearchResult } from '@/types'
 import { PUBLIC_CHILD_PROJECT_WHERE, PUBLIC_PROJECT_WHERE, PUBLIC_UNIT_PROJECT_WHERE } from '@/lib/project-visibility'
 import { developerAliasesFor } from '@/lib/ai-search-parser'
 
-export async function searchProjects(filters: PropertyFilterInput & { developer?: string; amenities?: string | string[] }) {
+export async function searchProjects(filters: PropertyFilterInput & { developer?: string; amenities?: string | string[]; ids?: string[] }) {
   const {
     q,
+    ids,
     governorate,
     city,
     district,
@@ -36,6 +37,12 @@ export async function searchProjects(filters: PropertyFilterInput & { developer?
   // area with a single top-level OR returned the UNION of matches instead of
   // the intersection, so combined filters showed MORE results, not fewer.
   const and: Record<string, unknown>[] = []
+
+  // Exact project ids — عين understood the query as one/more named projects
+  // (site search, not just chat). Publicness is still enforced above.
+  if (ids && ids.length > 0) {
+    and.push({ id: { in: ids } })
+  }
 
   if (q) {
     and.push({

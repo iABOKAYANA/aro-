@@ -2,6 +2,8 @@ import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { ProjectsPageClient } from './projects-page-client'
 import { searchProjects } from '@/lib/search'
+import { matchKnownProjectNames } from '@/lib/ai-llm'
+import { projectSearchUnderstanding, type AiSearchUnderstanding } from '@/lib/ai-page-search'
 import { SITE_URL, languageAlternates } from '@/lib/site'
 
 export const dynamic = 'force-dynamic'
@@ -54,13 +56,32 @@ async function ProjectsData({ searchParams }: ProjectsPageProps) {
     limit: searchParams.limit ? Math.min(50, Math.max(1, Number(searchParams.limit) || 12)) : 12,
   }
 
+  // عين in the listing page, not just the chat: the same understanding the
+  // assistant applies to a chat message is applied to the browser search box.
+  // URL filter params always beat عين's parsed values, and when عين matched
+  // named projects the raw phrase is never IP-impossible-as-substring (whole-
+  // phrase ILIKE would match nothing and zero out the page).
+  let ai: AiSearchUnderstanding | null = null
+  const rawQ = (searchParams.q || '').trim()
+  if (rawQ) {
+    const matches = await matchKnownProjectNames(rawQ)
+    ai = projectSearchUnderstanding(rawQ, searchParams, matches)
+    if (ai.ids && ai.ids.length > 0) {
+      ;(filters as Record<string, unknown>).ids = ai.ids
+      filters.q = undefined
+    } else if (ai.dropQ) {
+      filters.q = undefined
+      Object.assign(filters, ai.patch)
+    }
+  }
+
   const results = await searchProjects(filters)
-  return results
+  return { results, ai }
 }
 
 export default async function ProjectsPage({ searchParams }: ProjectsPageProps) {
   const q = searchParams.q
-  const results = await ProjectsData({ searchParams })
+  const { results, ai } = await ProjectsData({ searchParams })
 
   return (
     <Suspense fallback={
@@ -73,7 +94,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
         </div>
       </div>
     }>
-      <ProjectsPageClient results={results} searchParams={searchParams} q={q} />
+      <ProjectsPageClient results={results} searchParams={searchParams} q={q} ai={ai} />
     </Suspense>
   )
 }

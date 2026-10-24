@@ -232,7 +232,7 @@ export function QuickFilters({ total, resultCount }: QuickFiltersProps) {
                   type="button"
                   aria-label={ar ? 'مسح البحث' : 'Clear search'}
                   onClick={() => { setSearchValue(''); setSuggestOpen(false); setFilter('q' as any, ''); requestAnimationFrame(() => pushToURL()) }}
-                  className="absolute end-1 top-1/2 flex min-h-[44px] min-w-[44px] -translate-y-1/2 items-center justify-center rounded-full text-gray-400 hover:text-gray-600 md:end-3 md:min-h-0 md:min-w-0 md:p-0.5"
+                  className="absolute end-1 top-1/2 flex min-h-[44px] min-w-[44px] -translate-y-1/2 items-center justify-center rounded-full text-gray-400 hover:text-gray-600 md:end-2.5 md:min-h-0 md:min-w-0 md:h-8 md:w-8 md:p-0"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>

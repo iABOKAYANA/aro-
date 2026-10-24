@@ -44,6 +44,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
 
     const q = searchParams.get('q')?.trim() || undefined
+    // عين's project-name understanding (site search): explicit ids replace
+    // phrase matching — a natural-language phrase can't survive `contains`.
+    const idsRaw = searchParams.get('ids')?.trim() || ''
+    const ids: string[] | undefined = idsRaw
+      ? idsRaw.split(',').map((id) => id.trim()).filter(Boolean).slice(0, 50) || undefined
+      : undefined
     const governorate = searchParams.get('governorate')?.trim() || undefined
     const city = searchParams.get('city')?.trim() || undefined
     const district = searchParams.get('district')?.trim() || undefined
@@ -74,6 +80,10 @@ export async function GET(request: NextRequest) {
     // so combined filters showed MORE pins than the list.
     const where: Record<string, unknown> = { ...PUBLIC_PROJECT_WHERE }
     const and: Record<string, unknown>[] = []
+
+    if (ids && ids.length > 0) {
+      and.push({ id: { in: ids } })
+    }
 
     if (q) {
       and.push({
