@@ -27,7 +27,10 @@ function pickKeywords(text: string): string[] {
   const seen = new Set<string>()
   const out: string[] = []
   for (const w of words) {
-    const t = w.replace(/^(إ|أ)/, 'ا')
+    // Full-word alef unification (not just leading): user tokens like
+    // «الإيجاري» must match stored «الايجاري» — leading-only normalization
+    // missed those and dropped the whole chunk under the 2-hit threshold.
+    const t = w.replace(/[إأٱ]/g, 'ا')
     if (STOP.has(w) || STOP.has(t) || seen.has(t)) continue
     seen.add(t)
     out.push(t)
@@ -83,7 +86,7 @@ export async function retrieveKnowledge(message: string): Promise<string> {
     }
     if (!parts.length) return ''
     return (
-      '[LEARNED CONTEXT — public marketing pages fetched earlier from official developer sites and guides. ' +
+      '[LEARNED CONTEXT — public marketing pages fetched earlier from official developer sites and guides, plus GHAYA\'s vetted market-knowledge document. ' +
       'Use them to explain background/positioning/usps when the question is about these sources; ' +
       'for GHAYA catalog facts (prices, availability, plans) the DB tools always override this context. ' +
       'Cite the source URL when a claim comes from here.]\n\n' +
