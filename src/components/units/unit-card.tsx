@@ -120,7 +120,7 @@ export function UnitCard({ unit, projectName, projectSlug, projectCoverImage }: 
 
         <div className="flex items-center justify-between gap-3 border-t pt-3">
           <div className="min-w-0">
-            <p className="break-words text-lg font-bold text-estate-gold">
+            <p className="break-words text-lg font-bold text-estate-gold max-sm:text-xl max-sm:font-extrabold">
               {formatEGP(unit.price)}
             </p>
             {unit.pricePerSqm && (

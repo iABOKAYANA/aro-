@@ -48,7 +48,7 @@ function renderBlocks(blocks: ResponseBlock[]) {
 function TextBlock({ content }: { content: string }) {
   const parts = content.split(/(\*\*[^*]+\*\*)/)
   return (
-    <div className="text-sm leading-relaxed whitespace-pre-wrap">
+    <div className="text-sm leading-relaxed whitespace-pre-wrap max-sm:text-base">
       {parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**')) {
           return <strong key={i} className="font-semibold">{part.slice(2, -2)}</strong>
@@ -297,7 +297,7 @@ export function FullPageChat() {
                         : 'bg-gray-50 border border-gray-100 rounded-bl-sm dark:border-[#262626] dark:bg-[#0A0A0A] dark:text-gray-200'
                     )}>
                       {msg.role === 'user' ? (
-                        <p className="text-sm leading-relaxed">{msg.content}</p>
+                        <p className="text-sm leading-relaxed max-sm:text-base">{msg.content}</p>
                       ) : (
                         <div className="space-y-1.5">
                           {msg.blocks && msg.blocks.length > 0 ? (

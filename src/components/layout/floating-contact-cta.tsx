@@ -87,7 +87,7 @@ export function FloatingContactCta() {
           {...(b.external ? { target: '_blank', rel: 'noopener' } : {})}
           aria-label={b.label}
           className={cn(
-            'group fixed z-[60] flex h-12 max-w-[3rem] items-center overflow-hidden whitespace-nowrap rounded-full bg-estate-navy text-estate-gold shadow-xl ring-1 ring-estate-gold/40 transition-all duration-300 hover:max-w-[260px] hover:bg-estate-gold hover:text-estate-navy focus-visible:max-w-[260px] focus-visible:bg-estate-gold focus-visible:text-estate-navy focus-within:max-w-[260px] focus-within:bg-estate-gold focus-within:text-estate-navy dark:bg-black dark:hover:bg-estate-gold dark:hover:text-black dark:focus-visible:bg-estate-gold dark:focus-visible:text-black dark:focus-within:bg-estate-gold dark:focus-within:text-black',
+            'group fixed z-[60] flex h-12 max-w-[3rem] items-center overflow-hidden whitespace-nowrap rounded-full bg-estate-navy text-estate-gold shadow-xl ring-1 ring-estate-gold/40 transition-all duration-300 hover:max-w-[260px] hover:bg-estate-gold hover:text-estate-navy focus-visible:max-w-[260px] focus-visible:bg-estate-gold focus-visible:text-estate-navy focus-within:max-w-[260px] focus-within:bg-estate-gold focus-within:text-estate-navy dark:bg-black dark:hover:bg-estate-gold dark:hover:text-black dark:focus-visible:bg-estate-gold dark:focus-visible:text-black dark:focus-within:bg-estate-gold dark:focus-within:text-black max-sm:h-14 max-sm:max-w-[3.5rem]',
             isRtl ? 'left-6' : 'right-6',
             // Slot 1 of the stack (same side as Ain + green bubble):
             // bubble visible → land the first pill ABOVE it (bottom-[10rem]);
@@ -99,8 +99,8 @@ export function FloatingContactCta() {
               : 'bottom-[max(10rem,calc(env(safe-area-inset-bottom)+8.5rem))]'
           )}
         >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center">
-            <b.Icon className="h-5 w-5 shrink-0" />
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center max-sm:h-14 max-sm:w-14">
+            <b.Icon className="h-5 w-5 shrink-0 max-sm:h-6 max-sm:w-6" />
           </span>
           <span
             dir="ltr"

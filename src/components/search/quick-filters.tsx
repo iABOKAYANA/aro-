@@ -338,7 +338,11 @@ export function QuickFilters({ total, resultCount }: QuickFiltersProps) {
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              aria-label={ar ? 'فلاتر البحث المتقدمة' : 'Advanced search filters'}
+              aria-label={(() => {
+                // Matches the visible text exactly (axe label-content-name).
+                const base = ar ? 'فلاتر أكتر لو حابب تدقق' : t('projects.advancedFilters')
+                return activeCount > 0 ? `${base}${activeCount}` : base
+              })()}
               aria-expanded={showAdvanced}
               aria-controls={showAdvanced ? 'advanced-project-filters' : undefined}
               className={cn(

@@ -50,7 +50,7 @@ function TextBlock({ content }: { content: string }) {
   // Parse markdown-like bold and line breaks
   const parts = content.split(/(\*\*[^*]+\*\*)/)
   return (
-    <div className="text-xs leading-relaxed whitespace-pre-wrap">
+    <div className="text-xs leading-relaxed whitespace-pre-wrap max-sm:text-sm">
       {parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**')) {
           return <strong key={i} className="font-semibold text-gray-800 dark:text-white">{part.slice(2, -2)}</strong>
@@ -309,7 +309,7 @@ export function ChatSearch() {
                   : 'bg-gray-50 border border-gray-100 rounded-tl-sm space-y-1 dark:border-[#262626] dark:bg-black dark:text-gray-200'
               )}>
                 {msg.role === 'user' ? (
-                  <p className="text-xs leading-relaxed">{msg.content}</p>
+                  <p className="text-xs leading-relaxed max-sm:text-sm">{msg.content}</p>
                 ) : (
                   <>
                     {msg.blocks && msg.blocks.length > 0 ? (

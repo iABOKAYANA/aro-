@@ -72,7 +72,7 @@ export function WhatsAppBubble() {
       aria-label={label}
       title={label}
       className={cn(
-        'group fixed z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl ring-1 ring-black/10 transition-transform duration-300 hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none dark:ring-white/20 bottom-[max(6rem,calc(env(safe-area-inset-bottom)+4.5rem))]',
+        'group fixed z-[60] flex h-14 w-14 max-sm:h-16 max-sm:w-16 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl ring-1 ring-black/10 transition-transform duration-300 hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none dark:ring-white/20 bottom-[max(6rem,calc(env(safe-area-inset-bottom)+4.5rem))]',
         isRtl ? 'left-6' : 'right-6'
       )}
     >

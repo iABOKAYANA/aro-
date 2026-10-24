@@ -203,7 +203,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
             <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
               {lang === 'ar' ? 'يبدأ من' : 'Starting from'}
             </p>
-            <p className="font-display break-words text-lg font-bold text-estate-navy dark:text-estate-gold">
+            <p className="font-display break-words text-lg font-bold text-estate-navy dark:text-estate-gold max-sm:text-xl max-sm:font-extrabold">
               {lowestPrice ? formatEGP(lowestPrice) : 'N/A'}
             </p>
           </div>
