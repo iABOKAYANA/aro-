@@ -107,7 +107,7 @@ export function Footer({ appType = 'all' }: { appType?: AppType }) {
             <ul className="space-y-2">
               {footerLinks.properties.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="-my-1 inline-flex min-h-[36px] items-center text-sm text-gray-400 underline-offset-4 transition-colors hover:text-[#E8C56D] hover:underline hover:decoration-estate-gold/50">
+                  <Link href={link.href} className="-my-1 inline-flex min-h-[36px] max-sm:min-h-11 items-center text-sm max-sm:text-base text-gray-400 underline-offset-4 transition-colors hover:text-[#E8C56D] hover:underline hover:decoration-estate-gold/50">
                     {propertyLabels[lang][link.type]}
                   </Link>
                 </li>
@@ -120,7 +120,7 @@ export function Footer({ appType = 'all' }: { appType?: AppType }) {
             <ul className="space-y-2">
               {footerLinks.locations.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="-my-1 inline-flex min-h-[36px] items-center text-sm text-gray-400 underline-offset-4 transition-colors hover:text-[#E8C56D] hover:underline hover:decoration-estate-gold/50">
+                  <Link href={link.href} className="-my-1 inline-flex min-h-[36px] max-sm:min-h-11 items-center text-sm max-sm:text-base text-gray-400 underline-offset-4 transition-colors hover:text-[#E8C56D] hover:underline hover:decoration-estate-gold/50">
                     {locationLabels[lang][link.key]}
                   </Link>
                 </li>
@@ -133,7 +133,7 @@ export function Footer({ appType = 'all' }: { appType?: AppType }) {
             <ul className="space-y-2">
               {visibleTools.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="-my-1 inline-flex min-h-[36px] items-center text-sm text-gray-400 underline-offset-4 transition-colors hover:text-[#E8C56D] hover:underline hover:decoration-estate-gold/50">
+                  <Link href={link.href} className="-my-1 inline-flex min-h-[36px] max-sm:min-h-11 items-center text-sm max-sm:text-base text-gray-400 underline-offset-4 transition-colors hover:text-[#E8C56D] hover:underline hover:decoration-estate-gold/50">
                     {toolLabels[lang][link.key]}
                   </Link>
                 </li>
@@ -146,7 +146,7 @@ export function Footer({ appType = 'all' }: { appType?: AppType }) {
             <ul className="space-y-2">
               {footerLinks.company.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="-my-1 inline-flex min-h-[36px] items-center text-sm text-gray-400 underline-offset-4 transition-colors hover:text-[#E8C56D] hover:underline hover:decoration-estate-gold/50">
+                  <Link href={link.href} className="-my-1 inline-flex min-h-[36px] max-sm:min-h-11 items-center text-sm max-sm:text-base text-gray-400 underline-offset-4 transition-colors hover:text-[#E8C56D] hover:underline hover:decoration-estate-gold/50">
                 {companyLabels[lang][link.key]}
                   </Link>
                 </li>
@@ -162,7 +162,7 @@ export function Footer({ appType = 'all' }: { appType?: AppType }) {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             {footerLinks.legal.map((link) => (
-              <Link key={link.href} href={link.href} className="-my-1.5 inline-flex min-h-[36px] items-center text-xs text-gray-500 transition-colors hover:text-gray-300">
+              <Link key={link.href} href={link.href} className="-my-1.5 inline-flex min-h-[36px] max-sm:min-h-11 items-center text-xs max-sm:text-sm text-gray-500 transition-colors hover:text-gray-300">
                 {legalLabels[lang][link.key]}
               </Link>
             ))}

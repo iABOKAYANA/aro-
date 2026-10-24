@@ -315,7 +315,7 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    'min-h-[44px] py-2.5 text-sm font-medium',
+                    'min-h-[44px] max-sm:min-h-12 py-2.5 text-sm font-medium max-sm:text-base',
                     active ? 'text-estate-gold dark:text-[#E8C56D]' : 'text-gray-700 dark:text-gray-300'
                   )}
                   aria-current={active ? 'page' : undefined}

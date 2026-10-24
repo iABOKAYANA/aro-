@@ -96,7 +96,7 @@ export default function FaqView() {
                         </button>
                         {isOpen && (
                           <div className="border-t border-estate-gold/15 px-4 py-3">
-                            <p className="break-words text-sm leading-7 text-muted-foreground">
+                            <p className="break-words text-sm leading-7 max-sm:text-base max-sm:leading-8 text-muted-foreground">
                               {renderAnswer(ar ? item.aAr : item.aEn)}
                             </p>
                           </div>

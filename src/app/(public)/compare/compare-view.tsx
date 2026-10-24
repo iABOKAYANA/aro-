@@ -443,11 +443,16 @@ export default function CompareView({ ids }: { ids?: string }) {
         </div>
       </Reveal>
 
-      <p className="flex items-center gap-2 text-xs leading-relaxed text-gray-500">
+      {/* Phone affordance: the table scrolls sideways; say so, plainly. */}
+      <p className="flex items-center gap-2 text-xs leading-relaxed text-gray-500 max-sm:rounded-2xl max-sm:border max-sm:border-estate-gold/25 max-sm:bg-estate-gold/5 max-sm:px-4 max-sm:py-3 max-sm:text-sm max-sm:text-estate-gold">
         <MapPin className="h-3.5 w-3.5 shrink-0" />
-        {ar
-          ? 'الأسعار متسجلة بالجنيه المصري. عملة العرض اللي مختارها بتتطبق تلقائياً.'
-          : 'Prices are stored in EGP. Your active display currency applies automatically.'}
+        <span>
+          {ar ? 'الأسعار متسجلة بالجنيه المصري. عملة العرض اللي مختارها بتتطبق تلقائياً.' : 'Prices are stored in EGP. Your active display currency applies automatically.'}
+        </span>
+      </p>
+      <p className="sr-only">{ar ? 'اسحب الجدول يمين وشمال لمشاهدة كل الأعمدة كاملة.' : 'Swipe the table sideways to see all columns.'}</p>
+      <p aria-hidden="true" className="max-sm:flex max-sm:items-center max-sm:gap-2 max-sm:pb-1 text-xs text-gray-500 lg:hidden">
+        {ar ? '↔ اسحب الجدول يمين وشمال لكل الأعمدة' : '↔ Swipe to see all columns'}
       </p>
     </div>
   )

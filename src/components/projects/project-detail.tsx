@@ -208,12 +208,12 @@ function PlanCalculator({ plans, basePrice }: { plans: any[]; basePrice: number 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 [&>*]:min-w-0">
           <div className="min-w-0">
             <p className="text-xs text-muted-foreground">{ar ? 'المقدم' : 'Down payment'}</p>
-            <p className="break-words text-lg font-bold">{priced ? formatEGP(downAmount) : '—'}</p>
+            <p className="break-words text-lg max-sm:text-xl font-bold">{priced ? formatEGP(downAmount) : '—'}</p>
             <p className="text-xs text-muted-foreground">{dp}%</p>
           </div>
           <div className="min-w-0">
             <p className="text-xs text-muted-foreground">{ar ? 'إجمالي التقسيط' : 'Installment total'}</p>
-            <p className="break-words text-lg font-bold">{priced ? formatEGP(basePrice) : '—'}</p>
+            <p className="break-words text-lg max-sm:text-xl font-bold">{priced ? formatEGP(basePrice) : '—'}</p>
             {maint > 0 && (
               <p className="break-words text-xs text-muted-foreground">
                 {ar ? `+ صيانة ${maint}% (≈${formatEGP(maintAmount)})` : `+ ${maint}% maintenance (≈${formatEGP(maintAmount)})`}
@@ -224,13 +224,13 @@ function PlanCalculator({ plans, basePrice }: { plans: any[]; basePrice: number 
             <p className="text-xs text-muted-foreground">{ar ? 'خصم الكاش' : 'Cash discount'}</p>
             {cashPrice !== null ? (
               <>
-                <p className="break-words text-lg font-bold text-green-600">{formatEGP(cashPrice)}</p>
+                <p className="break-words text-lg max-sm:text-xl font-bold text-green-600">{formatEGP(cashPrice)}</p>
                 <p className="break-words text-xs text-muted-foreground">
                   {ar ? `وفر ${formatEGP(savings)} (${discount}%)` : `Save ${formatEGP(savings)} (${discount}%)`}
                 </p>
               </>
             ) : (
-              <p className="text-lg font-bold">—</p>
+              <p className="text-lg max-sm:text-xl font-bold">—</p>
             )}
           </div>
         </div>
@@ -652,21 +652,21 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                   <Card>
                     <CardContent className="p-4 text-center">
                       <p className="text-xs text-muted-foreground">{ar ? 'يبدأ من' : 'Starting From'}</p>
-                      <p className="font-display break-words text-lg font-bold text-estate-gold">{formatEGP(project.startPrice)}</p>
+                      <p className="font-display break-words text-lg max-sm:text-xl font-bold text-estate-gold">{formatEGP(project.startPrice)}</p>
                     </CardContent>
                   </Card>
                 )}
                 <Card>
                   <CardContent className="p-4 text-center">
                     <p className="text-xs text-muted-foreground">{ar ? 'وحدات معروضة' : 'Units listed'}</p>
-                    <p className="font-display text-lg font-bold">{listedUnits.length}</p>
+                    <p className="font-display text-lg max-sm:text-xl font-bold">{listedUnits.length}</p>
                   </CardContent>
                 </Card>
                 {project.totalUnits != null && (
                   <Card>
                     <CardContent className="p-4 text-center">
                       <p className="text-xs text-muted-foreground">{ar ? 'حجم المشروع' : 'Project size'}</p>
-                      <p className="font-display text-lg font-bold">{project.totalUnits}</p>
+                      <p className="font-display text-lg max-sm:text-xl font-bold">{project.totalUnits}</p>
                     </CardContent>
                   </Card>
                 )}
@@ -674,7 +674,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                   <Card>
                     <CardContent className="p-4 text-center">
                       <p className="text-xs text-muted-foreground">{ar ? 'المساحة الكلية' : 'Total Area'}</p>
-                      <p className="font-display text-lg font-bold">{formatSQM(project.totalArea)}</p>
+                      <p className="font-display text-lg max-sm:text-xl font-bold">{formatSQM(project.totalArea)}</p>
                     </CardContent>
                   </Card>
                 )}
@@ -682,7 +682,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                   <Card>
                     <CardContent className="p-4 text-center">
                       <p className="text-xs text-muted-foreground">{ar ? 'نسبة الإنجاز' : 'Completion'}</p>
-                      <p className="font-display text-lg font-bold">{project.completionPercent}%</p>
+                      <p className="font-display text-lg max-sm:text-xl font-bold">{project.completionPercent}%</p>
                     </CardContent>
                   </Card>
                 )}
@@ -853,7 +853,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                           <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
                             {ar ? 'يبدأ من' : 'Starting from'}
                           </p>
-                          <p className="font-display text-lg font-bold text-estate-gold">{formatEGP(row.startingPrice)}</p>
+                          <p className="font-display text-lg max-sm:text-xl font-bold text-estate-gold">{formatEGP(row.startingPrice)}</p>
                         </div>
                       )}
                     </div>
@@ -921,22 +921,22 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                         <div>
                           <p className="text-xs text-muted-foreground">{ar ? 'المقدم' : 'Down Payment'}</p>
-                          <p className="text-lg font-bold">{plan.downPaymentPct}%</p>
+                          <p className="text-lg max-sm:text-xl font-bold">{plan.downPaymentPct}%</p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">{ar ? 'التقسيط' : 'Installments'}</p>
-                          <p className="text-lg font-bold">{plan.installmentYears} {plan.installmentYears === 1 ? (ar ? 'سنة' : 'Year') : (ar ? 'سنين' : 'Years')}</p>
+                          <p className="text-lg max-sm:text-xl font-bold">{plan.installmentYears} {plan.installmentYears === 1 ? (ar ? 'سنة' : 'Year') : (ar ? 'سنين' : 'Years')}</p>
                         </div>
                         {plan.cashDiscount && (
                           <div>
                             <p className="text-xs text-muted-foreground">{ar ? 'خصم' : 'Discount'}</p>
-                            <p className="text-lg font-bold text-green-600">{plan.cashDiscount}%</p>
+                            <p className="text-lg max-sm:text-xl font-bold text-green-600">{plan.cashDiscount}%</p>
                           </div>
                         )}
                         {plan.maintenanceFeePct && (
                           <div>
                             <p className="text-xs text-muted-foreground">{ar ? 'الصيانة' : 'Maintenance'}</p>
-                            <p className="text-lg font-bold">{plan.maintenanceFeePct}%</p>
+                            <p className="text-lg max-sm:text-xl font-bold">{plan.maintenanceFeePct}%</p>
                           </div>
                         )}
                       </div>
@@ -1044,7 +1044,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                         </p>
                       )}
                       {(ph.startPrice != null || ph.endPrice != null) && (
-                        <p className="font-display break-words text-lg font-bold text-estate-gold">
+                        <p className="font-display break-words text-lg max-sm:text-xl font-bold text-estate-gold">
                           {ph.startPrice != null ? `${ar ? 'من' : 'From'} ${formatEGP(ph.startPrice)}` : ''}
                           {ph.startPrice != null && ph.endPrice != null ? ` — ${ar ? 'إلى' : 'to'} ${formatEGP(ph.endPrice)}` : ''}
                         </p>
@@ -1097,7 +1097,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                                 </div>
                               )}
                               {childStart != null && childStart > 0 && (
-                                <p className="mt-3 font-display text-lg font-bold text-estate-gold">{ar ? 'يبدأ من ' : 'From '}{formatEGP(childStart)}</p>
+                                <p className="mt-3 font-display text-lg max-sm:text-xl font-bold text-estate-gold">{ar ? 'يبدأ من ' : 'From '}{formatEGP(childStart)}</p>
                               )}
                               {childUnits.length > 0 && (
                                 <div className="mt-3 space-y-2 border-t border-border pt-3">
@@ -1252,7 +1252,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                           </div>
                         )}
                         {unit.price != null && (
-                          <p className="font-display text-lg font-bold text-estate-gold">{formatEGP(unit.price)}</p>
+                          <p className="font-display text-lg max-sm:text-xl font-bold text-estate-gold">{formatEGP(unit.price)}</p>
                         )}
                         <Button asChild variant="outline" className="w-full" size="lg">
                           <Link href={`/contact?message=${encodeURIComponent(inquiryText)}`}>
