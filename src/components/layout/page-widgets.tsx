@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowUp, Sparkles } from 'lucide-react'
 import { useLanguage } from '@/lib/language-context'
+import { useCompare } from '@/lib/compare'
 import { cn } from '@/lib/utils'
 import { FloatingContactCta } from '@/components/layout/floating-contact-cta'
 
@@ -17,6 +18,7 @@ export function PageWidgets() {
   const isRtl = lang === 'ar'
   const [progress, setProgress] = useState(0)
   const [scrolled, setScrolled] = useState(false)
+  const { items } = useCompare()
 
   useEffect(() => {
     const onScroll = () => {
@@ -40,6 +42,13 @@ export function PageWidgets() {
   const bottomPos = hasStickyBar
     ? 'bottom-[max(6rem,calc(env(safe-area-inset-bottom)+4.5rem))] lg:bottom-[max(1.5rem,env(safe-area-inset-bottom))]'
     : 'bottom-[max(1.5rem,env(safe-area-inset-bottom))]'
+  // The compare tray (fixed, z-70, full-width on phones) covers the bottom
+  // slots — lift the widgets above it on max-sm while it is showing. The
+  // tray is single-row on phones, so this fixed offset is stable; the pair
+  // on each side keeps its vertical order (contact pills shift via their
+  // own slot logic in FloatingContactCta).
+  const trayUp = items.length > 0
+  const TRAY_LIFT = 'max-sm:bottom-[max(8rem,calc(env(safe-area-inset-bottom)+6rem))]'
 
   return (
     <>
@@ -61,6 +70,7 @@ export function PageWidgets() {
         className={cn(
           'fixed z-[60] flex h-11 w-11 items-center justify-center rounded-full bg-estate-gold text-[#0F1A2C] shadow-lg shadow-estate-gold/30 transition-all duration-300 hover:bg-estate-gold-dark',
           bottomPos,
+          trayUp && TRAY_LIFT,
           isRtl ? 'right-6' : 'left-6',
           scrolled ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0'
         )}
@@ -76,6 +86,7 @@ export function PageWidgets() {
           className={cn(
             'group fixed z-[60] flex h-14 w-14 max-sm:h-16 max-sm:w-16 items-center justify-center rounded-full bg-estate-navy text-estate-gold shadow-xl ring-1 ring-estate-gold/40 transition-all duration-300 hover:bg-estate-gold hover:text-estate-navy dark:bg-black dark:hover:bg-estate-gold dark:hover:text-black',
             bottomPos,
+            trayUp && TRAY_LIFT,
             isRtl ? 'left-6' : 'right-6'
           )}
         >

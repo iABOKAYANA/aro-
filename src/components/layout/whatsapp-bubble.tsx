@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useLanguage } from '@/lib/language-context'
+import { useCompare } from '@/lib/compare'
 import { cn } from '@/lib/utils'
 
 const HIDDEN_PREFIXES = ['/ceo', '/dashboard', '/auth', '/ai-tools/chat']
@@ -39,6 +40,8 @@ export function WhatsAppBubble() {
   const { lang } = useLanguage()
   const isRtl = lang === 'ar'
   const [cta, setCta] = useState<CtaConfig | null>(null)
+  const { items } = useCompare()
+  const trayUp = items.length > 0
 
   useEffect(() => {
     let cancelled = false
@@ -73,6 +76,8 @@ export function WhatsAppBubble() {
       title={label}
       className={cn(
         'group fixed z-[60] flex h-14 w-14 max-sm:h-16 max-sm:w-16 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl ring-1 ring-black/10 transition-transform duration-300 hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none dark:ring-white/20 bottom-[max(6rem,calc(env(safe-area-inset-bottom)+4.5rem))]',
+        // Compare tray showing → keep one slot above عين's lifted slot.
+        trayUp && 'max-sm:bottom-[max(12.5rem,calc(env(safe-area-inset-bottom)+11rem))]',
         isRtl ? 'left-6' : 'right-6'
       )}
     >

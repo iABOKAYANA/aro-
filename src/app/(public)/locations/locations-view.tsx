@@ -105,7 +105,7 @@ function LocationCardItem({ card, index }: { card: LocationCard; index: number }
                   {title}
                 </h3>
                 {card.count > 0 && (
-                  <span className="shrink-0 whitespace-nowrap text-[11px] text-white/70">{card.count} {label}</span>
+                  <span className="shrink-0 whitespace-nowrap text-[11px] max-sm:text-xs text-white/70">{card.count} {label}</span>
                 )}
               </div>
               <p className="break-words text-sm text-white/80">

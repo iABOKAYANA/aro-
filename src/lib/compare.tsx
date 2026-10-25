@@ -153,22 +153,24 @@ function CompareTray() {
   if (items.length === 0) return null
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[70] flex justify-center px-4 pb-4">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[70] flex justify-center px-4 pb-4 max-sm:pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="pointer-events-auto w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-[#0d1428]/95 shadow-2xl backdrop-blur">
         <div className="flex flex-wrap items-center gap-3 px-4 py-3">
           <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-estate-gold">
             <GitCompareArrows className="h-4 w-4" />
             Compare
-            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white">
+            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] max-sm:text-xs text-white">
               {items.length}/{COMPARE_MAX}
             </span>
           </span>
 
-          <div className="flex flex-1 flex-wrap gap-2">
+          {/* One scrolling chip row on phones — a wrapping tray would change
+              height and no fixed-position lift could reliably clear it. */}
+          <div className="flex flex-1 flex-wrap gap-2 max-sm:flex-nowrap max-sm:overflow-x-auto">
             {items.map((item) => (
               <span
                 key={item.id}
-                className="inline-flex max-w-[10rem] items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-xs text-gray-200"
+                className="inline-flex max-w-[10rem] max-sm:shrink-0 items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-xs text-gray-200"
               >
                 <span className="truncate">{item.name}</span>
                 <button

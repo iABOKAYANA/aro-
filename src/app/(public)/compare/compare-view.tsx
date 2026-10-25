@@ -263,7 +263,7 @@ export default function CompareView({ ids }: { ids?: string }) {
         typeof i.startPrice === 'number' ? (
           <span className={i.id === cheapestId ? 'font-bold text-emerald-400' : 'text-white'}>
             {formatEGP(i.startPrice)}
-            {i.id === cheapestId && <span className="ml-1 text-[10px] font-bold">{ar ? 'أقل سعر معروض' : 'Lowest price here'}</span>}
+            {i.id === cheapestId && <span className="ml-1 text-[10px] max-sm:text-xs font-bold">{ar ? 'أقل سعر معروض' : 'Lowest price here'}</span>}
           </span>
         ) : (
           '—'
@@ -401,7 +401,7 @@ export default function CompareView({ ids }: { ids?: string }) {
                   >
                     {row.render(item)}
                     {row.label === 'Rating' && item.id === bestRatedId && (
-                      <span className="ml-1 text-[10px] font-bold text-estate-gold">{ar ? 'أعلى تقييم مطوّر' : 'Top-rated developer'}</span>
+                      <span className="ml-1 text-[10px] max-sm:text-xs font-bold text-estate-gold">{ar ? 'أعلى تقييم مطوّر' : 'Top-rated developer'}</span>
                     )}
                   </td>
                 ))}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { MessageCircle, Phone } from 'lucide-react'
 import { useLanguage } from '@/lib/language-context'
+import { useCompare } from '@/lib/compare'
 import { toTelHref, toWhatsAppHref } from '@/lib/contact-cta'
 import { cn } from '@/lib/utils'
 
@@ -52,6 +53,8 @@ export function FloatingContactCta() {
   // WhatsAppBubble (providers level) renders the green bubble when enabled
   // with a valid number — in that state our own WhatsApp pill is noise.
   const bubbleVisible = bubbleEnabled && whatsapp.replace(/\D/g, '').length >= 7
+  const { items: compareItems } = useCompare()
+  const trayUp = compareItems.length > 0
 
   const items = (
     [
@@ -96,7 +99,13 @@ export function FloatingContactCta() {
               ? bubbleVisible
                 ? 'bottom-[max(10rem,calc(env(safe-area-inset-bottom)+8.5rem))]'
                 : 'bottom-[max(6rem,calc(env(safe-area-inset-bottom)+4.5rem))]'
-              : 'bottom-[max(10rem,calc(env(safe-area-inset-bottom)+8.5rem))]'
+              : 'bottom-[max(10rem,calc(env(safe-area-inset-bottom)+8.5rem))]',
+            // Compare tray showing → every pill keeps its stack slot but one
+            // row higher (tray+notice bar ≈ 7rem on phones).
+            trayUp &&
+              (i === 0 && !bubbleVisible
+                ? 'max-sm:bottom-[max(12.5rem,calc(env(safe-area-inset-bottom)+11rem))]'
+                : 'max-sm:bottom-[max(17rem,calc(env(safe-area-inset-bottom)+15.5rem))]')
           )}
         >
           <span className="flex h-12 w-12 shrink-0 items-center justify-center max-sm:h-14 max-sm:w-14">
