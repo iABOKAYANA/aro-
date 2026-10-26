@@ -58,7 +58,15 @@ export function UnitCard({ unit, projectName, projectSlug, projectCoverImage }: 
   const image = sources[Math.min(stage, sources.length - 1)]
 
   return (
-    <Card className="group overflow-hidden card-hover">
+    <Card className="group relative overflow-hidden card-hover">
+      {/* Whole-card tap target (same stretched-overlay as ProjectCard): one
+          tap anywhere on the card opens the unit on the phone — no aiming for
+          the title. The favorite button stays clickable above it (z-10). */}
+      <Link
+        href={`/units/${unit.slug || unit.id}`}
+        aria-label={ar ? `فتح الوحدة ${cardTitle}` : `Open ${cardTitle}`}
+        className="absolute inset-0 z-[5] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-estate-gold"
+      />
       <div className="relative aspect-[16/10] overflow-hidden">
         <Image
           src={image}
@@ -77,7 +85,7 @@ export function UnitCard({ unit, projectName, projectSlug, projectCoverImage }: 
           </Badge>
         </div>
 
-        <button aria-label="Save to favorites" className="absolute end-3 top-3 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-background/80 text-foreground transition-colors hover:bg-background hover:text-red-500 md:min-h-0 md:min-w-0 md:p-2">
+        <button aria-label="Save to favorites" className="absolute end-3 top-3 z-10 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-background/80 text-foreground transition-colors hover:bg-background hover:text-red-500 md:min-h-0 md:min-w-0 md:p-2">
           <Heart className="h-4 w-4" />
         </button>
       </div>
