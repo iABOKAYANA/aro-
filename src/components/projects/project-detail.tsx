@@ -125,6 +125,17 @@ function PlanAnchorLine({ basePrice, plan, pricePerSqm }: { basePrice: number; p
   )
 }
 
+// One «price basis» option for the installment calculators: the recorded
+// buyable startingPrice of an offered unit category (from unitCategoryRows —
+// real inventory only), so a client can compute the installment for ANY
+// unit type, not just the project's first starting row.
+interface PriceOption {
+  id: string
+  labelAr: string
+  labelEn: string
+  price: number
+}
+
 // Plan-driven installment calculator for the payment tab: runs on the
 // project's REAL payment plans, not generic inputs. A native select picks
 // one of the published plans; down payment + years baseline from that plan
@@ -132,9 +143,12 @@ function PlanAnchorLine({ basePrice, plan, pricePerSqm }: { basePrice: number; p
 // baselined from the plan, one tap resets back. Monthly = equal
 // installments on the remainder after down, no interest (developer plans
 // carry 0% interest — same math as PlanAnchorLine + the sidebar
-// estimator). Returns null when there are no plans (the caller renders the
-// honest "no published plans" line instead and hides the calculator).
-function PlanCalculator({ plans, basePrice }: { plans: any[]; basePrice: number }) {
+// estimator). The calculation basis (price) is a second select: the
+// project's recorded starting price OR the recorded starting price of any
+// offered unit category — never invented. Returns null when there are no
+// plans (the caller renders the honest "no published plans" line instead
+// and hides the calculator).
+function PlanCalculator({ plans, basePrice, priceOptions }: { plans: any[]; basePrice: number; priceOptions: PriceOption[] }) {
   const { lang } = useLanguage()
   const ar = lang === 'ar'
   const list = Array.isArray(plans) ? plans.filter((p) => p && typeof p === 'object') : []
@@ -143,8 +157,15 @@ function PlanCalculator({ plans, basePrice }: { plans: any[]; basePrice: number 
   const [manual, setManual] = useState(false)
   const [customDp, setCustomDp] = useState<number | null>(null)
   const [customYears, setCustomYears] = useState<number | null>(null)
+  // Price basis: '' = the project's recorded starting price; anything else
+  // must match a real category option (startingPrice from buyable stock).
+  const [priceId, setPriceId] = useState('')
   const selected = list.find((p) => p?.id === selectedId) ?? defaultPlan
   if (!selected) return null
+
+  const priceBasis = priceOptions.find((o: PriceOption) => o.id === priceId) ?? null
+  // Bad state fallback (option gone between renders) → project start price.
+  const calcPrice = priceBasis && priceBasis.price > 0 ? priceBasis.price : basePrice
 
   const planDp = Number(selected?.downPaymentPct) || 0
   const planYears = Number(selected?.installmentYears) || 0
@@ -153,13 +174,13 @@ function PlanCalculator({ plans, basePrice }: { plans: any[]; basePrice: number 
   const discount = Number(selected?.cashDiscount) || 0
   const maint = Number(selected?.maintenanceFeePct) || 0
 
-  const priced = basePrice > 0
-  const downAmount = priced ? Math.round((basePrice * dp) / 100) : 0
-  const remainder = priced ? Math.max(0, basePrice - downAmount) : 0
+  const priced = calcPrice > 0
+  const downAmount = priced ? Math.round((calcPrice * dp) / 100) : 0
+  const remainder = priced ? Math.max(0, calcPrice - downAmount) : 0
   const monthly = priced && years > 0 ? Math.round(remainder / (years * 12)) : 0
-  const cashPrice = priced && discount > 0 ? Math.round(basePrice * (1 - discount / 100)) : null
-  const savings = cashPrice !== null ? basePrice - cashPrice : 0
-  const maintAmount = priced && maint > 0 ? Math.round((basePrice * maint) / 100) : 0
+  const cashPrice = priced && discount > 0 ? Math.round(calcPrice * (1 - discount / 100)) : null
+  const savings = cashPrice !== null ? calcPrice - cashPrice : 0
+  const maintAmount = priced && maint > 0 ? Math.round((calcPrice * maint) / 100) : 0
   const yearWord = years === 1 ? (ar ? 'سنة' : 'year') : (ar ? 'سنين' : 'years')
 
   const pickPlan = (id: string) => {
@@ -180,6 +201,33 @@ function PlanCalculator({ plans, basePrice }: { plans: any[]; basePrice: number 
         </CardTitle>
       </CardHeader>
       <CardContent className="min-w-0 space-y-4">
+        {priceOptions.length > 0 && (
+          <label className="block min-w-0">
+            <span className="mb-1 block text-xs text-muted-foreground">{ar ? 'احسب على أنهي وحدات؟' : 'Compute on which units?'}</span>
+            <select
+              value={priceId}
+              onChange={(e) => setPriceId(e.target.value)}
+              aria-label={ar ? 'احسب على أنهي وحدات' : 'Compute on which units'}
+              className="min-h-[44px] w-full rounded-xl border border-border bg-background px-3 py-2.5 text-base md:py-2 md:text-sm"
+            >
+              {basePrice > 0 && (
+                <option value="">
+                  {ar ? `سعر بداية المشروع — من ${formatEGP(basePrice)}` : `Project starting price — from ${formatEGP(basePrice)}`}
+                </option>
+              )}
+              {priceOptions.map((o: PriceOption) => (
+                <option key={o.id} value={o.id}>
+                  {ar ? `${o.labelAr} — من ${formatEGP(o.price)}` : `${o.labelEn} — from ${formatEGP(o.price)}`}
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-[11px] text-muted-foreground">
+              {priceBasis
+                ? (ar ? 'أرخص وحدة متاحة مسجّلة في النوع ده — الأسعار من المخزون الفعلي.' : 'Cheapest recorded available unit of this type — real inventory prices.')
+                : (ar ? 'أرخص سعر مسجّل على المشروع — الأسعار من المخزون الفعلي.' : 'Recorded project starting price — real inventory prices.')}
+            </span>
+          </label>
+        )}
         <label className="block min-w-0">
           <span className="mb-1 block text-xs text-muted-foreground">{ar ? 'اختار خطة السداد' : 'Choose a payment plan'}</span>
           <select
@@ -384,6 +432,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
   const [shareOpen, setShareOpen] = useState(false)
   const [calcDp, setCalcDp] = useState(20)
   const [calcYears, setCalcYears] = useState(5)
+  const [calcUnitId, setCalcUnitId] = useState('')
   // Hero display chain: cover → city landmark → placeholder. A dead (403)
   // cover steps to the landmark onError instead of rendering grey/broken.
   const heroSources = coverChain(project.coverImage, landmarkForCity(project.city))
@@ -413,7 +462,6 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
   }, [project.id])
 
   const basePrice = Number(project.startPrice) || 0
-  const monthlyPayment = basePrice > 0 ? Math.round((basePrice * (1 - calcDp / 100)) / (calcYears * 12)) : 0
 
   // Egyptian-dialect text that reads well inside a WhatsApp bubble.
   const shareText = ar ? `بص على المشروع ده على غاية: ${project.name}` : `Check out this project on GHAYA: ${project.name}`
@@ -485,6 +533,23 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
   // rule, so a 500-unit compound reads as a short type list, not a flood of
   // unit cards. Individual unit cards only render for small inventories.
   const categoryRows = unitCategoryRows(listedUnits)
+
+  // The installment calculators (payment tab + sidebar) may run on the
+  // recorded buyable startingPrice of ANY offered category — owner request:
+  // «أحسب بقيت الوحدات، مش أول وحدة بس». Options come from real inventory
+  // only (unitCategoryRows skips samples and non-buyable statuses); a
+  // category without a recorded price simply offers no basis.
+  const unitPriceOptions: PriceOption[] = categoryRows
+    .filter((r) => typeof r.startingPrice === 'number' && (r.startingPrice ?? 0) > 0)
+    .map((r) => ({
+      id: r.key,
+      labelAr: `${r.labelAr} · ${r.count} ${r.count === 1 ? 'وحدة' : 'وحدات'}`,
+      labelEn: `${r.labelEn} · ${r.count} ${r.count === 1 ? 'unit' : 'units'}`,
+      price: r.startingPrice as number,
+    }))
+  const calcChosen = unitPriceOptions.find((o) => o.id === calcUnitId) ?? null
+  const calcPriceBasis = calcChosen && calcChosen.price > 0 ? calcChosen.price : basePrice
+  const monthlyPayment = calcPriceBasis > 0 ? Math.round((calcPriceBasis * (1 - calcDp / 100)) / (calcYears * 12)) : 0
   // Individual cards only for SMALL inventories (at most 12) — big compounds
   // (500+ units) read as the category summary alone, never a flood of cards,
   // and never a cheapest-12 skew (buyable inventory is price-ascending).
@@ -924,7 +989,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
               )}
               {project.paymentPlans?.length > 0 ? (
                 <>
-                  <PlanCalculator key={project.id} plans={project.paymentPlans} basePrice={basePrice} />
+                  <PlanCalculator key={project.id} plans={project.paymentPlans} basePrice={basePrice} priceOptions={unitPriceOptions} />
                   {/* Headline discount across the plan set ("up to X%"). */}
                   {maxPlanDiscount !== null && (
                     <p className="rounded-2xl border border-green-200 bg-green-50 p-4 text-center text-sm dark:border-green-900 dark:bg-green-950">
@@ -1397,13 +1462,38 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                 </Link>
               </Button>
 
-              {basePrice > 0 && (
+              {(basePrice > 0 || unitPriceOptions.length > 0) && (
                 <div className="border-t pt-4">
                   <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     {ar ? 'حاسبة القسط الشهري' : 'Monthly Installment Estimator'}
                   </p>
+                  {unitPriceOptions.length > 0 && (
+                    <select
+                      value={calcUnitId}
+                      onChange={(e) => setCalcUnitId(e.target.value)}
+                      aria-label={ar ? 'احسب على أنهي وحدات' : 'Compute on which units'}
+                      className="mb-2 min-h-[44px] w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                    >
+                      {basePrice > 0 && (
+                        <option value="">
+                          {ar ? `سعر بداية المشروع — من ${formatEGP(basePrice)}` : `Project starting price — from ${formatEGP(basePrice)}`}
+                        </option>
+                      )}
+                      {unitPriceOptions.map((o: PriceOption) => (
+                        <option key={o.id} value={o.id}>
+                          {ar ? `${o.labelAr} — من ${formatEGP(o.price)}` : `${o.labelEn} — from ${formatEGP(o.price)}`}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   <div className="mb-3 rounded-2xl border border-estate-gold/30 bg-estate-gold/5 p-3 text-center">
                     <p className="text-2xl font-bold text-estate-gold">{formatEGP(monthlyPayment)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {calcChosen
+                        ? (ar ? `شقة النوع: ${calcChosen.labelAr}` : calcChosen.labelEn)
+                        : (ar ? 'على سعر بداية المشروع' : 'on the project starting price')}
+                      {' · '}{ar ? 'تقدير تقريبي' : 'estimate'}
+                    </p>
                     <p className="text-xs text-muted-foreground">{ar ? `في الشهر · على ${calcYears} سنين` : `per month · over ${calcYears} years`}</p>
                   </div>
                   <label className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
