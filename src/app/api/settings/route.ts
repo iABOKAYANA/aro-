@@ -3,6 +3,8 @@ import { db } from '@/lib/db'
 import { auth } from '@/lib/auth'
 import { requireCEOApi } from '@/lib/permissions'
 import { CTA_STORAGE_KEY, normalizeCtaPhone } from '@/lib/contact-cta'
+import { HERO_SHOWCASE_DEFAULTS } from '@/lib/home-hero'
+import { PUBLIC_PROJECT_WHERE } from '@/lib/project-visibility'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,6 +70,7 @@ const ALLOWED_KEYS: Record<string, string[]> = {
   ai: ['searchEnabled', 'recommendationsEnabled', 'priceEstimation', 'dnaEnabled', 'anomalyDetectionEnabled', 'anomalyThresholdPct', 'journeyTrackingEnabled', 'watchAlertsEnabled', 'dataFreshnessDays'],
   notifications: ['email', 'sms', 'newLead', 'newInquiry', 'weeklyReport'],
   cta: ['enabled', 'whatsappNumber', 'messageEn', 'messageAr', 'labelEn', 'labelAr', 'phone', 'whatsapp'],
+  home_hero: ['imageUrl', 'captionAr', 'captionEn', 'linkMode', 'projectSlug', 'projectNameAr', 'projectNameEn'],
 }
 
 export async function GET() {
@@ -80,7 +83,7 @@ export async function GET() {
     // rates at defaults. Internal sections (ai/notifications/…) still require
     // the CEO session.
     const isSignedIn = !!(session?.user as any)?.id
-    const publicSections = new Set(['company', 'platform', 'cta'])
+    const publicSections = new Set(['company', 'platform', 'cta', 'home_hero'])
     const settings = await db.systemSetting.findMany({
       where: isSignedIn ? {} : { category: { in: [...publicSections] } },
     })
@@ -90,6 +93,7 @@ export async function GET() {
       ai: { ...DEFAULTS.ai },
       notifications: { ...DEFAULTS.notifications },
       cta: { ...DEFAULTS.cta },
+      home_hero: { ...HERO_SHOWCASE_DEFAULTS },
     }
 
     // Only whitelisted sections/keys are ever returned. Internal categories
@@ -149,7 +153,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'section and data are required' }, { status: 400 })
     }
 
-    const validSections = ['company', 'platform', 'ai', 'notifications', 'cta']
+    const validSections = ['company', 'platform', 'ai', 'notifications', 'cta', 'home_hero']
     if (!validSections.includes(section)) {
       return NextResponse.json({ error: 'Invalid section' }, { status: 400 })
     }
@@ -188,6 +192,40 @@ export async function POST(request: NextRequest) {
       }
       if (size > 10_000) {
         return NextResponse.json({ error: `Value for ${key} is too large` }, { status: 400 })
+      }
+    }
+    // Home-hero showcase integrity: the link target must be a real PUBLIC
+    // project (a broken slug would advertise a 404 on the homepage), the
+    // mode is a strict enum, and the image may only be our own static path
+    // or an https URL. Display names are auto-synced from the catalog row —
+    // they can never drift from what the project page actually shows.
+    if (section === 'home_hero') {
+      const map = Object.fromEntries(entries)
+      const mode = map.linkMode
+      if (mode !== undefined && mode !== 'none' && mode !== 'project') {
+        return NextResponse.json({ error: 'Invalid home_hero.linkMode' }, { status: 400 })
+      }
+      const img = typeof map.imageUrl === 'string' ? map.imageUrl : ''
+      if (img !== '' && !img.startsWith('/') && !img.startsWith('https://')) {
+        return NextResponse.json({ error: 'Invalid home_hero.imageUrl' }, { status: 400 })
+      }
+      const slug = typeof map.projectSlug === 'string' ? map.projectSlug.trim() : ''
+      if (slug !== '') {
+        if (!/^[a-z0-9-]{1,120}$/.test(slug)) {
+          return NextResponse.json({ error: 'Invalid home_hero.projectSlug' }, { status: 400 })
+        }
+        const project = await db.project.findFirst({
+          where: { ...PUBLIC_PROJECT_WHERE, slug },
+          select: { name: true, nameArabic: true },
+        })
+        if (!project) {
+          return NextResponse.json(
+            { error: 'home_hero.projectSlug: not a public project' },
+            { status: 400 }
+          )
+        }
+        entries.push(['projectNameAr', project.nameArabic ?? project.name])
+        entries.push(['projectNameEn', project.name])
       }
     }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -16,12 +16,19 @@ import {
   Loader2,
   X,
   MessageCircle,
+  ImageIcon,
+  Upload,
 } from 'lucide-react'
 import { useLanguage } from '@/lib/language-context'
 import { Reveal } from '@/components/design'
 
-interface SettingsState {
-  company: {
+interface ProjectOption {
+  slug: string
+  name: string
+  nameArabic: string
+}
+
+interface SettingsState {  company: {
     name: string
     email: string
     phone: string
@@ -55,6 +62,15 @@ interface SettingsState {
     labelAr: string
     phone: string
     whatsapp: string
+  }
+  home_hero: {
+    imageUrl: string
+    captionAr: string
+    captionEn: string
+    linkMode: 'none' | 'project'
+    projectSlug: string
+    projectNameAr: string
+    projectNameEn: string
   }
 }
 
@@ -93,6 +109,15 @@ const defaultSettings: SettingsState = {
     labelAr: 'كلّمنا على واتساب',
     phone: '',
     whatsapp: '',
+  },
+  home_hero: {
+    imageUrl: '',
+    captionAr: '',
+    captionEn: '',
+    linkMode: 'none' as 'none' | 'project',
+    projectSlug: '',
+    projectNameAr: '',
+    projectNameEn: '',
   },
 }
 
@@ -165,6 +190,61 @@ export default function CEOSettingsPage() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [retryKey, setRetryKey] = useState(0)
+  // Home-hero showcase: public projects for the link picker + upload state.
+  const [heroProjects, setHeroProjects] = useState<ProjectOption[]>([])
+  const heroFileRef = useRef<HTMLInputElement>(null)
+  const [heroUploading, setHeroUploading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/projects?limit=50')
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return
+        if (Array.isArray(d.projects)) {
+          setHeroProjects(
+            d.projects
+              .map((p: any) => ({
+                slug: String(p.slug ?? ''),
+                name: String(p.name ?? ''),
+                nameArabic: String(p.nameArabic ?? ''),
+              }))
+              .filter((o: ProjectOption) => o.slug !== '')
+          )
+        }
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // CEO image upload for the hero showcase — /api/ceo/upload returns the
+  // stored URL; apply it locally so the CEO saves it together with the rest.
+  async function handleHeroUpload(file: File) {
+    setHeroUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/ceo/upload', {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: fd,
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && typeof data.url === 'string' && data.url) {
+        update('home_hero', 'imageUrl', data.url)
+        setToast(ar ? 'الصورة اترفعت — اضغط احفظ' : 'Image uploaded — press Save')
+      } else {
+        setToast(ar ? 'معرفناش نرفع الصورة' : 'Could not upload the image')
+      }
+    } catch {
+      setToast(ar ? 'معرفناش نرفع الصورة' : 'Could not upload the image')
+    } finally {
+      setHeroUploading(false)
+      if (heroFileRef.current) heroFileRef.current.value = ''
+    }
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -179,6 +259,10 @@ export default function CEOSettingsPage() {
             ai: { ...prev.ai, ...data.ai },
             notifications: { ...prev.notifications, ...data.notifications },
             cta: { ...prev.cta, ...data.cta },
+            home_hero: {
+              ...prev.home_hero,
+              ...(typeof data.home_hero === 'object' && data.home_hero ? data.home_hero : {}),
+            },
           }))
         } else {
           setLoadError(true)
@@ -422,6 +506,172 @@ export default function CEOSettingsPage() {
               className="bg-gradient-to-r from-estate-gold to-yellow-600 text-[#0F1A2C]"
             >
               {saving === 'cta' ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {ar ? 'احفظ' : 'Save'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Home-hero showcase — the arched homepage image, fully CEO-controlled:
+          swap the image (upload), override the floating caption (AR/EN), and
+          choose image-only vs. click-opens-project. Unset = built-in default. */}
+      <Card className="border-border dark:border-[#262626] bg-card dark:bg-[#0A0A0A] backdrop-blur-sm">
+        <CardHeader>
+          <SectionHeader icon={ImageIcon} title={ar ? 'عرض الصفحة الرئيسية (الهيرو)' : 'Homepage Hero Showcase'} />
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap items-start gap-4">
+            {/* Live preview in the same arch shape the homepage renders */}
+            <div className="h-32 w-24 shrink-0 overflow-hidden rounded-t-full ring-1 ring-estate-gold/40 bg-gradient-to-br from-estate-sand to-estate-sand-dark">
+              {settings.home_hero.imageUrl !== '' && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={settings.home_hero.imageUrl}
+                  alt={ar ? 'معاينة صورة الهيرو' : 'Hero image preview'}
+                  className="h-full w-full object-cover"
+                />
+              )}
+            </div>
+            <div className="min-w-[240px] flex-1 space-y-2">
+              <input
+                ref={heroFileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) void handleHeroUpload(file)
+                }}
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => heroFileRef.current?.click()}
+                  disabled={heroUploading}
+                  className="border-border dark:border-[#262626]"
+                >
+                  {heroUploading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="mr-2 h-4 w-4" />
+                  )}
+                  {ar ? 'ارفع صورة' : 'Upload image'}
+                </Button>
+                {settings.home_hero.imageUrl !== '' && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => update('home_hero', 'imageUrl', '')}
+                    className="border-border dark:border-[#262626]"
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    {ar ? 'شيل الصورة (ارجع للأصلية)' : 'Remove (restore default)'}
+                  </Button>
+                )}
+              </div>
+              <p className="text-[11px] text-gray-500">
+                {ar
+                  ? 'صورة رأسية (٤:٣ تقريباً). فاضية = الصورة الأصلية زي ما هي.'
+                  : 'Vertical image (≈4:3). Empty = the built-in default stays.'}
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-gray-400">{ar ? 'التعليق (عربي)' : 'Caption (Arabic)'}</label>
+              <Input
+                value={settings.home_hero.captionAr}
+                onChange={(e) => update('home_hero', 'captionAr', e.target.value)}
+                placeholder="مساحات مصممة للحياة"
+                maxLength={160}
+                className="border-border dark:border-[#262626] bg-card dark:bg-[#0A0A0A] text-foreground placeholder:text-muted-foreground focus:border-estate-gold/50"
+              />
+              <p className="text-[11px] text-gray-500">{ar ? 'فاضي = التعليق الأصلي.' : 'Empty = built-in caption.'}</p>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-gray-400">{ar ? 'التعليق (إنجليزي)' : 'Caption (English)'}</label>
+              <Input
+                value={settings.home_hero.captionEn}
+                onChange={(e) => update('home_hero', 'captionEn', e.target.value)}
+                placeholder="Spaces Designed for Living"
+                maxLength={160}
+                dir="ltr"
+                className="border-border dark:border-[#262626] bg-card dark:bg-[#0A0A0A] text-foreground placeholder:text-muted-foreground focus:border-estate-gold/50"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-gray-400">{ar ? 'لما الزائر يدوس على الصورة' : 'When the visitor clicks the image'}</label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => update('home_hero', 'linkMode', 'none')}
+                className={`rounded-full px-4 py-2 text-sm transition-colors ${
+                  settings.home_hero.linkMode === 'none'
+                    ? 'bg-estate-gold text-[#0F1A2C]'
+                    : 'border border-border dark:border-[#262626] text-foreground hover:border-estate-gold/50'
+                }`}
+              >
+                {ar ? 'مرور صورة بس (مفيش رابط)' : 'Image only (no link)'}
+              </button>
+              <button
+                type="button"
+                onClick={() => update('home_hero', 'linkMode', 'project')}
+                className={`rounded-full px-4 py-2 text-sm transition-colors ${
+                  settings.home_hero.linkMode === 'project'
+                    ? 'bg-estate-gold text-[#0F1A2C]'
+                    : 'border border-border dark:border-[#262626] text-foreground hover:border-estate-gold/50'
+                }`}
+              >
+                {ar ? 'تفتح على مشروع' : 'Opens a project'}
+              </button>
+            </div>
+            {settings.home_hero.linkMode === 'project' && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-gray-400">{ar ? 'اختار المشروع' : 'Pick the project'}</label>
+                <select
+                  value={settings.home_hero.projectSlug}
+                  onChange={(e) => {
+                    const opt = heroProjects.find((o) => o.slug === e.target.value)
+                    setSettings((prev) => ({
+                      ...prev,
+                      home_hero: {
+                        ...prev.home_hero,
+                        projectSlug: e.target.value,
+                        projectNameAr: opt?.nameArabic || opt?.name || '',
+                        projectNameEn: opt?.name || '',
+                      },
+                    }))
+                  }}
+                  className="w-full rounded-2xl border border-border dark:border-[#262626] bg-card dark:bg-[#0A0A0A] px-3 py-2 text-sm text-foreground outline-none focus:border-estate-gold/50"
+                >
+                  <option value="">{ar ? '— اختار —' : '— pick one —'}</option>
+                  {heroProjects.map((o) => (
+                    <option key={o.slug} value={o.slug}>
+                      {o.nameArabic || o.name}
+                    </option>
+                  ))}
+                </select>
+                {settings.home_hero.projectSlug === '' && (
+                  <p className="text-xs text-red-400">{ar ? 'لازم تختار مشروع قبل ما تحفظ.' : 'Pick a project before saving.'}</p>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end pt-2">
+            <Button
+              onClick={() => handleSave('home_hero')}
+              disabled={saving === 'home_hero' || heroUploading || (settings.home_hero.linkMode === 'project' && settings.home_hero.projectSlug === '')}
+              className="bg-gradient-to-r from-estate-gold to-yellow-600 text-[#0F1A2C]"
+            >
+              {saving === 'home_hero' ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Save className="mr-2 h-4 w-4" />

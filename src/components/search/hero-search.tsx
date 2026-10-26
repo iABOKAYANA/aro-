@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Sparkles, ArrowLeft, ArrowRight, Mic } from 'lucide-react'
 import { useLanguage } from '@/lib/language-context'
@@ -40,7 +41,13 @@ function getVoiceRecognizerCtor(): VoiceRecognizerCtor | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
 }
 
-export function HeroSearch({ availableUnits }: { availableUnits: number | null }) {
+export function HeroSearch({
+  availableUnits,
+  hero,
+}: {
+  availableUnits: number | null
+  hero?: import('@/lib/home-hero').HeroShowcase | null
+}) {
   const router = useRouter()
   const { lang } = useLanguage()
   const [question, setQuestion] = useState('')
@@ -184,50 +191,24 @@ export function HeroSearch({ availableUnits }: { availableUnits: number | null }
                 would be squared/clipped by a clip-path reveal. Phone keeps a
                 narrower arch so the headline + search stay near the fold. */}
             {/* Above-fold: plain div, NOT <Reveal/> (same LCP gating reason). */}
-            <div className="relative mx-auto max-w-[280px] sm:max-w-[420px]">
-            <div className="animate-float-slow relative">
-              <div
-                className="arch relative bg-white ring-1 ring-estate-gold/40 dark:bg-[#0A0A0A]"
-                style={{ aspectRatio: '3/4' }}
+            {/* CEO-controlled showcase: image/caption come from SystemSetting
+                (home_hero); when the CEO set link-mode 'project' the whole
+                arch becomes the click target into that project's page.
+                Default (nothing configured) renders the built-in showcase
+                exactly as before — image only. */}
+            {hero?.linkMode === 'project' && hero.projectSlug ? (
+              <Link
+                href={`/projects/${hero.projectSlug}`}
+                aria-label={isRtl
+                  ? `افتح المشروع: ${hero.projectNameAr || hero.projectNameEn || ''}`
+                  : `Open project: ${hero.projectNameEn || hero.projectNameAr || ''}`}
+                className="block rounded-t-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-estate-gold"
               >
-                <Image
-                  src="/images/uploads/1791413758072-611f2f09.webp"
-                  alt={isRtl ? 'اليجريا — سوديك' : 'Allegria — SODIC'}
-                  fill
-                  priority
-                  fetchPriority="high"
-                  className="h-full w-full object-cover"
-                  sizes="(max-width: 640px) 280px, 420px"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.style.display = 'none'
-                    target.parentElement!.classList.add('bg-gradient-to-br', 'from-estate-sand', 'to-estate-sand-dark')
-                  }}
-                />
-              </div>
-
-              <div className="absolute -bottom-4 -left-2 rounded-2xl bg-estate-copper px-4 py-3 text-[#0F1A2C] shadow-xl sm:-left-4 sm:px-6 sm:py-5">
-                {availableUnits !== null ? (
-                  <>
-                    <p className="text-2xl font-bold sm:text-3xl">
-                      {new Intl.NumberFormat(isRtl ? 'ar-EG' : 'en-US').format(availableUnits)}
-                    </p>
-                    <p className="text-sm">{isRtl ? 'وحدة متاحة' : 'Available units'}</p>
-                    <p className="text-xs font-medium">{isRtl ? 'بسعر مسجل' : 'with a recorded price'}</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-lg font-bold">{isRtl ? 'كتالوج غاية' : 'GHAYA catalog'}</p>
-                    <p className="text-sm">{isRtl ? 'مشاريع عقارية في مصر' : 'Egyptian real estate'}</p>
-                  </>
-                )}
-              </div>
-
-              <div className="absolute -bottom-6 right-0 max-w-[62%] rounded-full bg-white/90 px-4 py-2 text-center text-sm font-medium text-gray-700 shadow-md dark:border dark:border-[#262626] dark:bg-[#0A0A0A] dark:text-white sm:left-1/2 sm:right-auto sm:max-w-[92%] sm:-translate-x-1/2 sm:-bottom-8 sm:whitespace-nowrap">
-                {isRtl ? 'مساحات مصممة للحياة' : 'Spaces Designed for Living'}
-              </div>
-            </div>
-            </div>
+                <ArchShowcase hero={hero} availableUnits={availableUnits} isRtl={isRtl} linked />
+              </Link>
+            ) : (
+              <ArchShowcase hero={hero} availableUnits={availableUnits} isRtl={isRtl} />
+            )}
           </div>
 
           <div className="w-full text-center lg:w-[50%] lg:text-right">
@@ -354,5 +335,84 @@ export function HeroSearch({ availableUnits }: { availableUnits: number | null }
         </div>
       </div>
     </section>
+  )
+}
+
+/**
+ * The arched image showcase (image + stat badge + caption pill), extracted so
+ * it can render either bare (image-only mode) or inside a project Link
+ * (linked mode — gold ring+lift on hover so it reads as tappable).
+ * Everything visual now comes from the CEO's home_hero settings; unset
+ * fields keep the built-in defaults, so the empty hero can never break.
+ */
+function ArchShowcase({
+  hero,
+  availableUnits,
+  isRtl,
+  linked = false,
+}: {
+  hero?: import('@/lib/home-hero').HeroShowcase | null
+  availableUnits: number | null
+  isRtl: boolean
+  linked?: boolean
+}) {
+  const imageUrl = hero?.imageUrl || '/images/uploads/1791413758072-611f2f09.webp'
+  const caption =
+    isRtl
+      ? (hero?.captionAr || hero?.captionEn || 'مساحات مصممة للحياة')
+      : (hero?.captionEn || hero?.captionAr || 'Spaces Designed for Living')
+  const linkedName =
+    isRtl
+      ? (hero?.projectNameAr || hero?.projectNameEn || '')
+      : (hero?.projectNameEn || hero?.projectNameAr || '')
+  return (
+    <div className="relative mx-auto max-w-[280px] sm:max-w-[420px]">
+      <div className="animate-float-slow relative">
+        <div
+          className={`arch relative bg-white ring-1 transition-[box-shadow,transform] duration-300 dark:bg-[#0A0A0A] ${
+            linked
+              ? 'cursor-pointer ring-estate-gold/40 hover:scale-[1.01] hover:ring-estate-gold/80 hover:shadow-[0_20px_60px_-20px_rgba(212,168,67,0.45)]'
+              : 'ring-estate-gold/40'
+          }`}
+          style={{ aspectRatio: '3/4' }}
+        >
+          <Image
+            src={imageUrl}
+            alt={linked && linkedName ? linkedName : (isRtl ? 'اليجريا — سوديك' : 'Allegria — SODIC')}
+            fill
+            priority
+            fetchPriority="high"
+            className="h-full w-full object-cover"
+            sizes="(max-width: 640px) 280px, 420px"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement
+              target.style.display = 'none'
+              target.parentElement!.classList.add('bg-gradient-to-br', 'from-estate-sand', 'to-estate-sand-dark')
+            }}
+          />
+        </div>
+
+        <div className="absolute -bottom-4 -left-2 rounded-2xl bg-estate-copper px-4 py-3 text-[#0F1A2C] shadow-xl sm:-left-4 sm:px-6 sm:py-5">
+          {availableUnits !== null ? (
+            <>
+              <p className="text-2xl font-bold sm:text-3xl">
+                {new Intl.NumberFormat(isRtl ? 'ar-EG' : 'en-US').format(availableUnits)}
+              </p>
+              <p className="text-sm">{isRtl ? 'وحدة متاحة' : 'Available units'}</p>
+              <p className="text-xs font-medium">{isRtl ? 'بسعر مسجل' : 'with a recorded price'}</p>
+            </>
+          ) : (
+            <>
+              <p className="text-lg font-bold">{isRtl ? 'كتالوج غاية' : 'GHAYA catalog'}</p>
+              <p className="text-sm">{isRtl ? 'مشاريع عقارية في مصر' : 'Egyptian real estate'}</p>
+            </>
+          )}
+        </div>
+
+        <div className="absolute -bottom-6 right-0 max-w-[62%] rounded-full bg-white/90 px-4 py-2 text-center text-sm font-medium text-gray-700 shadow-md dark:border dark:border-[#262626] dark:bg-[#0A0A0A] dark:text-white sm:left-1/2 sm:right-auto sm:max-w-[92%] sm:-translate-x-1/2 sm:-bottom-8 sm:whitespace-nowrap">
+          {caption}
+        </div>
+      </div>
+    </div>
   )
 }

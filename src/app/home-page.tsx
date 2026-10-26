@@ -43,9 +43,11 @@ function formatCount(value: number, lang: 'en' | 'ar'): string {
 export function HomePage({
   siteStats,
   initialProjects,
+  hero,
 }: {
   siteStats: PublicHomepageStats | null
   initialProjects: any[]
+  hero: import('@/lib/home-hero').HeroShowcase | null
 }) {
   const { t, lang } = useLanguage()
   const projects = initialProjects
@@ -78,7 +80,7 @@ export function HomePage({
 
   return (
     <div className="dark:bg-black">
-      <HeroSearch availableUnits={siteStats?.availableUnitCount ?? null} />
+      <HeroSearch availableUnits={siteStats?.availableUnitCount ?? null} hero={hero} />
 
       {/* Server-counted public catalog metrics — never totals from the first 6 cards. */}
       {siteStats && (
