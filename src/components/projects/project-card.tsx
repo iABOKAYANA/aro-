@@ -86,6 +86,17 @@ export function ProjectCard({ project }: ProjectCardProps) {
     <div
       className="arch-card group relative overflow-hidden bg-white transition-all duration-300 hover:shadow-lg hover:shadow-estate-gold/20 dark:bg-[#0A0A0A] dark:hover:shadow-black/50"
     >
+      {/* Whole-card click target (stretched overlay): every pixel of the card
+          opens the project — no need to aim for the title. Non-interactive
+          areas (image, badges, location, price) sit under it; the actual
+          controls (master plan, favorite, compare toggle) get z-10 to stay
+          clickable without triggering navigation. */}
+      <Link
+        href={`/projects/${project.slug}`}
+        aria-label={lang === 'ar' ? `فتح مشروع ${projectName}` : `Open ${projectName}`}
+        className="absolute inset-0 z-[5] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-estate-gold"
+      />
+
       {/* Image — Ken Burns drift runs on hover only (no infinite animation in grids — perf) */}
       <div className="arch kenburns relative aspect-[16/10] overflow-hidden">
         <Image
@@ -111,7 +122,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <button
             type="button"
             onClick={() => setPlanIdx(0)}
-            className="absolute left-4 top-12 inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm transition-colors hover:bg-estate-gold hover:text-[#0F1A2C] md:min-h-0"
+            className="absolute left-4 top-12 z-10 inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm transition-colors hover:bg-estate-gold hover:text-[#0F1A2C] md:min-h-0"
             aria-label={lang === 'ar' ? 'المستر بلان — عرض المستر بلان' : 'MASTER PLAN — View master plan'}
           >
             <LayoutGrid className="h-3 w-3" />
@@ -120,7 +131,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         )}
 
         {/* Favorite — top-4/right-4 clears the card arch curve */}
-        <button aria-label="Save to favorites" className="absolute right-4 top-4 flex h-8 w-8 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-red-500 md:min-h-0 md:min-w-0 md:h-8 md:w-8">
+        <button aria-label="Save to favorites" className="absolute right-4 top-4 z-10 flex h-8 w-8 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-red-500 md:min-h-0 md:min-w-0 md:h-8 md:w-8">
           <Heart className="h-4 w-4" />
         </button>
 
@@ -207,7 +218,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
               {lowestPrice ? formatEGP(lowestPrice) : 'N/A'}
             </p>
           </div>
-          <div className="flex items-center gap-2.5 text-gray-400">
+          <div className="relative z-10 flex items-center gap-2.5 text-gray-400">
             <CompareToggle project={{ id: project.id, slug: project.slug, name: projectName }} />
             {project.viewCount > 0 && (
               <span className="flex items-center gap-1 text-[11px]">
