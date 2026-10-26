@@ -26,6 +26,7 @@ interface ProjectOption {
   slug: string
   name: string
   nameArabic: string
+  coverImage?: string | null
 }
 
 interface SettingsState {  company: {
@@ -208,6 +209,7 @@ export default function CEOSettingsPage() {
                 slug: String(p.slug ?? ''),
                 name: String(p.name ?? ''),
                 nameArabic: String(p.nameArabic ?? ''),
+                coverImage: p.coverImage ? String(p.coverImage) : null,
               }))
               .filter((o: ProjectOption) => o.slug !== '')
           )
@@ -302,6 +304,15 @@ export default function CEOSettingsPage() {
       setSaving(null)
     }
   }
+
+  // Home-hero image preview: a "@cover:<slug>" sentinel renders the picked
+  // project's catalog cover; plain values render as-is; '' shows the arch
+  // with the built-in default placeholder.
+  const heroImgRaw = settings.home_hero.imageUrl
+  const heroSentinelCov = /^@cover:(.+)$/.exec(heroImgRaw)
+  const heroPreviewSrc = heroSentinelCov
+    ? (heroProjects.find((o) => o.slug === settings.home_hero.projectSlug)?.coverImage ?? '')
+    : heroImgRaw
 
   if (loading) {
     return (
@@ -525,12 +536,14 @@ export default function CEOSettingsPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex flex-wrap items-start gap-4">
-            {/* Live preview in the same arch shape the homepage renders */}
+            {/* Live preview in the same arch shape the homepage renders. A
+                "@cover:<slug>" sentinel renders the picked project's catalog
+                cover, so the CEO sees exactly what the homepage will show. */}
             <div className="h-32 w-24 shrink-0 overflow-hidden rounded-t-full ring-1 ring-estate-gold/40 bg-gradient-to-br from-estate-sand to-estate-sand-dark">
-              {settings.home_hero.imageUrl !== '' && (
+              {heroPreviewSrc !== '' && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={settings.home_hero.imageUrl}
+                  src={heroPreviewSrc}
                   alt={ar ? 'معاينة صورة الهيرو' : 'Hero image preview'}
                   className="h-full w-full object-cover"
                 />
@@ -581,6 +594,13 @@ export default function CEOSettingsPage() {
                   ? 'صورة رأسية (٤:٣ تقريباً). فاضية = الصورة الأصلية زي ما هي.'
                   : 'Vertical image (≈4:3). Empty = the built-in default stays.'}
               </p>
+              {heroSentinelCov && (
+                <p className="text-[11px] text-estate-gold">
+                  {ar
+                    ? 'بيستخدم صورة غلاف المشروع من الكتالوج — وبتتحدث لوحدها لو الغلاف اتغير.'
+                    : "Using the project's catalog cover — it updates automatically if the cover changes."}
+                </p>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -647,6 +667,12 @@ export default function CEOSettingsPage() {
                         projectSlug: e.target.value,
                         projectNameAr: opt?.nameArabic || opt?.name || '',
                         projectNameEn: opt?.name || '',
+                        // Picking a project auto-fills its cover as the hero
+                        // image — stored as the live-catalog sentinel so
+                        // future cover changes in the catalog flow into the
+                        // homepage without re-saving. A custom upload after
+                        // picking replaces it with a plain path.
+                        imageUrl: e.target.value !== '' ? `@cover:${e.target.value}` : prev.home_hero.imageUrl,
                       },
                     }))
                   }}

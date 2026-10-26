@@ -205,11 +205,17 @@ export async function POST(request: NextRequest) {
       if (mode !== undefined && mode !== 'none' && mode !== 'project') {
         return NextResponse.json({ error: 'Invalid home_hero.linkMode' }, { status: 400 })
       }
+      const slug = typeof map.projectSlug === 'string' ? map.projectSlug.trim() : ''
       const img = typeof map.imageUrl === 'string' ? map.imageUrl : ''
       if (img !== '' && !img.startsWith('/') && !img.startsWith('https://')) {
-        return NextResponse.json({ error: 'Invalid home_hero.imageUrl' }, { status: 400 })
+        // The "@cover:<slug>" sentinel ("use the linked project's live cover")
+        // is the one non-URL form allowed — and only when it matches the
+        // linked project in the same payload.
+        const sentinel = /^@cover:([a-z0-9-]{1,120})$/.exec(img)
+        if (!(sentinel && slug !== '' && sentinel[1] === slug)) {
+          return NextResponse.json({ error: 'Invalid home_hero.imageUrl' }, { status: 400 })
+        }
       }
-      const slug = typeof map.projectSlug === 'string' ? map.projectSlug.trim() : ''
       if (slug !== '') {
         if (!/^[a-z0-9-]{1,120}$/.test(slug)) {
           return NextResponse.json({ error: 'Invalid home_hero.projectSlug' }, { status: 400 })

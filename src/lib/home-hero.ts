@@ -46,26 +46,38 @@ export function sanitizeHeroShowcase(input: Partial<
     const s = v.trim().slice(0, max)
     return s
   }
-  const rawMode = typeof input.linkMode === 'string' ? input.linkMode : ''
+  // Slug first: both the link mode and the sentinel image reference depend
+  // on it (sentinel mismatch → cleared, see below).
   const slug = /^[a-z0-9-]{1,120}$/.test(cleanStr(input.projectSlug, 120))
     ? (cleanStr(input.projectSlug, 120) as string)
     : ''
+  const rawMode = typeof input.linkMode === 'string' ? input.linkMode : ''
+  const linkMode: HeroShowcaseLinkMode =
+    rawMode === 'project' && slug !== ''
+      ? ('project' as HeroShowcaseLinkMode)
+      : ('none' as HeroShowcaseLinkMode)
   // The image must live on our own static path or be an https URL (blob CDN);
   // anything else (data:, javascript:, relative ../) falls back to default.
   const imgRaw = cleanStr(input.imageUrl, 600)
-  const imageUrl =
+  let imageUrl =
     imgRaw === '' || imgRaw.startsWith('/') || imgRaw.startsWith('https://')
       ? imgRaw
       : ''
+  // "@cover:<slug>" sentinel = "use the linked project's LIVE catalog cover".
+  // It is only meaningful when it matches the linked project — any mismatch
+  // degrades to the built-in default image, never a broken render.
+  const sentinelMatch = /^@cover:([a-z0-9-]{1,120})$/.exec(imgRaw)
+  if (sentinelMatch && !(linkMode === 'project' && sentinelMatch[1] === slug)) {
+    imageUrl = ''
+  } else if (sentinelMatch) {
+    imageUrl = imgRaw
+  }
   return {
     imageUrl,
     captionAr: cleanStr(input.captionAr, 160),
     captionEn: cleanStr(input.captionEn, 160),
-    linkMode:
-      rawMode === 'project' && slug !== ''
-        ? ('project' as HeroShowcaseLinkMode)
-        : ('none' as HeroShowcaseLinkMode),
-    projectSlug: rawMode === 'project' ? slug : '',
+    linkMode,
+    projectSlug: linkMode === 'project' ? slug : '',
     projectNameAr: cleanStr(input.projectNameAr, 160),
     projectNameEn: cleanStr(input.projectNameEn, 160),
   }
@@ -95,10 +107,22 @@ export async function readHeroShowcase(): Promise<HeroShowcase> {
     if (config.linkMode === 'project' && config.projectSlug) {
       const project = await db.project.findFirst({
         where: { ...PUBLIC_PROJECT_WHERE, slug: config.projectSlug },
-        select: { name: true, nameArabic: true },
+        select: { name: true, nameArabic: true, coverImage: true },
       })
       if (!project) {
-        return { ...config, linkMode: 'none', projectSlug: '' }
+        // Unpublic project → image-only mode; a sentinel reference dies with it.
+        return {
+          ...config,
+          linkMode: 'none',
+          projectSlug: '',
+          imageUrl: config.imageUrl.startsWith('@cover:') ? '' : config.imageUrl,
+        }
+      }
+      // Sentinel = always render the project's LIVE catalog cover (future
+      // catalog cover changes flow into the hero with no re-save). Empty
+      // resolve (project has no cover) → built-in default image.
+      if (config.imageUrl.startsWith('@cover:')) {
+        config.imageUrl = project.coverImage || ''
       }
       // Display names always come from the live catalog row — never stale.
       config.projectNameAr = project.nameArabic ?? project.name
