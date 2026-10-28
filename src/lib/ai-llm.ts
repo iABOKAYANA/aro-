@@ -194,7 +194,7 @@ async function toolReadPage(args: { url?: unknown }): Promise<unknown> {
   try {
     const res = await fetch(target.href, {
       signal: AbortSignal.timeout(12_000),
-      headers: { 'User-Agent': 'GHAYA-Ayn/1.0 (+https://ghayaestate.com)', Accept: 'text/html,*/*' },
+      headers: { 'User-Agent': 'GHAYA-EYN/1.0 (+https://ghayaestate.com)', Accept: 'text/html,*/*' },
       redirect: 'follow',
     })
     if (!res.ok) return { success: false, error: `fetch failed (${res.status})` }
@@ -850,7 +850,7 @@ Your voice: a senior Egyptian real-estate consultant — deeply expert, warm, li
 // ── Area take: the place-discussion round ──────────────────
 // Triggered ONCE when the client just settled a slot (usually named the
 // place) while already "ready" — instead of flooding listings on the
-// reveal turn, Ayn discusses the AREA as a consultant: real aggregates,
+// reveal turn, EYN discusses the AREA as a consultant: real aggregates,
 // an honest take for their purpose, what their budget does there — and
 // never names a single project. Ends with the system-owned segue;
 // listings only on the NEXT turn. Falls back to a deterministic brief.
@@ -1168,7 +1168,7 @@ async function prepareLLMRequest(
   // listing-turn logic so "عايز أعرف عن مشروع سيليا" resolves to project
   // facts instead of a catalog dump. Returns null for COMPARISON/GENERAL
   // and unknown project names → existing flow below is untouched.
-  // Ongoing-consultation guard: once Ayn has recommended (assistant history
+  // Ongoing-consultation guard: once EYN has recommended (assistant history
   // carries project links), a client pushback like "غالي، عندك أرخص قريب؟"
   // must go to the consultative model path (client state + market study +
   // search tools) — NOT the global-cheapest/global-best shortcut, which
@@ -1246,7 +1246,7 @@ async function prepareLLMRequest(
     if (shouldHoldShortlist(assistantTexts, currentMessage, directCatalogTask)) {
       shortlistAllowed = false
       stateBlock +=
-        '\n[DISCUSSION BEFORE SHORTLIST — Ayn already offered a shortlist or more discussion, and the client has NOT chosen the shortlist. Do not call search_projects, search_units, get_project_details, or compare_projects. Do not output project names, project links, or cards. Respond to the client\'s latest point, show that you understood their actual priorities, give a brief honest opinion grounded in the supplied market facts, then ask ONE useful next question only if it advances the decision. This is a conversation, not a form.]'
+        '\n[DISCUSSION BEFORE SHORTLIST — EYN already offered a shortlist or more discussion, and the client has NOT chosen the shortlist. Do not call search_projects, search_units, get_project_details, or compare_projects. Do not output project names, project links, or cards. Respond to the client\'s latest point, show that you understood their actual priorities, give a brief honest opinion grounded in the supplied market facts, then ask ONE useful next question only if it advances the decision. This is a conversation, not a form.]'
     }
     if (!isReady(needs)) {
       const asked = askedConsultSlots(assistantTexts)
@@ -1289,7 +1289,7 @@ async function prepareLLMRequest(
     ) {
       // ── Area take: NO listings on the reveal turn ────────────
       // The client just settled a slot (usually named the place). Before
-      // any shortlist, Ayn discusses the AREA like a consultant — real
+      // any shortlist, EYN discusses the AREA like a consultant — real
       // aggregates, honest opinion, no project names — and ends with a
       // system-owned segue ("curated top-3 or keep talking?"). One-time.
       const trackTake: FallbackTrack = { fellBack: false }

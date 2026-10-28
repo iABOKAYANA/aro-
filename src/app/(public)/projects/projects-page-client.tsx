@@ -152,7 +152,7 @@ export function ProjectsPageClient({ results, searchParams, q, ai }: ProjectsPag
                 <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-estate-gold/30 bg-estate-gold/5 px-4 py-3">
                   <span className="flex items-center gap-1.5 text-xs font-semibold text-estate-gold">
                     <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                    {ar ? 'عين فهمت:' : 'Ain understood:'}
+                    {ar ? 'عين فهمت:' : 'EYN understood:'}
                   </span>
                   {ai.chips.map((chip, i) => (
                     <span

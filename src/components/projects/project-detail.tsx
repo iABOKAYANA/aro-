@@ -669,11 +669,11 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
           /ai-tools/chat (?q= auto-sends) and come back grounded in this
           project's catalog rows — prices that exist, delivery that honestly
           says "not recorded". */}
-      <section aria-label={ar ? ('اسأل عين عن ' + (project.name || '')) : `Ask Ain about ${(project.name || '')}`} className="mb-8 rounded-2xl border border-estate-gold/30 bg-estate-gold/5 p-4">
+      <section aria-label={ar ? ('اسأل عين عن ' + (project.name || '')) : `Ask EYN about ${(project.name || '')}`} className="mb-8 rounded-2xl border border-estate-gold/30 bg-estate-gold/5 p-4">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <p className="flex items-center gap-1.5 text-sm font-semibold text-estate-navy dark:text-estate-gold">
             <Sparkles className="h-4 w-4 shrink-0" />
-            {ar ? 'اسأل عين عن المشروع ده' : 'Ask Ain about this project'}
+            {ar ? 'اسأل عين عن المشروع ده' : 'Ask EYN about this project'}
           </p>
           <nav className="flex flex-wrap gap-2" aria-label={ar ? 'أسئلة جاهزة' : 'Ready questions'}>
             {[
@@ -967,7 +967,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                 <p className="text-center text-xs text-muted-foreground">
                   {ar
                     ? 'اللي فوق مخزون متاح فعليًا حاليًا — اسأل عين عن أي نوع أو مواصفة بالتحديد.'
-                    : 'The list above reflects live available inventory — ask Ayn for any exact unit or spec.'}
+                    : 'The list above reflects live available inventory — ask EYN for any exact unit or spec.'}
                 </p>
               )}
             </TabsContent>

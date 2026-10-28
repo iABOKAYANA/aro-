@@ -230,7 +230,7 @@ export async function searchProjects(filters: PropertyFilterInput & { developer?
 
 /**
  * Public project pages do not need to serialize thousands of live units.
- * Keep the full inventory for APIs/console/Ayn, but optionally return one
+ * Keep the full inventory for APIs/console/EYN, but optionally return one
  * area-balanced representative per offered unitType for the public showcase.
  */
 async function getRepresentativeProjectUnits(projectId: string) {

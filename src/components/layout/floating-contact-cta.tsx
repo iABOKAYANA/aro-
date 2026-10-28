@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
  * hidden on /ceo, /dashboard and /auth. Hidden-until-set: renders nothing
  * unless GET /api/public-config returns a non-empty cta number.
  * Single-stack rule: both pills live on the SAME side as the green
- * WhatsAppBubble + "Ain" shortcut (see page-widgets), so exactly ONE edge
+ * WhatsAppBubble + "EYN" shortcut (see page-widgets), so exactly ONE edge
  * of the page carries the contact stack and the other edge stays clean for
  * back-to-top. The green WhatsAppBubble is the one WhatsApp entry point —
  * when it is enabled this component drops its own duplicate WhatsApp pill
@@ -92,7 +92,7 @@ export function FloatingContactCta() {
           className={cn(
             'group fixed z-[60] flex h-12 max-w-[3rem] items-center overflow-hidden whitespace-nowrap rounded-full bg-estate-navy text-estate-gold shadow-xl ring-1 ring-estate-gold/40 transition-all duration-300 hover:max-w-[260px] hover:bg-estate-gold hover:text-estate-navy focus-visible:max-w-[260px] focus-visible:bg-estate-gold focus-visible:text-estate-navy focus-within:max-w-[260px] focus-within:bg-estate-gold focus-within:text-estate-navy dark:bg-black dark:hover:bg-estate-gold dark:hover:text-black dark:focus-visible:bg-estate-gold dark:focus-visible:text-black dark:focus-within:bg-estate-gold dark:focus-within:text-black max-sm:h-14 max-sm:max-w-[3.5rem]',
             isRtl ? 'left-6' : 'right-6',
-            // Slot 1 of the stack (same side as Ain + green bubble):
+            // Slot 1 of the stack (same side as EYN + green bubble):
             // bubble visible → land the first pill ABOVE it (bottom-[10rem]);
             // bubble hidden/dropped → this pill takes its slot (bottom-[6rem]).
             i === 0

@@ -11,7 +11,7 @@ import { FloatingContactCta } from '@/components/layout/floating-contact-cta'
 
 const HIDDEN_PREFIXES = ['/ceo', '/dashboard', '/auth', '/ai-tools/chat']
 
-/** Global page widgets: scroll progress bar, back-to-top, and the floating "Ain" AI shortcut. */
+/** Global page widgets: scroll progress bar, back-to-top, and the floating "EYN" AI shortcut. */
 export function PageWidgets() {
   const pathname = usePathname() || ''
   const { lang } = useLanguage()
@@ -36,7 +36,7 @@ export function PageWidgets() {
 
   // Project/unit detail pages render a sticky mobile booking bar (~80px tall,
   // lg:hidden). Lift the bottom widgets above it on small screens so the
-  // "Ask Ain" bubble and back-to-top never cover the booking CTA. Desktop
+  // "Ask EYN" bubble and back-to-top never cover the booking CTA. Desktop
   // (lg:) keeps the exact same position as every other page.
   const hasStickyBar = /^\/(projects|units)\/[^/]+\/?$/.test(pathname)
   const bottomPos = hasStickyBar
@@ -78,11 +78,11 @@ export function PageWidgets() {
         <ArrowUp className="h-5 w-5" />
       </button>
 
-      {/*3 · Floating "Ask Ain" AI shortcut */}
+      {/*3 · Floating "Ask EYN" AI shortcut */}
       {pathname !== '/ai-tools/chat' && (
         <Link
           href="/ai-tools/chat"
-          aria-label={isRtl ? 'اسأل «عين» — مساعدك العقاري' : 'Ask “Ain” — your real-estate assistant'}
+          aria-label={isRtl ? 'اسأل «عين» — مساعدك العقاري' : 'Ask “EYN” — your real-estate assistant'}
           className={cn(
             'group fixed z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-estate-navy text-estate-gold shadow-xl ring-1 ring-estate-gold/40 transition-all duration-300 hover:bg-estate-gold hover:text-estate-navy dark:bg-black dark:hover:bg-estate-gold dark:hover:text-black',
             bottomPos,
@@ -97,7 +97,7 @@ export function PageWidgets() {
               isRtl ? 'left-full ml-3' : 'right-full mr-3'
             )}
           >
-            {isRtl ? 'اسأل «عين»' : 'Ask “Ain”'}
+            {isRtl ? 'اسأل «عين»' : 'Ask “EYN”'}
           </span>
         </Link>
       )}

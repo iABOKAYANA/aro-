@@ -6,7 +6,7 @@ import { FAQ_GROUPS } from './faq-data'
 export const metadata: Metadata = {
   title: 'الأسئلة الشائعة | FAQ',
   description:
-    'إجابات غاية العقارية عن الحجز والمعاينة والأسعار والمناطق والحسابات والمساعد عين والتواصل. GHAYA REAL ESTATE answers on booking, prices, areas, accounts, Ayn and contact.',
+    'إجابات غاية العقارية عن الحجز والمعاينة والأسعار والمناطق والحسابات والمساعد عين والتواصل. GHAYA REAL ESTATE answers on booking, prices, areas, accounts, EYN and contact.',
   alternates: languageAlternates('/faq'),
   openGraph: {
     title: 'الأسئلة الشائعة عن العقارات | FAQ',
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
       siteName: 'GHAYA REAL ESTATE',
     images: [
       {
-        url: `${SITE_URL}/og?t=${encodeURIComponent('FAQ')}&s=${encodeURIComponent('Booking, prices, areas and Ayn answers')}`,
+        url: `${SITE_URL}/og?t=${encodeURIComponent('FAQ')}&s=${encodeURIComponent('Booking, prices, areas and EYN answers')}`,
         width: 1200,
         height: 630,
         alt: 'GHAYA REAL ESTATE — FAQ',

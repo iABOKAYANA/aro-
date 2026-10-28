@@ -27,11 +27,11 @@ function WhatsAppGlyph({ className }: { className?: string }) {
 
 /**
  * Global WhatsApp CTA bubble — mounted once in <Providers/> so every
- * public page inherits it. Placement stacks ABOVE the "Ask Ain" FAB on the
- * SAME side (Ain sits bottom-6, this bubble bottom-24) so it never collides
+ * public page inherits it. Placement stacks ABOVE the "Ask EYN" FAB on the
+ * SAME side (EYN sits bottom-6, this bubble bottom-24) so it never collides
  * with the back-to-top button or the FloatingContactCta pills, which live on
  * the opposite side: contact/back-to-top bottom-6..bottom-40 on one side,
- * Ain + WhatsApp bottom-6/bottom-24 on the other. RTL mirrors both stacks.
+ * EYN + WhatsApp bottom-6/bottom-24 on the other. RTL mirrors both stacks.
  * Hidden on console/auth/chat routes, when disabled, or when no valid number
  * is configured. Pure wa.me deep link, no prefetch.
  */

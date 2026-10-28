@@ -25,7 +25,7 @@ const { PrismaClient } = require('@prisma/client')
 const p = new PrismaClient()
 
 const BASE = (process.env.PUBLIC_BASE_URL || 'https://ghayaestate.com').replace(/\/$/, '')
-const UA = 'GHAYA-AynTrainer/2.0 (+https://ghayaestate.com)'
+const UA = 'GHAYA-EYNTrainer/2.0 (+https://ghayaestate.com)'
 const TIMEOUT_MS = 25_000
 const CHUNK = 1800
 const OVERLAP = 150

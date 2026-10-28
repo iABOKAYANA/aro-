@@ -114,7 +114,7 @@ export const translations = {
     'dash.settings': 'Settings',
 
     // AI Chat
-    'chat.title': 'Ayn — Ghaya Assistant',
+    'chat.title': 'EYN — Ghaya Assistant',
     'chat.subtitle': 'Tell me what you\'re looking for',
     'chat.placeholder': 'Ask about properties, projects, or payments...',
     'chat.aiOnline': 'AI Online',

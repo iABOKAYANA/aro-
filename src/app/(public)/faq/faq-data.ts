@@ -88,7 +88,7 @@ export const FAQ_GROUPS: FaqGroup[] = [
         qAr: 'بتشتغلوا في أنهي مناطق؟',
         qEn: 'Which areas do you cover?',
         aAr: 'اتصفح المدن والمناطق من /locations، وتفاصيل خدمات كل منطقة من /areas — أو اسأل المساعد عين عن المنطقة اللي في بالك وهو يجيبلك المشاريع اللي فيها.',
-        aEn: 'Browse cities and regions at /locations, and per-area services at /areas — or ask Ayn about the area you have in mind and it will pull its projects.',
+        aEn: 'Browse cities and regions at /locations, and per-area services at /areas — or ask EYN about the area you have in mind and it will pull its projects.',
         source: 'src/lib/ai-site-knowledge.ts PLATFORM locations line; WHERE_AREAS answer',
       },
       {
@@ -122,18 +122,18 @@ export const FAQ_GROUPS: FaqGroup[] = [
   },
   {
     titleAr: 'المساعد عين',
-    titleEn: 'Ayn assistant',
+    titleEn: 'EYN assistant',
     items: [
       {
-        qAr: 'مين عين (Ayn)؟',
-        qEn: 'Who is Ayn?',
+        qAr: 'مين عين (EYN)؟',
+        qEn: 'Who is EYN?',
         aAr: 'عين هو مساعد غاية العقارية الذكي في /ai-tools/chat: يدورلك على مشروع أو شقة بالمواصفات اللي عايزها (المكان والميزانية وعدد الأوض)، يقارن بين مشاريع، يوجهك للحاسبة الصح، أو يشرحلك إزاي تحجز معاينة.',
-        aEn: 'Ayn is the GHAYA smart assistant at /ai-tools/chat: it searches projects by your specs (area, budget, bedrooms), compares projects, points you to the right calculator, or explains how to book a viewing.',
+        aEn: 'EYN is the GHAYA smart assistant at /ai-tools/chat: it searches projects by your specs (area, budget, bedrooms), compares projects, points you to the right calculator, or explains how to book a viewing.',
         source: 'src/lib/ai-site-knowledge.ts GREETING answer + /ai-tools/chat route',
       },
       {
         qAr: 'هل ترشيحات عين تعتبر استشارة مالية؟',
-        qEn: 'Are Ayn recommendations financial advice?',
+        qEn: 'Are EYN recommendations financial advice?',
         aAr: 'لأ — ترشيحات الذكاء الاصطناعي وتقديرات الأسعار ورؤى السوق معلوماتية فقط، ومش استشارة مالية أو قانونية.',
         aEn: 'No — AI recommendations, price estimates and market insights are informational only, not financial or legal advice.',
         source: 'src/app/(public)/terms/terms-view.tsx §3 AI-Powered Recommendations',

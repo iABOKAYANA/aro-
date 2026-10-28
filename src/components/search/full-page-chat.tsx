@@ -232,7 +232,7 @@ export function FullPageChat() {
                       </div>
                     )}
                     <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
-                      {lang === 'ar' ? 'عين' : 'Ayn'}
+                      {lang === 'ar' ? 'عين' : 'EYN'}
                     </h1>
                     <p className="mt-1.5 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                       {lang === 'ar' ? 'قولي بتدور على إيه وأنا هساعدك' : 'Tell me what you\'re looking for'}

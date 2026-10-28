@@ -258,7 +258,7 @@ export function HeroSearch({
                       if (voiceHint) setVoiceHint(null)
                     }}
                     onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
-                    placeholder={isRtl ? 'اسأل عين... مثلاً: شقق في القاهرة الجديدة' : 'Ask Ayn... e.g. apartments in New Cairo'}
+                    placeholder={isRtl ? 'اسأل عين... مثلاً: شقق في القاهرة الجديدة' : 'Ask EYN... e.g. apartments in New Cairo'}
                     className="w-full border-0 bg-transparent py-4 pl-14 pr-5 text-gray-700 placeholder:text-gray-400 focus:outline-none md:pl-12 dark:text-white dark:placeholder:text-gray-400"
                   />
                   {voiceSupported ? (
@@ -282,7 +282,7 @@ export function HeroSearch({
                   onClick={handleAsk}
                   className="gold-shimmer flex shrink-0 items-center gap-2 bg-estate-gold px-5 py-4 font-medium text-[#0F1A2C] transition-colors hover:bg-estate-gold-dark sm:px-6"
                 >
-                  {isRtl ? 'اسأل عين' : 'Ask Ayn'}
+                  {isRtl ? 'اسأل عين' : 'Ask EYN'}
                   <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
                 </button>
               </div>
@@ -306,7 +306,7 @@ export function HeroSearch({
                 onClick={() => router.push('/ai-tools/chat')}
                 className="flex min-h-[44px] items-center gap-2 px-1 text-white/80 transition-colors hover:text-white"
               >
-                <span>{isRtl ? 'اسأل عين' : 'Ask Ayn'}</span>
+                <span>{isRtl ? 'اسأل عين' : 'Ask EYN'}</span>
                 <span className="text-estate-gold">✦</span>
               </button>
               <ArrowRight className="h-4 w-4 shrink-0 text-white/40 rtl:rotate-180" aria-hidden />

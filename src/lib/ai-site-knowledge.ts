@@ -51,7 +51,7 @@ export type SiteIntentKind =
 //   PLATFORM ← /compare, /saved, /saved-searches, /broker, /developer/submit,
 //              /offers page copy, /locations page copy (one-line each + links)
 //   FAQ      ← src/app/(public)/faq/faq-data.ts (14 Q&As; page is authoritative,
-//              grounding points at /faq via PLATFORM.faq so Ayn answers from it)
+//              grounding points at /faq via PLATFORM.faq so EYN answers from it)
 // NOTE on single-source-of-truth: the page components above are 'use client'
 // (hooks + icons) and cannot be imported into this server module, so static
 // copy is MIRRORED here with a ← pointer per block (same convention as the
@@ -159,7 +159,7 @@ const PLATFORM_EN = {
   offers: 'Cash discounts land at /offers (payment plans with a cash discount above zero).',
   locations: 'Browse cities and regions at /locations, per-area services at /areas.',
   tour: 'Virtual tours live inside the project page (/projects/<slug> → tour).',
-  faq: 'Quick answers to common questions (booking, prices, areas, accounts, Ayn, contact) at /faq.',
+  faq: 'Quick answers to common questions (booking, prices, areas, accounts, EYN, contact) at /faq.',
 }
 
 // ─── DYNAMIC layer (live, TTL-cached) ─────────────────────────
@@ -626,8 +626,8 @@ export async function answerSiteQuestion(
     return {
       toolTag: 'site_knowledge',
       content: ar
-        ? `أهلًا بيك 👋 أنا عين (Ayn)، مساعد غاية العقارية.\n${SITE_IDENTITY_LINE}\n\nأقدر أساعدك في: تدور على مشروع أو شقة بالمواصفات اللي عايزها، تقارن بين مشاريع، تحسب القسط والمقدم، أو تحجز معاينة.\nقولي بتدور على إيه: المكان والميزانية وعدد الأوض؟`
-        : `Hi 👋 I'm Ayn (عين), the GHAYA Real Estate assistant.\n${SITE_IDENTITY_LINE}\n\nI can help you search projects by budget/area/rooms, compare projects, estimate installments, or book a viewing.\nTell me what you're looking for: area, budget, bedrooms?`,
+        ? `أهلًا بيك 👋 أنا عين (EYN)، مساعد غاية العقارية.\n${SITE_IDENTITY_LINE}\n\nأقدر أساعدك في: تدور على مشروع أو شقة بالمواصفات اللي عايزها، تقارن بين مشاريع، تحسب القسط والمقدم، أو تحجز معاينة.\nقولي بتدور على إيه: المكان والميزانية وعدد الأوض؟`
+        : `Hi 👋 I'm EYN (عين), the GHAYA Real Estate assistant.\n${SITE_IDENTITY_LINE}\n\nI can help you search projects by budget/area/rooms, compare projects, estimate installments, or book a viewing.\nTell me what you're looking for: area, budget, bedrooms?`,
     }
   }
 

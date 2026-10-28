@@ -5,7 +5,7 @@
  */
 import { db } from '@/lib/db'
 
-const UA = 'GHAYA-AynTrainer/1.0 (+https://ghayaestate.com)'
+const UA = 'GHAYA-EYNTrainer/1.0 (+https://ghayaestate.com)'
 const TIMEOUT_MS = 20_000
 const CHUNK = 1800
 const OVERLAP = 150

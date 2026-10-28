@@ -277,7 +277,7 @@ export function ChatSearch() {
               <div className="rounded-xl bg-gray-50 border border-gray-100 px-3 py-2 text-xs text-gray-700 rounded-tl-sm dark:border-[#262626] dark:bg-black dark:text-gray-300">
                 {ar
                   ? 'أهلاً! أنا عين، مساعدك في غاية. أقدر أساعدك تلاقي عقارات، تقارن مشاريع، تحسب الأقساط، وأكتر. بتدور على إيه؟'
-                  : "Hi! I'm Ayn, your GHAYA assistant. I can help you find properties, compare projects, calculate payments, and more. What are you looking for?"}
+                  : "Hi! I'm EYN, your GHAYA assistant. I can help you find properties, compare projects, calculate payments, and more. What are you looking for?"}
               </div>
             </div>
             <div className="ms-8 grid grid-cols-1 gap-2">

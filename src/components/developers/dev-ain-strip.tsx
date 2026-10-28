@@ -16,13 +16,13 @@ export function DevAinStrip({ developerName }: { developerName: string }) {
 
   return (
     <section
-      aria-label={ar ? `اسأل عين عن ${developerName}` : `Ask Ain about ${developerName}`}
+      aria-label={ar ? `اسأل عين عن ${developerName}` : `Ask EYN about ${developerName}`}
       className="mb-8 rounded-2xl border border-estate-gold/30 bg-estate-gold/5 p-4"
     >
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <p className="flex items-center gap-1.5 text-sm font-semibold text-estate-navy dark:text-estate-gold">
           <Sparkles className="h-4 w-4 shrink-0" />
-          {ar ? 'اسأل عين عن مشاريع المطوّر ده' : 'Ask Ain about this developer'}
+          {ar ? 'اسأل عين عن مشاريع المطوّر ده' : 'Ask EYN about this developer'}
         </p>
         <nav className="flex flex-wrap gap-2" aria-label={ar ? 'أسئلة جاهزة' : 'Ready questions'}>
           {[

@@ -1,6 +1,6 @@
 // ─── Consultation gate — عين studies & consults, never dumps listings ───
 //
-// Before recommending, Ayn needs a usable CLIENT PROFILE: budget + place +
+// Before recommending, EYN needs a usable CLIENT PROFILE: budget + place +
 // property type or purpose. Until then a listing turn resolves to ONE short
 // question (deterministic — instant, free, consistent), max 3, then the
 // search proceeds with whatever is known. Clients who explicitly ask to see
@@ -163,7 +163,7 @@ export function slotsRevealedBy(
   return revealed
 }
 
-/** Has Ayn already recommended projects in the recent conversation? */
+/** Has EYN already recommended projects in the recent conversation? */
 export function hasRecommended(assistantTexts: string[]): boolean {
   return assistantTexts.some((t) => t.includes('/projects/'))
 }
@@ -189,7 +189,7 @@ export function wantsShortlistNow(text: string): boolean {
 }
 
 /**
- * If Ayn already offered a shortlist-vs-discussion choice, don't show cards
+ * If EYN already offered a shortlist-vs-discussion choice, don't show cards
  * until the client chooses the shortlist. A bare yes accepts the first option;
  * direct project questions/comparisons are handled normally.
  */
@@ -236,7 +236,7 @@ export function countConsultQuestions(assistantTexts: string[]): number {
 export const CONSULT_MAX_QUESTIONS = 3
 
 // Area-take round: before a client who just revealed their place (or a
-// fresh profile) gets ANY listings, Ayn discusses the AREA first — a
+// fresh profile) gets ANY listings, EYN discusses the AREA first — a
 // consultative take on the market with REAL aggregates — and ends with a
 // system-owned segue question. The marker lets the gate know the round
 // already happened (it never happens twice).

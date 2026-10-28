@@ -54,6 +54,10 @@ function maskPii(text) {
     .replace(/\d{7,}/g, () => '****')
 }
 
+/** Keep the assistant's own name consistent in learned chunks (owner: the
+ * English name is EYN). Older stored answers may carry the old spellings. */
+const fixName = (text) => String(text).replace(/\bAyn\b|\bAin\b/g, 'EYN')
+
 /** Normalize a question to a dedup key: alef/hamza/ya-nun unify, diacritics out, no punct. */
 const dedupKey = (q) =>
   String(q)
@@ -113,7 +117,7 @@ async function main() {
   const best = new Map() // key → { q, a, at }
 
   for (const { q, a, meta, at } of pairs) {
-    const qRaw = maskPii(q).replace(/\s+/g, ' ').trim().slice(0, MAX_Q)
+    const qRaw = fixName(maskPii(q).replace(/\s+/g, ' ').trim().slice(0, MAX_Q))
     if (!qRaw) { tally.skipNoise++; continue }
     if (qRaw.split(/\s+/).length < MIN_WORDS || NOISE.test(qRaw)) { tally.skipNoise++; continue }
     if (FOLLOWUP.test(qRaw)) { tally.skipNoise++; continue }
@@ -122,7 +126,7 @@ async function main() {
     try { provider = JSON.parse(meta || '{}').provider } catch { /* none stored */ }
     if (provider !== 'grounded') { tally.skipAnswer++; continue }
 
-    const aRaw = String(a || '').replace(/\s+/g, ' ').trim().slice(0, MAX_A)
+    const aRaw = fixName(maskPii(String(a || '').replace(/\s+/g, ' ').trim().slice(0, MAX_A)))
     if (!aRaw || aRaw.length < 15) { tally.skipAnswer++; continue }
     // Tool-loop walls / failure strings are chat bugs, not learnable facts.
     if (aRaw.includes('عذراً') && aRaw.length > 700) { tally.skipWall++; continue }

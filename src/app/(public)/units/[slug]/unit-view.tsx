@@ -256,7 +256,7 @@ export default function UnitView({ unit, gallery, priceHistory = [] }: { unit: U
                   className="mb-4 flex min-h-11 items-center gap-2 rounded-xl border border-estate-gold/30 bg-estate-gold/5 px-3 text-sm font-medium text-estate-gold underline-offset-4 hover:bg-estate-gold/10"
                 >
                   <Sparkles className="h-4 w-4 shrink-0" />
-                  {ar ? 'اسأل عين عن الوحدة دي' : 'Ask Ain about this unit'}
+                  {ar ? 'اسأل عين عن الوحدة دي' : 'Ask EYN about this unit'}
                 </a>
 
                 {/* Recorded price history trend (F-watch companion) */}

@@ -47,7 +47,7 @@ export default function FaqView() {
             <p className="mt-4 max-w-2xl text-base leading-8 text-[#faf7ef]/85">
               {ar
                 ? 'إجابات سريعة عن الحجز والأسعار والمناطق والحسابات والمساعد عين — ولو ملقتش سؤالك ابعتلنا من صفحة التواصل.'
-                : 'Quick answers about booking, prices, areas, accounts and Ayn — and if your question is missing, message us from the contact page.'}
+                : 'Quick answers about booking, prices, areas, accounts and EYN — and if your question is missing, message us from the contact page.'}
             </p>
           </Reveal>
         </div>
@@ -116,13 +116,13 @@ export default function FaqView() {
             <div className="mb-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-3 rounded-2xl border border-estate-gold/30 bg-estate-gold/5 px-5 py-4 text-center">
               <p className="flex items-center gap-1.5 text-sm font-semibold text-estate-navy dark:text-estate-gold">
                 <Sparkles className="h-4 w-4 shrink-0" />
-                {ar ? 'ملقتش سؤالك؟ اسأل عين' : 'Not answered here? Ask Ain'}
+                {ar ? 'ملقتش سؤالك؟ اسأل عين' : 'Not answered here? Ask EYN'}
               </p>
               <Link
                 href="/ai-tools/chat"
                 className="inline-flex min-h-11 items-center rounded-full bg-estate-navy px-4 text-sm font-semibold text-estate-gold transition-colors hover:bg-estate-gold hover:text-estate-navy dark:bg-black dark:hover:bg-estate-gold dark:hover:text-black sm:min-h-0"
               >
-                {ar ? 'اتكلم عين دلوقتي' : 'Talk to Ain now'}
+                {ar ? 'اتكلم عين دلوقتي' : 'Talk to EYN now'}
               </Link>
             </div>
           </Reveal>
