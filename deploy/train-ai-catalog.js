@@ -15,12 +15,9 @@
 //      with verified stock: price + area ranges, bedrooms, finishing, views
 //      and verbatim delivery terms per unit type (AVAILABLE && isSample:false
 //      only). Answers "المساحات؟ / أوض شوية كام؟ / تشطيب؟ / إطلالة؟".
-//   4) archive register (source 'ghaya-catalog-archive') — EVERY archived
-//      project in the DB (name · developer · city · verified stock).
-//      Internal chunks with no public page: content explicitly says the
-//      project is not listed on the site and no link may be cited, so عين
-//      recognizes every project name the catalog holds — without dead links
-//      or made-up data.
+//   (The old §4 archive register — internal chunks for NON-public archived
+//   projects — was removed on 2026-10-27: عين must not mention unpublished
+//   projects at all. Stale cleanup deletes those rows on each run.)
 // Re-running refreshes chunks, so every import/price fix is one run away.
 // Idempotent: upsert keyed by the chunk URL.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -357,66 +354,13 @@ async function main() {
     }
   }
 
-  // ── 3) archive register: EVERY archived project in the catalog ────────────
-  const archived = await p.project.findMany({
-    where: { isActive: false },
-    select: {
-      id: true, name: true, nameArabic: true,
-      city: { select: { name: true, nameArabic: true, nameSlug: true } },
-      developer: { select: { companyName: true } },
-    },
-    orderBy: { name: 'asc' },
-  })
-  // verified stock per archived project (AVAILABLE & non-sample only)
-  const archUnits = await p.unit.groupBy({
-    by: ['projectId'],
-    where: { status: 'AVAILABLE', isSample: false, project: { isActive: false } },
-    _min: { price: true }, _max: { price: true }, _count: { _all: true },
-  })
-  const unitMap = new Map(archUnits.map((u) => [u.projectId, u]))
-
-  const byCity = new Map()
-  for (const pr of archived) {
-    const k = pr.city?.nameSlug || 'other'
-    if (!byCity.has(k)) byCity.set(k, { key: k, name: pr.city?.name || 'Other locations', ar: pr.city?.nameArabic || '', items: [] })
-    byCity.get(k).items.push(pr)
-  }
-
-  for (const g of byCity.values()) {
-    let part = 0
-    let buf = []
-    let len = 0
-    const flush = async () => {
-      if (!buf.length) return
-      part++
-      const url = `internal://ghaya-archive/${g.key}-${part}`
-      const header = [
-        `GHAYA internal archive register — ${g.name}${g.ar ? ` (${g.ar})` : ''} — part ${part} — verified ${today}.`,
-        `مشاريع ${g.ar} المسجلة في قاعدة بيانات غيا (أرشيف داخلي — غير معروضة حالياً على الموقع).`,
-        `These projects EXIST in the GHAYA catalog but are NOT publicly listed right now — there is no /projects/ page for them. Recorded by name / developer / city / verified stock only. If a client asks about one, say the GHAYA team can share availability and details on request — never cite a website link for an archived project.`,
-      ].join('\n')
-      const content = trimWords(`${header}\n${buf.join('\n')}`, MAX_CONTENT)
-      seenUrls.add(url)
-      bump(await upsertChunk(url, `GHAYA archive register — ${g.name} (${part})`, 'ghaya-catalog-archive', content))
-      buf = []
-      len = 0
-    }
-    for (const pr of g.items) {
-      const u = unitMap.get(pr.id)
-      const bits = [
-        `${normAr(pr.name)}${pr.nameArabic ? ` / ${normAr(pr.nameArabic)}` : ''}`,
-        pr.developer?.companyName || '—',
-      ]
-      if (u && u._count._all > 0) {
-        bits.push(`${u._count._all} verified AVAILABLE units${u._min.price != null ? ` EGP ${fmt(u._min.price)}${u._max.price > u._min.price ? `–${fmt(u._max.price)}` : ''}` : ''}`)
-      }
-      const line = `- ${bits.join(' · ')}`
-      if (len + line.length > 1150) await flush()
-      buf.push(line)
-      len += line.length
-    }
-    await flush()
-  }
+  // ── 3) archive register: REMOVED (owner decision 2026-10-27) ──────────────
+  // The AI must never name unpublished/archived projects. The per-city
+  // archive register chunks were the leak vector; dropping the section and
+  // letting the stale cleanup below (staleArch) delete every existing
+  // 'ghaya-catalog-archive' row on the next training run.
+  // (historical note: was "EVERY archived project — isActive:false", with a
+  // "team can share on request" instruction that عين no longer uses.)
 
   // stale aggregate/archive cleanup for keys not regenerated this run
   const staleAgg = await p.aIKnowledge.deleteMany({
@@ -433,7 +377,6 @@ async function main() {
   const bySource = await p.aIKnowledge.groupBy({ by: ['source'], _count: { _all: true } })
   console.log(JSON.stringify({
     publicProjects: projects.length,
-    archivedProjectsRegistered: archived.length,
     ...tally,
     staleAggRemoved: staleAgg.count,
     staleUnitChunksRemoved: staleUnits.count,

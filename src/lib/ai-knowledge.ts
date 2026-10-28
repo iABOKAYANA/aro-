@@ -86,10 +86,10 @@ export async function retrieveKnowledge(message: string): Promise<string> {
     }
     if (!parts.length) return ''
     return (
-      '[LEARNED CONTEXT — public marketing pages fetched earlier from official developer sites and guides, plus GHAYA\'s vetted market-knowledge document. ' +
+      '[LEARNED CONTEXT — public marketing pages fetched earlier from official developer sites, guides, GHAYA\'s vetted market-knowledge document, and real client Q&A learned from past chat turns. ' +
       'Use them to explain background/positioning/usps when the question is about these sources; ' +
       'for GHAYA catalog facts (prices, availability, plans) the DB tools always override this context. ' +
-      'Cite the source URL when a claim comes from here.]\n\n' +
+      'Cite the source URL when a claim comes from here (learned Q&A chunks have no public URL — state the fact plainly, no link).]\n\n' +
       parts.join('\n\n')
     )
   } catch {

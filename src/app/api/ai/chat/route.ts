@@ -371,69 +371,14 @@ function isDeveloperScopedPluralQuestion(message: string): boolean {
 }
 
 async function projectCatalogFactsTurn(projectMatch: KnownCatalogProject, message: string, lang: ChatLang): Promise<DeterministicTurn | null> {
-  // Archived register entry: no public page — answer honestly from the DB
-  // (city/developer/verified stock) WITHOUT a /projects link and WITHOUT
-  // pretending it is listed. Client interest → the team follows up.
+  // Unpublished entry (safety net — the mention corpus no longer contains
+  // archived names at all): reply WITHOUT confirming the project exists,
+  // recording any of its data, or naming it. Owner rule: عين never speaks
+  // about unpublished projects.
   if (projectMatch.archived) {
-    const project = await db.project.findFirst({
-      where: { id: projectMatch.id, isActive: false },
-      select: {
-        id: true,
-        name: true,
-        nameArabic: true,
-        status: true,
-        startPrice: true,
-        propertyTypes: true,
-        deliveryTerms: true,
-        city: { select: { name: true, nameArabic: true } },
-        governorate: { select: { name: true, nameArabic: true } },
-        developer: { select: { companyName: true, companyNameArabic: true } },
-      },
-    })
-    if (!project) return null
-
-    const inventory = await db.unit.aggregate({
-      where: { projectId: project.id, status: { in: ['AVAILABLE', 'Vacant'] }, isSample: false, price: { gt: 0 } },
-      _count: { _all: true },
-      _min: { price: true },
-      _max: { price: true },
-    })
-
-    let types: string[] = []
-    try {
-      const parsed = typeof project.propertyTypes === 'string' ? JSON.parse(project.propertyTypes) : project.propertyTypes
-      if (Array.isArray(parsed)) types = parsed.filter((type): type is string => typeof type === 'string' && type !== 'UNKNOWN')
-    } catch { types = [] }
-
-    const projectName = lang === 'ar' ? project.nameArabic || project.name : project.name
-    const areaName = lang === 'ar' ? project.city?.nameArabic || project.city?.name || project.governorate?.name : project.city?.name || project.governorate?.name || '—'
-    const devName = lang === 'ar' ? project.developer?.companyNameArabic || project.developer?.companyName : project.developer?.companyName
-    const count = inventory._count._all
-    const lines: string[] = [
-      lang === 'ar'
-        ? `**${projectName}** مسجّل في كتالوج غاية — لكنه حالياً **مش منشور على الموقع** للمشاريع، فمفيش صفحة عامة ليه. إلي اللي مسجّل عندنا:`
-        : `**${projectName}** is in the GHAYA catalogue but is **not currently listed publicly** — there's no public page for it. What we have on record:`,
-    ]
-    if (areaName && areaName !== '—') lines.push(lang === 'ar' ? `• المنطقة: ${areaName}.` : `• Location: ${areaName}.`)
-    if (devName) lines.push(lang === 'ar' ? `• المطور: ${devName}.` : `• Developer: ${devName}.`)
-    if (types.length > 0) lines.push(lang === 'ar' ? `• الأنواع المسجلة: ${types.map((type) => type.replace(/_/g, ' ')).join('، ')}.` : `• Recorded types: ${types.map((type) => type.replace(/_/g, ' ')).join(', ')}.`)
-    if (count > 0 && inventory._min.price != null) {
-      const priceText = inventory._max.price != null && inventory._max.price > inventory._min.price
-        ? `${formatCatalogMoney(inventory._min.price, lang)} – ${formatCatalogMoney(inventory._max.price, lang)}`
-        : formatCatalogMoney(inventory._min.price, lang)
-      lines.push(lang === 'ar' ? `• وحدات متاحة في المخزون: ${count} بأسعار ${priceText}.` : `• Verified available units: ${count} (${priceText}).`)
-    } else if (project.startPrice != null && project.startPrice > 0) {
-      lines.push(lang === 'ar'
-        ? `• سعر البداية المسجّل: ${formatCatalogMoney(project.startPrice, lang)} (مش تأكيد توفر وحدة).`
-        : `• Recorded starting price: ${formatCatalogMoney(project.startPrice, lang)} (not confirmation of an available unit).`)
-    } else {
-      lines.push(lang === 'ar' ? '• لا توجد وحدات متاحة مسجلة حالياً.' : '• No currently available units on record.')
-    }
-    if (project.deliveryTerms) lines.push(lang === 'ar' ? `• شروط التسليم المسجل: ${project.deliveryTerms}` : `• Recorded delivery terms: ${project.deliveryTerms}`)
-    lines.push(lang === 'ar'
-      ? 'فريق غاية يقدر يجيبلك تفاصيله كاملة وأي متاح جديد — تحب نتابع معاك؟'
-      : 'The GHAYA team can share full details and any new availability — want us to follow up with you?')
-    const content = lines.join('\n')
+    const content = lang === 'ar'
+      ? 'مش لاقي مشروع منشور بالاسم ده على غاية حالياً. عين بيتحاور عن المشاريع المنشورة على الموقع فقط — ابعتلي المنطقة أو المطور اللي نفسك فيه وهجيب لك بدائل منشورة.'
+      : 'No published project by that name on ghayaestate.com right now. عين only talks about the published catalog — tell me the area or developer you have in mind and I will show you published alternatives.'
     return { content, blocks: [{ type: 'text', content }], toolCallsMade: [], provider: 'grounded' }
   }
 

@@ -589,54 +589,34 @@ export async function matchKnownProjectNames(
 ): Promise<Array<{ project: KnownCatalogProject; score: number }>> {
   try {
     if (!projectNameCorpus || Date.now() - projectNameCorpus.loadedAt > 60_000) {
-      const [rows, archivedRows] = await Promise.all([
-        db.project.findMany({
-          where: PUBLIC_PROJECT_WHERE,
-          select: {
-            id: true,
-            name: true,
-            nameArabic: true,
-            slug: true,
-            developer: { select: { companyName: true } },
-            city: { select: { name: true } },
-          },
-        }),
-        // The full catalog register: archived projects are NOT public — عين
-        // must recognize ANY name the catalog holds and answer honestly
-        // (no site link, "team can share details") instead of feigning ignorance.
-        db.project.findMany({
-          where: { isActive: false },
-          select: {
-            id: true,
-            name: true,
-            nameArabic: true,
-            slug: true,
-            developer: { select: { companyName: true } },
-            city: { select: { name: true } },
-          },
-        }),
-      ])
+      // PUBLIC catalog only (owner decision 2026-10-27): عين never mentions
+      // unpublished/archived projects, so their names stay OUT of the
+      // recognition corpus — an archived name now simply doesn't resolve,
+      // and the chat treats it like any unknown project name instead of
+      // revealing catalog-internal stock. (The old "full register with
+      // archived:true rows" flow is gone — see also the removed
+      // ghaya-catalog-archive chunks.)
+      const rows = await db.project.findMany({
+        where: PUBLIC_PROJECT_WHERE,
+        select: {
+          id: true,
+          name: true,
+          nameArabic: true,
+          slug: true,
+          developer: { select: { companyName: true } },
+          city: { select: { name: true } },
+        },
+      })
       projectNameCorpus = {
         loadedAt: Date.now(),
-        projects: [
-          ...rows.map((row) => ({
-            id: row.id,
-            slug: row.slug,
-            name: row.name,
-            nameArabic: row.nameArabic,
-            developerName: row.developer?.companyName ?? null,
-            cityName: row.city?.name ?? null,
-          })),
-          ...archivedRows.map((row) => ({
-            id: row.id,
-            slug: row.slug,
-            name: row.name,
-            nameArabic: row.nameArabic,
-            developerName: row.developer?.companyName ?? null,
-            cityName: row.city?.name ?? null,
-            archived: true,
-          })),
-        ],
+        projects: rows.map((row) => ({
+          id: row.id,
+          slug: row.slug,
+          name: row.name,
+          nameArabic: row.nameArabic,
+          developerName: row.developer?.companyName ?? null,
+          cityName: row.city?.name ?? null,
+        })),
       }
     }
     const sorted = resolveProjectName(message, projectNameCorpus.projects)
