@@ -66,6 +66,8 @@ interface ProjectDetailProps {
   // GET /api/projects/[slug]). Optional so other callers (developer preview)
   // keep working — the client falls back to grouping the loaded units.
   unitsByType?: UnitsByTypeRow[] // legacy shape (mobile/API contract) — unused by the units tab now
+  // 3D models published for this project (empty = feature stays invisible).
+  models3d?: import('@/lib/models3d').PublicModel3D[]
 }
 
 // Reviews summary for the sidebar proof line, the payment-tab summary, and
@@ -422,7 +424,7 @@ function ShowcasePhoto({ photo, cover, landmark, name }: { photo?: string | null
   )
 }
 
-export function ProjectDetail({ project }: ProjectDetailProps) {
+export function ProjectDetail({ project, unitsByType, models3d }: ProjectDetailProps) {
   const { lang, dir } = useLanguage()
   const ar = lang === 'ar'
   const [showPhone, setShowPhone] = useState(false)
@@ -1678,6 +1680,41 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
           </section>
         )
       })()}
+
+      {/* 3D experience — renders ONLY when the CEO master switch is ON and a
+          model is published for this project (otherwise props are empty and
+          nothing is ever visible on the public site). */}
+      {models3d && models3d.length > 0 && (
+        <section aria-label={ar ? 'تجربة 3D' : '3D experience'} className="mt-8">
+          <Card>
+            <CardContent className="flex flex-wrap items-center justify-between gap-4 p-6">
+              <div className="flex items-center gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-estate-gold/10">
+                  <span aria-hidden="true" className="text-lg">🧊</span>
+                </span>
+                <div>
+                  <h2 className="font-display display-3">{ar ? 'ألعب بالمجسم ثلاثي الأبعاد' : 'Interactive 3D model'}</h2>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    {ar ? 'لف المجسم، ادخل جوه، شوف الغرف والطوابق كلها من كل زاوية' : 'Rotate, walk inside, and explore rooms and floors from every angle'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {models3d.slice(0, 2).map((m) => (
+                  <Button
+                    key={m.id}
+                    asChild
+                    size="lg"
+                    className="gold-shimmer bg-estate-gold text-[#0F1A2C] hover:bg-estate-gold-dark"
+                  >
+                    <Link href={`/3d/${m.id}`}>{ar ? m.labelAr || 'شوف في 3D' : m.labelEn || 'View in 3D'}</Link>
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       </div>
 

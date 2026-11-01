@@ -87,6 +87,7 @@ const groups: Group[] = [
       { label: 'Payment Plans', labelAr: 'أنظمة الدفع', href: '/ceo/payment-plans', icon: CreditCard },
       { label: 'Areas Survey', labelAr: 'مسح المناطق', href: '/ceo/areas-survey', icon: FileSpreadsheet },
       { label: 'Inventory Gaps', labelAr: 'نواقص المخزون', href: '/ceo/gaps', icon: AlertTriangle },
+      { label: '3D Studio', labelAr: 'استوديو 3D', href: '/ceo/3d', icon: Boxes },
       { label: 'New Launches', labelAr: 'اللانشات الجديدة', href: '/ceo/new-launches', icon: Rocket },
       { label: 'Import Nawy', labelAr: 'استيراد من ناوي', href: '/ceo/import/nawy', icon: CloudDownload },
     ],

@@ -6,7 +6,7 @@ import { useLanguage } from '@/lib/language-context'
 import { useCompare } from '@/lib/compare'
 import { cn } from '@/lib/utils'
 
-const HIDDEN_PREFIXES = ['/ceo', '/dashboard', '/auth', '/ai-tools/chat']
+const HIDDEN_PREFIXES = ['/ceo', '/dashboard', '/auth', '/ai-tools/chat', '/3d']
 
 type CtaConfig = {
   enabled: boolean

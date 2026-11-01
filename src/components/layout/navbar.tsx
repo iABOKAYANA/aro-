@@ -16,6 +16,9 @@ import type { AppType } from '@/lib/app-type'
 
 export function Navbar({ appType = 'all' }: { appType?: AppType }) {
   const pathname = usePathname() || '/'
+  // The 3D viewer is a cinematic standalone surface — decided but applied
+  // AFTER the hook list below (rules-of-hooks: never return early before hooks).
+  const isStandalone3d = pathname.startsWith('/3d')
   const { data: session, status } = useSession()
   const { lang, setLang, t } = useLanguage()
   // Feature switch: price explorer link visibility (fetches once, fails open).
@@ -40,6 +43,8 @@ export function Navbar({ appType = 'all' }: { appType?: AppType }) {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [mobileOpen])
+
+  if (isStandalone3d) return null
 
   const user = session?.user as any
   const isRtl = lang === 'ar'

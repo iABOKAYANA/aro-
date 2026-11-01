@@ -24,7 +24,7 @@ const CSP = [
   "img-src 'self' data: blob: https: https://www.google-analytics.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com",
-  "connect-src 'self' https: https://*.google-analytics.com https://*.googletagmanager.com",
+  "connect-src 'self' https: blob: https://*.google-analytics.com https://*.googletagmanager.com",
   // Voice-note audio (Blob/local) + promo video files.
   "media-src 'self' blob: https:",
   "object-src 'none'",

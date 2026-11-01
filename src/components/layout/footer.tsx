@@ -92,7 +92,7 @@ export function Footer({ appType = 'all' }: { appType?: AppType }) {
   // it turns the phone screen into a double scroll (page scroll vs chat
   // scroll) and unpins the composer. Same hiding rule as the floating
   // widgets; hidden on the chat route only.
-  if (pathname.startsWith('/ai-tools/chat')) return null
+  if (pathname.startsWith('/ai-tools/chat') || pathname.startsWith('/3d')) return null
   return (
     <footer data-app-type={appType} className="relative overflow-hidden border-t border-estate-gold/25 bg-estate-navy text-white dark:border-[rgba(212,168,67,0.25)] dark:bg-black">
       <div className="mashrabiya pointer-events-none absolute inset-0 opacity-40" aria-hidden="true" />

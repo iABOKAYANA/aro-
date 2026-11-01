@@ -4,8 +4,10 @@ import { getProjectBySlug } from '@/lib/search'
 import { getUnitsByType } from '@/lib/units-by-type'
 import { isPublicProject } from '@/lib/project-visibility'
 import { projectJsonLd, projectMetadata, type AreaRange } from '@/lib/seo'
+import { listPublicModels3DForSource } from '@/lib/models3d'
 import { ProjectDetail } from '@/components/projects/project-detail'
 import { ProjectQA } from '@/components/projects/project-qa'
+import type { PublicModel3D } from '@/lib/models3d'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,10 +57,13 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   const area: AreaRange | null = min === null && max === null ? null : { minArea: min, maxArea: max }
   // Real values only — the builder omits every null field, never fakes one.
   const jsonLd = projectJsonLd(project, area)
+  // 3D entry — null while the feature is private (master switch OFF), or this
+  // project has no published model: the button literally does not render.
+  const models3d = await listPublicModels3DForSource('PROJECT', project.id)
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <ProjectDetail project={project} unitsByType={unitsByType} />
+      <ProjectDetail project={project} unitsByType={unitsByType} models3d={models3d} />
       <ProjectQA slug={params.slug} />
     </>
   )

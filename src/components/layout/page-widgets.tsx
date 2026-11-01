@@ -9,7 +9,7 @@ import { useCompare } from '@/lib/compare'
 import { cn } from '@/lib/utils'
 import { FloatingContactCta } from '@/components/layout/floating-contact-cta'
 
-const HIDDEN_PREFIXES = ['/ceo', '/dashboard', '/auth', '/ai-tools/chat']
+const HIDDEN_PREFIXES = ['/ceo', '/dashboard', '/auth', '/ai-tools/chat', '/3d']
 
 /** Global page widgets: scroll progress bar, back-to-top, and the floating "EYN" AI shortcut. */
 export function PageWidgets() {

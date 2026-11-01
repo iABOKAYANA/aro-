@@ -1510,3 +1510,31 @@ model EditRequest {
   @@index([entity, entityId])
   @@index([developerId])
 }
+
+// ─── 3D property models (private until the CEO master switch is ON) ───
+// A row links ONE uploaded architectural GLB/GLTF to a Project or a Unit.
+// Files live OUTSIDE public/ behind a gated API (/api/3d/file/<id>) that only
+// streams them while publishEnabled=true AND the row is PUBLISHED AND the
+// linked source is publicly visible. Plain-id links (no Prisma relation) so
+// existing models stay untouched.
+model PropertyModel3D {
+  id               String   @id @default(cuid())
+  sourceType       String // PROJECT | UNIT
+  sourceId         String
+  kind             String   @default("EXTERIOR") // EXTERIOR | INTERIOR | BUILDING
+  labelAr          String?
+  labelEn          String?
+  storageKey       String? // file under data/models3d/ — null = clearly-labeled demo scene
+  originalName     String?
+  sizeBytes        Int?
+  hotspotData      String? // JSON: [{ id, position:[x,y,z], labelAr, labelEn, noteAr?, noteEn?, area?, dimsAr?, dimsEn? }]
+  floorData        String? // JSON: [{ id, nameAr, nameEn, y?, units:[{ id, label, status, price?, area?, rooms?, unitId? }] }]
+  fallbackImageUrl String?
+  status           String   @default("DRAFT") // DRAFT | PUBLISHED
+  uploadedByEmail  String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([sourceType, sourceId, status])
+  @@index([status])
+}
