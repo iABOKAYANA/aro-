@@ -164,9 +164,24 @@ export function Footer({ appType = 'all' }: { appType?: AppType }) {
 
         <hr className="gold-hairline mt-8" />
         <div className="flex flex-col items-center justify-between gap-4 pt-8 sm:flex-row">
-          <p className="text-xs text-gray-500">
-            &copy; {new Date().getFullYear()} GHAYA REAL ESTATE. {t('footer.rights')}
-          </p>
+          <div className="flex flex-col items-center gap-1.5 sm:items-start">
+            <p className="text-xs text-gray-500">
+              &copy; {new Date().getFullYear()} GHAYA REAL ESTATE. {t('footer.rights')}
+            </p>
+            <p className="text-xs text-gray-500">
+              {lang === 'ar' ? (
+                <>
+                  تطوير وبرمجة:{' '}
+                  <span className="font-bold text-estate-gold/80">عبدالله أبو زيد</span>
+                </>
+              ) : (
+                <>
+                  Developed by{' '}
+                  <span className="font-bold text-estate-gold/80">Abdullah Abu Zeid</span>
+                </>
+              )}
+            </p>
+          </div>
           <div className="flex flex-wrap justify-center gap-4">
             {footerLinks.legal.map((link) => (
               <Link key={link.href} href={link.href} className="-my-1.5 inline-flex min-h-[36px] max-sm:min-h-11 items-center text-xs max-sm:text-sm text-gray-500 transition-colors hover:text-gray-300">
