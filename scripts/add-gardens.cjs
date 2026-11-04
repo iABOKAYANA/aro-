@@ -157,9 +157,10 @@ async function main() {
   })
 
   /* 6) خطط السداد — كما بالكيت حرفيًا (لا حملات مبتكرة) */
+  const EOI_DESC = '⚠️ حجز مبدئي EOI بدءًا من 8/11/2026: 100,000 ج.م للفاون هاوس وG-Villa، و50,000 ج.م للشقق (كيت المبيعات)'
   const plans = [
-    { name: '5% down · 8 years', nameArabic: 'مقدم 5% — تقسيط حتى 8 سنوات', downPaymentPct: 5, installmentYears: 8, isDefault: true, sortOrder: 1 },
-    { name: '10% down · 10 years', nameArabic: 'مقدم 10% — تقسيط حتى 10 سنوات', downPaymentPct: 10, installmentYears: 10, isDefault: false, sortOrder: 2 },
+    { name: '5% down · 8 years', nameArabic: 'مقدم 5% — تقسيط حتى 8 سنوات', description: EOI_DESC, downPaymentPct: 5, installmentYears: 8, isDefault: true, sortOrder: 1 },
+    { name: '10% down · 10 years', nameArabic: 'مقدم 10% — تقسيط حتى 10 سنوات', description: EOI_DESC, downPaymentPct: 10, installmentYears: 10, isDefault: false, sortOrder: 2 },
   ]
   for (const p of plans) {
     const ex = await db.paymentPlan.findFirst({ where: { projectId: project.id, name: p.name } })
