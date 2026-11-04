@@ -1,7 +1,8 @@
 /*
  * add-gardens.cjs — إضافة مشروع Gardens (العاصمة الإدارية — R8) إلى قاعدة بيانات الموقع.
  * المصدر الوحيد للبيانات: كيت البيع الرسمي (Gardens sales kit — sales version, Nov 2026).
- * لا يوجد أي رقم مخترع — لا وحدات (الاسم الوحيد المسجل بأسعار "من") ولا مطوّر (غير مذكور بالكيت).
+ * لا يوجد أي رقم مخترع — لا وحدات (الاسم الوحيد المسجل بأسعار "من").
+ * المطوّر: مودن مصر — Modon Egypt («مدن مصر للتطوير العقاري») — تأكيد المالك، Nov 2026.
  * Idempotent: تشغيله مرارًا بأمان (upsert).
  *
  * التشغيل على السيرفر:
@@ -13,7 +14,11 @@ const db = new PrismaClient()
 /* ─── ثوابت من الكيت ─── */
 const KIT_SOURCE = 'Gardens sales kit (sales version) — Nov 2026'
 const SLUG = 'gardens-new-capital'
-const DEV_NAME = 'Undisclosed Developer (TBA)'
+/* المطوّر: مودن مصر — Modon Egypt («مدن مصر للتطوير العقاري») — تأكيد المالك، نوفمبر 2026.
+   ملاحظة صريحة: اسم المطوّر غير مذكور داخل الكيت نفسه — تأكد منه المالك.
+   الأسعار/الخطط/أنواع الوحدات تظل مصدرها الكيت فقط. */
+const DEVELOPER_VARIANTS = ['Modon Egypt', 'Modon Developments'] // نبدأ بالبروفيل الموجود في prod
+const DEV_CREATE = { companyName: 'Modon Egypt', companyNameArabic: 'مدن مصر للتطوير العقاري', slug: 'modon-egypt' }
 
 const IMG = (f) => `/images/projects/gardens-${f}.jpg`
 
@@ -49,20 +54,22 @@ async function main() {
   const owner =
     (await db.user.findUnique({ where: { id: 'cmv86a0l600002skymmeejoi0' } })) ||
     (await db.user.findFirst({ where: { role: 'CEO' }, orderBy: { createdAt: 'asc' } }))
-  if (!owner) throw new Error('No CEO/ADMIN user found to own the TBA developer profile')
+  if (!owner) throw new Error('No CEO/ADMIN user found to own the developer profile')
 
-  /* 2) بروفايل مطوّر "غير معلن" — تُحدَّث هوية المطوّر لاحقًا بتأكيد المالك */
-  let dev = await db.developerProfile.findFirst({ where: { companyName: DEV_NAME } })
+  /* 2) بروفايل المطوّر: «Modon Egypt / مدن مصر للتطوير العقاري» — موجود مسبقًا في prod
+     فنستخدمه كما هو. fallback: 'Modon Developments' ثم إنشاء بسيط بملكية مستخدم CEO حر
+     (حقل userId في البروفايلات unique — لا يملك مستخدم واحد أكثر من بروفايل). */
+  let dev = await db.developerProfile.findFirst({ where: { companyName: DEVELOPER_VARIANTS[0] } })
+  if (!dev) dev = await db.developerProfile.findFirst({ where: { companyName: DEVELOPER_VARIANTS[1] } })
   if (!dev) {
-    dev = await db.developerProfile.create({
-      data: {
-        userId: owner.id,
-        companyName: DEV_NAME,
-        slug: 'undisclosed-developer-tba',
-        description: 'هوية المطوّر لم تُعلن بعد. كل بيانات Gardens في الموقع مصدرها كيت المبيعات الرسمي، وسيتم تحديث اسم المطوّر فور تأكيده من المالك.',
-        headquarters: '—',
-      },
+    const usedIds = (await db.developerProfile.findMany({ select: { userId: true } })).map((r) => r.userId)
+    const freeUser = await db.user.findFirst({
+      where: { role: { in: ['CEO', 'ADMIN'] }, id: { notIn: usedIds } },
+      orderBy: { createdAt: 'asc' },
     })
+    if (!freeUser) throw new Error('No free CEO/ADMIN user to own a new developer profile')
+    dev = await db.developerProfile.create({ data: { userId: freeUser.id, ...DEV_CREATE } })
+    console.log('CREATED developer profile: ' + DEV_CREATE.companyName + ' (owner: ' + freeUser.name + ')')
   }
 
   /* 3) التوطين: المحافظة / المدينة / الحي R8 (موجودون مسبقًا في prod) */
@@ -182,6 +189,20 @@ async function main() {
   }
   await db.projectAmenity.deleteMany({ where: { projectId: project.id } })
   await db.projectAmenity.createMany({ data: linkRows })
+
+  /* 8) تنظيف بروفايل "غير معلن (TBA)" المؤقت — يُحذف فقط إذا بقى من غير مشاريع/ليدز/صفقات */
+  const tba = await db.developerProfile.findFirst({
+    where: { companyName: 'Undisclosed Developer (TBA)' },
+    include: {
+      projects: { select: { id: true } },
+      leads: { select: { id: true } },
+      deals: { select: { id: true } },
+    },
+  })
+  if (tba && tba.projects.length === 0 && tba.leads.length === 0 && tba.deals.length === 0) {
+    await db.developerProfile.delete({ where: { id: tba.id } })
+    console.log('CLEANUP: removed unused TBA developer profile')
+  }
 
   const planCount = await db.paymentPlan.count({ where: { projectId: project.id } })
   const amenityCount = await db.projectAmenity.count({ where: { projectId: project.id } })
