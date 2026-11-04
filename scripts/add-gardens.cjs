@@ -23,10 +23,10 @@ const DEV_CREATE = { companyName: 'Modon Egypt', companyNameArabic: 'مدن مص
 const IMG = (f) => `/images/projects/gardens-${f}.jpg`
 
 const AR_DESC =
-  'في قلب الحي السكني R8 بالعاصمة الإدارية الجديدة، وعلى مساحة تمتد إلى 232 فدانًا، يقدّم Gardens تجربة سكنية استثنائية، حيث تلتقي الخصوصية بجمال الطبيعة وتتكامل تفاصيل الحياة العصرية. صُمّم المشروع ليجعل المساحات المفتوحة والطبيعة حضورًا أساسيًا في كل تفاصيله: من الحدائق الخضراء الممتدة والبحيرات الهادئة إلى الإطلالات المميزة التي تتمتع بها الوحدات السكنية، لتصبح المساحات الخضراء والمسطحات المائية جزءًا من المشهد اليومي لكل منزل. ويضم Gardens مجموعة متنوعة من الوحدات السكنية، تتصدرها التاون هاوس و G-Villas والشقق المكونة من غرفتين وثلاث غرف نوم، في تخطيط عمراني يوازن بين الخصوصية والمساحات المفتوحة — مع إطلالات بانورامية على البرج الأيقوني وقاعة المؤتمرات، وموقع قريب من AUC ومدينتي وأوبرا مول المدينة.'
+  'على أعلى ربوة في قلب الحي السكني R8 بالعاصمة الإدارية الجديدة، وعلى مساحة تمتد إلى 23 فدانًا، يقدّم Gardens تجربة سكنية استثنائية، حيث تلتقي الخصوصية بجمال الطبيعة وتتكامل تفاصيل الحياة العصرية. صُمّم المشروع ليجعل المساحات المفتوحة والطبيعة حضورًا أساسيًا في كل تفاصيله: من الحدائق الخضراء الممتدة والبحيرات الهادئة إلى الإطلالات المميزة التي تتمتع بها الوحدات السكنية، لتصبح المساحات الخضراء والمسطحات المائية جزءًا من المشهد اليومي لكل منزل. ويضم Gardens مجموعة متنوعة من الوحدات السكنية، تتصدرها التاون هاوس و G-Villas والشقق المكونة من غرفتين وثلاث غرف نوم، في تخطيط عمراني يوازن بين الخصوصية والمساحات المفتوحة — مع إطلالات بانورامية على البرج الأيقوني وقاعة المؤتمرات، وموقع قريب من AUC ومدينتي وأوبرا مول المدينة.'
 
 const EN_DESC =
-  'An exceptional residential experience in the heart of the R8 residential district of the New Administrative Capital, on a sprawling 232-feddan footprint: town houses, G-villas and 2- and 3-bedroom apartments, where privacy meets the beauty of nature. Extended landscaped gardens, calm lakes and water surfaces are built into every detail of the master plan, giving all homes elevated views, with a location close to AUC, Madinaty, the Opera, the Conference Centre and the Iconic Tower.'
+  'An exceptional residential experience on the highest hill in the R8 residential district of the New Administrative Capital, on a 23-feddan footprint: town houses, G-villas and 2- and 3-bedroom apartments, where privacy meets the beauty of nature. Extended landscaped gardens, calm lakes and water surfaces are built into every detail of the master plan, giving all homes elevated views, with a location close to AUC, Madinaty, the Opera, the Conference Centre and the Iconic Tower.'
 
 /* المرافق كما بالكيت — أسماء قاعدة المرافق الموجودة + 3 مرافق جديدة (بحيرات / بوتيك هوتل / بادل) */
 const AMENITY_MAP = [
@@ -95,7 +95,7 @@ async function main() {
   }
 
   /* 5) المشروع نفسه */
-  const gallery = ['/images/projects/gardens-cover.jpg', '/images/projects/gardens-lakes.jpg', '/images/projects/gardens-masterplan.jpg', '/images/projects/gardens-townhouse.jpg', '/images/projects/gardens-gvilla.jpg', '/images/projects/gardens-apartments.jpg']
+  const gallery = ['/images/projects/gardens-cover.jpg', '/images/projects/gardens-location.jpg', '/images/projects/gardens-lakes.jpg', '/images/projects/gardens-masterplan.jpg', '/images/projects/gardens-pools.jpg', '/images/projects/gardens-clubhouse.jpg', '/images/projects/gardens-boutique.jpg', '/images/projects/gardens-commercial.jpg', '/images/projects/gardens-sports.jpg', '/images/projects/gardens-kids.jpg', '/images/projects/gardens-plans.jpg', '/images/projects/gardens-townhouse.jpg', '/images/projects/gardens-gvilla.jpg', '/images/projects/gardens-apartments.jpg']
 
   const project = await db.project.upsert({
     where: { slug: SLUG },
