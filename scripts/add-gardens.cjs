@@ -190,6 +190,17 @@ async function main() {
   await db.projectAmenity.deleteMany({ where: { projectId: project.id } })
   await db.projectAmenity.createMany({ data: linkRows })
 
+  /* 7b) الماستر بلان: تاب مخصص في صفحة المشروع (MasterPlanImage).
+     إعادة دفع idempotent (delete-then-insert) — كل الصور من صفحات الكيت:
+     خريطة الرسم الكاملة (ص23) + خريطة الموقع داخل R8 (ص4). */
+  const masterPlans = [
+    { url: '/images/projects/gardens-masterplan.jpg', caption: 'الماستر بلان — التخطيط العام', sortOrder: 1 },
+    { url: '/images/projects/gardens-location.jpg', caption: 'موقع المشروع داخل الحي السكني R8', sortOrder: 2 },
+  ]
+  await db.masterPlanImage.deleteMany({ where: { projectId: project.id } })
+  await db.masterPlanImage.createMany({ data: masterPlans.map((m) => ({ ...m, projectId: project.id })) })
+  console.log('MASTER_PLAN: wrote ' + masterPlans.length + ' images')
+
   /* 8) تنظيف بروفايل "غير معلن (TBA)" المؤقت — يُحذف فقط إذا بقى من غير مشاريع/ليدز/صفقات */
   const tba = await db.developerProfile.findFirst({
     where: { companyName: 'Undisclosed Developer (TBA)' },
@@ -206,8 +217,9 @@ async function main() {
 
   const planCount = await db.paymentPlan.count({ where: { projectId: project.id } })
   const amenityCount = await db.projectAmenity.count({ where: { projectId: project.id } })
+  const mpCount = await db.masterPlanImage.count({ where: { projectId: project.id } })
   console.log(
-    `OK: Gardens → project id=${project.id} slug=${SLUG} price=${project.startPrice}-${project.endPrice} | plans=${planCount} | amenities=${amenityCount} | dev=${dev.companyName}`
+    `OK: Gardens → project id=${project.id} slug=${SLUG} price=${project.startPrice}-${project.endPrice} | plans=${planCount} | amenities=${amenityCount} | masterplans=${mpCount} | dev=${dev.companyName}`
   )
 }
 
