@@ -34,6 +34,7 @@ import {
 } from 'lucide-react'
 import { formatEGP, cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/language-context'
+import { normalizeUploadFile } from '@/lib/image-upload-client'
 import { Reveal, SectionHeader } from '@/components/design'
 
 export type ProjectRow = {
@@ -3449,16 +3450,19 @@ function BulkImages({ projectId, slug, projectName }: { projectId: string; slug:
     const bad: string[] = []
     for (const f of Array.from(files)) {
       try {
+        // HEIC/oversize/mystery-MIME phone picks are normalized or rejected
+        // with the exact Arabic fix — see src/lib/image-upload-client.ts.
+        const uploadable = await normalizeUploadFile(f)
         const form = new FormData()
-        form.append('file', f)
+        form.append('file', uploadable)
         const res = await fetch('/api/developer/upload', { method: 'POST', headers: { ...CSRF_HEADERS }, body: form })
         let data: { url?: unknown; error?: unknown } | null = null
         try { data = (await res.json()) as { url?: unknown; error?: unknown } } catch { data = null }
         if (!res.ok || typeof data?.url !== 'string') {
-          bad.push(`${f.name}: ${ar ? 'فشل الرفع' : 'Upload failed'}`)
+          bad.push(`${f.name}: ${typeof data?.error === 'string' && data.error ? data.error : ar ? 'فشل الرفع' : 'Upload failed'}`)
         } else done.push(data.url)
-      } catch {
-        bad.push(`${f.name}: ${ar ? 'فشل الرفع' : 'Upload failed'}`)
+      } catch (e) {
+        bad.push(`${f.name}: ${e instanceof Error && e.message ? e.message : ar ? 'فشل الرفع' : 'Upload failed'}`)
       }
     }
     setUrls((prev) => [...prev, ...done])

@@ -4,11 +4,15 @@ import { useRef, useState, type ReactNode } from 'react'
 import Image from 'next/image'
 import { Image as ImageIcon, Upload, Loader2, X } from 'lucide-react'
 import { useLanguage } from '@/lib/language-context'
+import { normalizeUploadFile } from '@/lib/image-upload-client'
 
 // Uploads one file to /api/ceo/upload and returns the public URL.
+// Phone picks (HEIC, oversize) are normalized client-side first — see
+// src/lib/image-upload-client.ts.
 export async function uploadImageFile(file: File): Promise<string> {
+  const uploadable = await normalizeUploadFile(file)
   const fd = new FormData()
-  fd.append('file', file)
+  fd.append('file', uploadable)
   const res = await fetch('/api/ceo/upload', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd })
   const data = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(data.error || 'Upload failed')
@@ -43,7 +47,9 @@ export default function ImageInput({ label, value, onChange, disabled }: ImageIn
       onChange(await uploadImageFile(file))
     } catch (e) {
       console.error('Image upload failed:', e)
-      setError(ar ? 'الرفع فشل — حاول تاني.' : 'Upload failed')
+      // Surface the real cause (HEIC guidance, size cap, server message) —
+      // a generic "try again" leaves the owner guessing.
+      setError(ar ? (e instanceof Error && e.message ? e.message : 'الرفع فشل — حاول تاني.') : e instanceof Error && e.message ? e.message : 'Upload failed')
     } finally {
       setUploading(false)
     }

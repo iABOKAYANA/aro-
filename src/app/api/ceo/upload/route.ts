@@ -5,7 +5,7 @@ import { requireCEOApi } from '@/lib/permissions'
 
 export const dynamic = 'force-dynamic'
 
-const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_SIZE = 14 * 1024 * 1024 // 14MB (mobile photos; nginx client_max_body_size is 15m)
 
 const ALLOWED: Record<string, string> = {
   'image/jpeg': '.jpg',
